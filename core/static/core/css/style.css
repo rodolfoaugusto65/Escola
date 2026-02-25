@@ -1,0 +1,341 @@
+/* =========================
+   RESET
+========================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =========================
+   BASE
+========================= */
+body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background-color: #f4f6f9;
+    color: #212529;
+    overflow-x: hidden;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* =========================
+   SIDEBAR (CONTROLADA POR JS)
+========================= */
+.sidebar {
+    width: 240px;
+    background: linear-gradient(180deg, #0d6efd, #0b5ed7);
+    color: #fff;
+    transition: width 0.35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+}
+
+/* Colapsada */
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar.collapsed span {
+    display: none;
+}
+
+.sidebar.collapsed i {
+    font-size: 1.8rem;
+}
+
+/* LOGO */
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* MENU */
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.sidebar a:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+/* ICONES */
+.sidebar i {
+    font-size: 1.5rem;
+    transition: font-size 0.3s ease;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar {
+    height: 60px;
+    background: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+/* USER INFO */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.user-info span {
+    font-weight: 500;
+}
+
+/* =========================
+   MAIN
+========================= */
+.main {
+    padding: 30px;
+    flex: 1;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer {
+    text-align: center;
+    padding: 15px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+}
+
+/* =========================
+   CARDS
+========================= */
+.card {
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* =========================
+   LOGIN MODERNO
+========================= */
+.login-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0d6efd, #084298);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 35px;
+    width: 100%;
+    max-width: 420px;
+    color: #fff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+.login-card h4 {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.login-card .form-control {
+    display: block !important;
+    width: 100% !important;
+    height: 48px !important;
+    padding: 12px 14px !important;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255,255,255,0.35) !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    box-shadow: none !important;
+    caret-color: #ffffff !important;
+}
+
+.login-card .form-control::placeholder {
+    color: rgba(255,255,255,0.75) !important;
+}
+
+.login-card .form-control:focus {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15) !important;
+}
+
+.login-card input:-webkit-autofill {
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* =========================
+   NOTIFICAÇÕES SaaS
+========================= */
+.saas-toast {
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    font-size: 0.95rem !important;
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.97) !important;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.08) !important;
+    border-left: 5px solid #0d6efd;
+}
+
+/* =========================
+   ANIMAÇÕES
+========================= */
+.fade-in {
+    animation: fadeIn 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   STATUS CARDS
+========================= */
+.status-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+}
+
+.icon-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-success-soft { background: #e7f9f0; color: #16a34a; }
+.bg-info-soft { background: #e6f4ff; color: #0284c7; }
+.bg-warning-soft { background: #fff7e6; color: #d97706; }
+
+/* =========================
+   INDICADORES PREMIUM
+========================= */
+.indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.indicator-true {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+.indicator-true::before {
+    background: #16a34a;
+}
+
+.indicator-false {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.indicator-false::before {
+    background: #dc2626;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+button, .btn {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+
+.tooltip-inner {
+  background-color: #0d6efd;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #0d6efd;
+}
+
+/* =====================================
+   BLOCO DESABILITADO VISUAL
+======================================*/
+
+.box-disabled {
+  opacity: 0.6;
+  background: #f1f3f5 !important;
+  border: 1px dashed #ced4da !important;
+  transition: 0.2s;
+}
+
+.indicator-box {
+  transition: 0.3s ease;
+}

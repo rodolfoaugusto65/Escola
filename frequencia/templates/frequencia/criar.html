@@ -1,0 +1,46 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h4>Lançar Frequência</h4>
+
+<form method="get" class="row mb-3">
+    <div class="col">
+        <select name="turma" class="form-select" onchange="this.form.submit()">
+            <option value="">Selecione a turma</option>
+            {% for t in turmas %}
+            <option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>
+                {{ t }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col">
+        <input type="date" name="data" class="form-control" value="{{ data }}" onchange="this.form.submit()">
+    </div>
+</form>
+
+{% if alunos %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="turma" value="{{ turma_id }}">
+    <input type="hidden" name="data" value="{{ data }}">
+
+    <table class="table table-bordered">
+        <tr>
+            <th>Aluno</th>
+            <th>Presente</th>
+        </tr>
+        {% for a in alunos %}
+        <tr>
+            <td>{{ a.nome }}</td>
+            <td><input type="checkbox" name="presente_{{ a.id }}" checked></td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <button class="btn btn-success">Salvar Frequência</button>
+</form>
+{% endif %}
+
+{% endblock %}

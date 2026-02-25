@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Relatório de Frequência</title>
+    <style>
+        body { font-family: Arial; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 6px; }
+    </style>
+</head>
+<body onload="window.print()">
+
+<h3>Relatório de Frequência</h3>
+
+<p>
+    {% if filtros.turma %}<strong>Turma:</strong> {{ filtros.turma }}<br>{% endif %}
+    {% if filtros.aluno %}<strong>Aluno:</strong> {{ filtros.aluno }}<br>{% endif %}
+    {% if filtros.data_inicio %}<strong>Período:</strong>
+        {{ filtros.data_inicio }} a {{ filtros.data_fim }}
+    {% endif %}
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Aluno</th>
+            <th>Data</th>
+            <th>Presença</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in registros %}
+        <tr>
+            <td>{{ r.aluno.nome }}</td>
+            <td>{{ r.frequencia.data|date:"d/m/Y" }}</td>
+            <td>{{ r.presente|yesno:"Presente,Falta" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

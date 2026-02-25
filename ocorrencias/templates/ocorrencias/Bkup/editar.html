@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<h4>Editar Ocorrência</h4>
+
+<form method="post">
+{% csrf_token %}
+
+<label>Nº FICAI</label>
+<input name="ficai" value="{{ o.ficai }}" class="form-control mb-3">
+
+<label>Providências</label>
+<textarea name="providencias" class="form-control mb-3">
+{{ o.providencias }}
+</textarea>
+
+<button class="btn btn-success">Salvar</button>
+
+</form>
+
+{% endblock %}

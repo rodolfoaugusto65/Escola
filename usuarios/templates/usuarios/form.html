@@ -1,0 +1,150 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-body p-4">
+
+            <h4 class="fw-bold text-primary mb-4">
+                {{ titulo }}
+            </h4>
+
+            <!-- 🔹 Exibe mensagens de erro gerais -->
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>⚠ Corrija os erros abaixo:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form id="usuarioForm" method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="fw-bold">Nome</label>
+                        {{ form.first_name|add_class:"form-control" }}
+                        {% for error in form.first_name.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold">Sobrenome</label>
+                        {{ form.last_name|add_class:"form-control" }}
+                        {% for error in form.last_name.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold">CPF</label>
+                        {{ form.cpf|add_class:"form-control cpf-mask" }}
+                        {% for error in form.cpf.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold">Perfil</label>
+                        {{ form.perfil|add_class:"form-select" }}
+                        {% for error in form.perfil.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="fw-bold">Email</label>
+                        {{ form.email|add_class:"form-control" }}
+                        {% for error in form.email.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {% if form.password %}
+                    <div class="col-md-6 position-relative">
+                        <label class="fw-bold">Senha</label>
+                        <div class="input-group">
+                            {{ form.password|add_class:"form-control" }}
+                            <button type="button" class="btn btn-outline-secondary" id="togglePassword" title="Mostrar/Ocultar senha">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                        {% for error in form.password.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if form.is_active %}
+                    <div class="col-md-6 d-flex align-items-center mt-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label ms-2 fw-semibold">
+                                {% if form.is_active.value %}
+                                    <span class="text-success">🟢 Usuário Ativo</span>
+                                {% else %}
+                                    <span class="text-danger">🔴 Usuário Inativo</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary px-4">
+                        ⬅ Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        💾 Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 Máscara de CPF e comportamento do formulário -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+    $(document).ready(function(){
+        // Máscara de CPF visual
+        $('.cpf-mask').mask('000.000.000-00');
+
+        // Remove máscara antes de enviar o formulário
+        $('#usuarioForm').on('submit', function() {
+            let cpfInput = $('.cpf-mask');
+            let cpfVal = cpfInput.val().replace(/\D/g, '');
+            cpfInput.val(cpfVal);
+        });
+    });
+
+    // Mostrar/ocultar senha
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.querySelector('input[type="password"]');
+    togglePassword?.addEventListener('click', () => {
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        togglePassword.innerHTML = type === 'password'
+            ? '<i data-lucide="eye"></i>'
+            : '<i data-lucide="eye-off"></i>';
+        lucide.createIcons();
+    });
+</script>
+
+{% endblock %}

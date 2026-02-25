@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h3>📄 Relatório de Ocorrências</h3>
+
+<table class="table table-striped">
+
+<tr>
+<th>Código</th>
+<th>Aluno</th>
+<th>Tipo</th>
+<th>Status</th>
+<th>Data</th>
+</tr>
+
+{% for o in ocorrencias %}
+<tr>
+<td>{{ o.codigo }}</td>
+<td>{{ o.aluno }}</td>
+<td>{{ o.get_tipo_ocorrencia_display }}</td>
+<td>{{ o.get_status_display }}</td>
+<td>{{ o.data }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<a href="{% url 'lista_ocorrencias' %}" class="btn btn-secondary">
+⬅ Voltar
+</a>
+
+{% endblock %}

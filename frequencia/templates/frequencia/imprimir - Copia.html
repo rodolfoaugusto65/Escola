@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Frequência</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        h2, h3 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #000;
+        }
+        th, td {
+            padding: 6px;
+        }
+        .assinatura {
+            margin-top: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Lista de Frequência</h2>
+<h3>{{ frequencia.turma }}</h3>
+
+<p><strong>Data:</strong> {{ frequencia.data|date:"d/m/Y" }}</p>
+<p><strong>Professor:</strong> {{ frequencia.professor }}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Matrícula</th>
+            <th>Aluno</th>
+            <th>Assinatura</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in frequencia.itens.all %}
+        <tr>
+            <td>{{ item.aluno.matricula }}</td>
+            <td>{{ item.aluno.nome }}</td>
+            <td></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="assinatura">
+    _______________________________________<br>
+    Assinatura do Professor
+</div>
+
+<script>
+    window.print();
+</script>
+
+</body>
+</html>

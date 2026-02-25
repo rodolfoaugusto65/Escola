@@ -1,0 +1,74 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h4>Ocorrências</h4>
+
+<form method="get" class="row g-2 mb-3">
+
+<div class="col-md-4">
+<input name="busca" class="form-control" placeholder="Aluno, matrícula ou código">
+</div>
+
+<div class="col-md-3">
+<select name="turma" class="form-select">
+<option value="">Todas as turmas</option>
+{% for t in turmas %}
+<option value="{{ t.id }}">{{ t }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col">
+<button class="btn btn-primary">Buscar</button>
+<a href="{% url 'criar_ocorrencia' %}" class="btn btn-success">Nova</a>
+</div>
+
+</form>
+
+<table class="table table-hover shadow">
+
+<thead class="table-dark">
+<tr>
+<th>Código</th>
+<th>Aluno</th>
+<th>Tipo</th>
+<th>Data</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody>
+{% for o in ocorrencias %}
+<tr>
+<td>{{ o.codigo }}</td>
+<td>
+{{ o.aluno.nome }}<br>
+<a href="{% url 'imprimir_por_aluno' o.aluno.id %}" target="_blank" class="btn btn-sm btn-secondary">
+Imprimir todas do aluno
+</a>
+</td>
+<td>{{ o.get_tipo_ocorrencia_display }}</td>
+<td>{{ o.data }}</td>
+<td>
+<a href="{% url 'detalhe_ocorrencia' o.pk %}" class="btn btn-sm btn-info">Ver</a>
+<a href="{% url 'imprimir_ocorrencia' o.pk %}" target="_blank" class="btn btn-sm btn-dark">Imprimir</a>
+</td>
+<td>
+<a href="{% url 'detalhe_ocorrencia' o.pk %}" class="btn btn-sm btn-info">Ver</a>
+
+<a href="{% url 'editar_ocorrencia' o.pk %}" class="btn btn-sm btn-warning">
+Editar
+</a>
+
+<a href="{% url 'imprimir_ocorrencia' o.pk %}" target="_blank" class="btn btn-sm btn-dark">
+Imprimir
+</a>
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+{% endblock %}

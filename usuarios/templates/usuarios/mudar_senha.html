@@ -1,0 +1,186 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      <div class="card border-0 shadow-sm modern-card">
+        <div class="card-body p-4">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+              <i data-lucide="lock"></i>
+              Alterar Senha
+            </h4>
+            <span class="text-muted small">
+              Atualize sua senha de acesso
+            </span>
+          </div>
+
+          <form method="post" novalidate id="formSenha">
+            {% csrf_token %}
+
+            <!-- Senha Atual -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Senha Atual</label>
+              {{ form.old_password|add_class:"form-control" }}
+              {% for error in form.old_password.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Nova Senha -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nova Senha</label>
+              {{ form.new_password1|add_class:"form-control"|attr:"id:novaSenha" }}
+              <div class="password-strength mt-2">
+                <div id="strengthBar"></div>
+              </div>
+              <small id="strengthText" class="text-muted"></small>
+              {% for error in form.new_password1.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Confirmar Senha -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Confirmar Nova Senha</label>
+              {{ form.new_password2|add_class:"form-control" }}
+              {% for error in form.new_password2.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between">
+
+              <a href="{% url 'perfil' %}"
+                 class="btn btn-secondary btn-modern d-flex align-items-center gap-2">
+                <i data-lucide="arrow-left"></i>
+                Voltar
+              </a>
+
+              <button type="button"
+                      id="btnConfirmarSenha"
+                      class="btn btn-primary btn-modern d-flex align-items-center gap-2">
+                <i data-lucide="save"></i>
+                Atualizar Senha
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+.password-strength {
+    height: 6px;
+    width: 100%;
+    background: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+#strengthBar {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+}
+.btn-modern {
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  lucide.createIcons();
+
+  const form = document.getElementById("formSenha");
+  const btn = document.getElementById("btnConfirmarSenha");
+  const senhaInput = document.getElementById("novaSenha");
+  const strengthBar = document.getElementById("strengthBar");
+  const strengthText = document.getElementById("strengthText");
+
+  // Indicador de força
+  senhaInput.addEventListener("input", function() {
+      const value = senhaInput.value;
+      let strength = 0;
+
+      if (value.length >= 8) strength += 25;
+      if (/[A-Z]/.test(value)) strength += 25;
+      if (/[0-9]/.test(value)) strength += 25;
+      if (/[^A-Za-z0-9]/.test(value)) strength += 25;
+
+      strengthBar.style.width = strength + "%";
+
+      if (strength <= 25) {
+          strengthBar.style.background = "#dc3545";
+          strengthText.textContent = "Senha fraca";
+      } else if (strength <= 50) {
+          strengthBar.style.background = "#ffc107";
+          strengthText.textContent = "Senha média";
+      } else if (strength <= 75) {
+          strengthBar.style.background = "#0d6efd";
+          strengthText.textContent = "Senha boa";
+      } else {
+          strengthBar.style.background = "#198754";
+          strengthText.textContent = "Senha forte";
+      }
+  });
+
+  // Confirmação SweetAlert
+  btn.addEventListener("click", function() {
+
+      Swal.fire({
+          title: "Alterar senha?",
+          text: "Confirme para atualizar sua senha.",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Atualizar",
+          confirmButtonColor: "#0d6efd"
+      }).then(result => {
+
+          if (result.isConfirmed) {
+
+              btn.innerHTML = `
+                <span class="spinner-border spinner-border-sm"></span>
+                Atualizando...
+              `;
+              btn.disabled = true;
+
+              form.submit();
+          }
+
+      });
+
+  });
+
+  {% if form.errors %}
+      Swal.fire({
+          icon: 'error',
+          title: 'Erro ao alterar senha',
+          text: 'Verifique os campos informados.',
+          confirmButtonColor: '#dc3545'
+      });
+  {% endif %}
+
+});
+</script>
+
+{% endblock %}

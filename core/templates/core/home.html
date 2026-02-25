@@ -1,0 +1,151 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Início{% endblock %}
+{% block page_header %}
+    <i data-lucide="layout-dashboard"></i>
+    <h5>Painel</h5>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid fade-in">
+
+    <!-- BOAS VINDAS -->
+    <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h4 class="fw-bold mb-1">
+                    👋 Bem-vindo, {{ user.first_name }}!
+                </h4>
+                <p class="text-muted mb-0">
+                    Perfil: <strong>{{ user.get_perfil_display }}</strong>
+                </p>
+            </div>
+
+            <div class="text-end">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2">
+                    CPF: {{ user.cpf }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARDS DE STATUS -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-4">
+            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-success-soft">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Usuário Ativo</small>
+                        <h5 class="mb-0 fw-bold">
+                            {% if user.is_active %}
+                                <span class="indicator indicator-true">ATIVO</span>
+                            {% else %}
+                                <span class="indicator indicator-false">INATIVO</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-info-soft">
+                        <i data-lucide="settings"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Perfil Gerencial</small>
+                        <h5 class="mb-0 fw-bold">
+                            {% if user.perfil_gerencial %}
+                                <span class="indicator indicator-true">SIM</span>
+                            {% else %}
+                                <span class="indicator indicator-false">NÃO</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-warning-soft">
+                        <i data-lucide="user-cog"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Permissão de Gestão</small>
+                        <h5 class="mb-0 fw-bold">
+                            {% if user.pode_gerenciar_usuarios %}
+                                <span class="indicator indicator-true">LIBERADO</span>
+                            {% else %}
+                                <span class="indicator indicator-false">RESTRITO</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- INFORMAÇÕES DETALHADAS -->
+    <div class="card shadow-sm border-0 p-4 rounded-4">
+        <h5 class="fw-bold mb-3">📌 Informações da Conta</h5>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <strong>Email:</strong><br>
+                <span class="text-muted">{{ user.email }}</span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <strong>Telefone:</strong><br>
+                <span class="text-muted">
+                    {{ user.telefone|default:"Não informado" }}
+                </span>
+            </div>
+
+            <div class="col-12">
+                <strong>Endereço:</strong><br>
+                <span class="text-muted">
+                    {{ user.endereco|default:"Não informado" }}
+                </span>
+            </div>
+        </div>
+    </div>
+<div class="card p-4 shadow-sm border-0 modern-card mt-4">
+    <h6 class="fw-semibold mb-3 text-muted">
+        <i data-lucide="settings"></i>
+        Ações da Conta
+    </h6>
+
+    <div class="d-flex gap-3 flex-wrap">
+
+        <a href="{% url 'perfil' %}"
+           class="btn btn-primary d-flex align-items-center gap-2 shadow-sm btn-modern"
+           data-bs-toggle="tooltip"
+           data-bs-placement="top"
+           title="Visualizar e editar seus dados pessoais (não gerenciais)">
+            <i data-lucide="user"></i>
+            Meu Perfil
+        </a>
+
+        <a href="{% url 'password_change' %}"
+           class="btn btn-warning d-flex align-items-center gap-2 shadow-sm btn-modern"
+           data-bs-toggle="tooltip"
+           data-bs-placement="top"
+           title="Alterar sua senha de acesso ao sistema">
+            <i data-lucide="key-round"></i>
+            Alterar Senha
+        </a>
+
+    </div>
+</div>
+</div>
+{% endblock %}

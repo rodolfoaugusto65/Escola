@@ -1,0 +1,191 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+<div class="card shadow-lg border-0 rounded-4">
+<div class="card-body p-5">
+
+<h3 class="mb-4 text-primary fw-bold">
+📌 Nova Ocorrência
+</h3>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="row">
+
+<!-- 🔎 BUSCA PRO -->
+<div class="col-12 mb-4">
+<label class="fw-bold">🔎 Buscar aluno (nome ou matrícula)</label>
+
+<div class="input-group">
+<input type="text" id="buscarAluno" class="form-control form-control-lg"
+placeholder="Digite nome ou matrícula...">
+<button type="button" id="btnBuscar" class="btn btn-primary">
+Buscar
+</button>
+</div>
+</div>
+
+<!-- TURMA -->
+<div class="col-md-6 mb-3">
+<label class="fw-bold">Turma</label>
+{{ form.turma|add_class:"form-select form-select-lg" }}
+</div>
+
+<!-- ALUNO -->
+<div class="col-md-6 mb-3">
+<label class="fw-bold">Aluno</label>
+{{ form.aluno|add_class:"form-select form-select-lg" }}
+</div>
+
+<!-- TIPO -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Tipo</label>
+{{ form.tipo_ocorrencia|add_class:"form-select" }}
+</div>
+
+<!-- STATUS -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Status</label>
+{{ form.status|add_class:"form-select" }}
+</div>
+
+<!-- DATA -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Data</label>
+{{ form.data|add_class:"form-control" }}
+</div>
+
+<!-- DESCRIÇÃO -->
+<div class="col-12 mb-3">
+<label class="fw-bold">Descrição</label>
+{{ form.descricao|add_class:"form-control" }}
+</div>
+
+<!-- PROVIDÊNCIAS -->
+<div class="col-12 mb-3">
+<label class="fw-bold">Providências</label>
+{{ form.providencias|add_class:"form-control" }}
+</div>
+
+</div>
+
+<hr>
+
+<h5 class="text-danger fw-bold mb-3">🚨 Controle FICAI</h5>
+
+<div class="row">
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Abrir FICAI?</label><br>
+{{ form.ficai_aberta }}
+</div>
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Número FICAI</label>
+{{ form.ficai_numero|add_class:"form-control" }}
+</div>
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Data FICAI</label>
+{{ form.ficai_data|add_class:"form-control" }}
+</div>
+
+</div>
+
+<div class="mt-4 d-flex justify-content-between">
+<a href="{% url 'lista_ocorrencias' %}" class="btn btn-secondary px-4">
+⬅ Voltar
+</a>
+
+<button class="btn btn-success px-4">
+💾 Salvar Ocorrência
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<!-- ================= JS PRO ================= -->
+
+<script>
+
+// ENTER = BUSCAR
+document.getElementById("buscarAluno").addEventListener("keypress", e => {
+    if(e.key === "Enter"){
+        e.preventDefault();
+        buscarAluno();
+    }
+});
+
+document.getElementById("btnBuscar").onclick = buscarAluno;
+
+function buscarAluno(){
+
+    const termo = document.getElementById("buscarAluno").value;
+
+    fetch(`/ocorrencias/buscar-aluno/?q=${termo}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if(!data.length){
+                alert("Aluno não encontrado");
+                return;
+            }
+
+            const aluno = data[0];
+
+            // seleciona turma
+            document.getElementById("id_turma").value = aluno.turma_id;
+
+            // carrega alunos da turma
+            fetch(`/ocorrencias/get-alunos/?turma=${aluno.turma_id}`)
+                .then(r => r.json())
+                .then(lista => {
+
+                    const select = document.getElementById("id_aluno");
+                    select.innerHTML = "";
+
+                    lista.forEach(a => {
+                        const opt = document.createElement("option");
+                        opt.value = a.id;
+                        opt.text = `${a.nome} (${a.matricula})`;
+                        select.appendChild(opt);
+                    });
+
+                    select.value = aluno.id;
+                });
+
+        });
+}
+
+// FILTRAR POR TURMA
+document.getElementById("id_turma").addEventListener("change", function(){
+
+    const turmaId = this.value;
+
+    fetch(`/ocorrencias/get-alunos/?turma=${turmaId}`)
+        .then(r => r.json())
+        .then(lista => {
+
+            const select = document.getElementById("id_aluno");
+            select.innerHTML = "";
+
+            lista.forEach(a => {
+                const opt = document.createElement("option");
+                opt.value = a.id;
+                opt.text = `${a.nome} (${a.matricula})`;
+                select.appendChild(opt);
+            });
+        });
+});
+
+</script>
+
+{% endblock %}

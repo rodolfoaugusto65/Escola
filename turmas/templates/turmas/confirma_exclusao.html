@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block title %}Excluir Turma{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-danger">
+        <h4>Confirma exclusão?</h4>
+        <p>Tem certeza que deseja excluir a turma <strong>{{ turma.nome }}</strong>?</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, excluir</button>
+        <a href="{% url 'lista_turmas' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

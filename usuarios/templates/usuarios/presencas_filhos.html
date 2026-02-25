@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+{% block title %}Painel do Responsável{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Seus filhos</h3>
+
+  {% if alunos %}
+    <ul class="list-group">
+      {% for a in alunos %}
+        <li class="list-group-item">
+          {{ a.nome }} — Matrícula: {{ a.matricula }}
+          <a class="btn btn-sm btn-outline-primary float-end" href="{% url 'aluno_presencas' a.id %}">Ver presença</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Você não tem filhos vinculados no sistema.</p>
+  {% endif %}
+</div>
+{% endblock %}

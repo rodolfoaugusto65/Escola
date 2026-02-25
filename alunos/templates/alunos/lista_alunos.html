@@ -1,0 +1,247 @@
+{% extends "core/base.html" %}
+{% block title %}Alunos{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+      <i data-lucide="graduation-cap"></i>
+      Gerenciamento de Alunos
+    </h3>
+
+    <div class="d-flex gap-2">
+      <a href="{% url 'cadastrar_aluno' %}"
+         class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
+        <i data-lucide="user-plus"></i>
+        Novo Aluno
+      </a>
+
+      <a href="{% url 'relatorio_alunos' %}"
+         class="btn btn-info btn-modern d-flex align-items-center gap-2 shadow-sm text-white">
+        <i data-lucide="file-text"></i>
+        Relatório
+      </a>
+    </div>
+  </div>
+
+  <div class="card modern-card shadow-sm border-0">
+    <div class="card-body p-0">
+
+      {% if alunos %}
+
+      <div class="table-responsive">
+        <table class="table modern-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Matrícula</th>
+              <th>Nascimento</th>
+              <th>Turma</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for aluno in alunos %}
+            <tr id="alunoRow{{ aluno.id }}" class="hover-row">
+
+              <td><div class="fw-semibold">{{ aluno.nome }}</div></td>
+
+              <td>
+                <span class="badge bg-primary-soft">
+                  {{ aluno.matricula }}
+                </span>
+              </td>
+
+              <td>{{ aluno.data_nascimento|date:"d/m/Y" }}</td>
+
+              <td>
+                {% if aluno.turma_ano_letivo %}
+                  {{ aluno.turma_ano_letivo }} —
+                  {{ aluno.turma_etapa }} —
+                  {{ aluno.turma_ano_escolar }} {{ aluno.turma_nome }}
+                {% else %}
+                  <span class="text-muted">Sem turma</span>
+                {% endif %}
+              </td>
+
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+
+                  <a href="{% url 'editar_aluno' aluno.id %}"
+                     class="btn btn-icon btn-warning-soft">
+                    <i data-lucide="edit-3"></i>
+                  </a>
+
+                  <button type="button"
+                          class="btn btn-icon btn-danger-soft btn-delete-aluno"
+                          data-id="{{ aluno.id }}"
+                          data-nome="{{ aluno.nome }}"
+                          data-url="{% url 'excluir_aluno' aluno.id %}">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+
+      {% else %}
+        <div class="p-5 text-center text-muted">
+          <i data-lucide="users" style="width:50px;height:50px;"></i>
+          <p class="mt-3 mb-0">Nenhum aluno cadastrado.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  lucide.createIcons();
+
+  function getCSRFToken() {
+      return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+  }
+
+  document.querySelectorAll(".btn-delete-aluno").forEach(btn => {
+
+    btn.addEventListener("click", function() {
+
+      const alunoId = this.dataset.id;
+      const alunoNome = this.dataset.nome;
+      const url = this.dataset.url;
+      const row = document.getElementById(`alunoRow${alunoId}`);
+
+      Swal.fire({
+        title: "Excluir aluno?",
+        html: `<strong>${alunoNome}</strong><br>Ação irreversível.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Excluir",
+        confirmButtonColor: "#dc3545"
+      }).then(result => {
+
+        if (!result.isConfirmed) return;
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCSRFToken(),
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+
+          if (data.success) {
+
+            if (row) row.remove();
+
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: data.message,
+              showConfirmButton: false,
+              timer: 3000
+            });
+
+          } else {
+            Swal.fire("Erro", data.error, "error");
+          }
+
+        })
+        .catch(() => {
+          Swal.fire("Erro", "Erro ao excluir aluno.", "error");
+        });
+
+      });
+
+    });
+
+  });
+
+});
+
+
+/* =====================================
+   CONTROLE DINÂMICO DOS INDICADORES
+======================================*/
+
+function toggleDependentField(checkboxSelector, fieldSelector) {
+
+  const checkbox = document.querySelector(checkboxSelector);
+  const field = document.querySelector(fieldSelector);
+
+  if (!checkbox || !field) return;
+
+  function updateState() {
+    if (checkbox.checked) {
+      field.disabled = false;
+      field.closest(".indicator-box").classList.remove("box-disabled");
+    } else {
+      field.disabled = true;
+      field.value = "";
+      field.closest(".indicator-box").classList.add("box-disabled");
+    }
+  }
+
+  checkbox.addEventListener("change", updateState);
+
+  // Executa ao carregar a página
+  updateState();
+}
+
+/* PAED */
+toggleDependentField(
+  'input[name="aluno_paed"]',
+  '.paed-field'
+);
+
+/* FICAI */
+toggleDependentField(
+  'input[name="aluno_busca_ativa"]',
+  '.ficai-field'
+);
+</script>
+
+<style>
+.modern-card { border-radius: 14px; }
+.modern-table thead { background: #f8f9fa; font-weight: 600; }
+.hover-row:hover { background-color: #f5f9ff; transition: 0.2s; }
+.btn-modern {
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.bg-primary-soft { background:#e7f1ff; color:#0d6efd; }
+.btn-warning-soft { background:#fff3cd; border:none; }
+.btn-danger-soft { background:#fde2e2; border:none; }
+</style>
+
+{% endblock %}

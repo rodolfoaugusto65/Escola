@@ -1,0 +1,11 @@
+<script>window.print()</script>
+
+<h2>Ocorrências de {{ aluno.nome }}</h2>
+
+{% for o in ocorrencias %}
+<hr>
+Código: {{ o.codigo }}<br>
+Data: {{ o.data }}<br>
+Tipo: {{ o.get_tipo_ocorrencia_display }}<br>
+Descrição: {{ o.descricao }}
+{% endfor %}

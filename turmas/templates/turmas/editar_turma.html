@@ -1,0 +1,104 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Editar Turma{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 900px;">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <h5 class="mb-0">✏️ Editar Turma</h5>
+            <span class="badge bg-light text-primary ms-3">
+                ID {{ turma.id }}
+            </span>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <h6 class="text-primary mb-3">📚 Identificação da Turma</h6>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Ano Letivo</label>
+                        {{ form.ano_letivo|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Etapa</label>
+                        {{ form.etapa|add_class:"form-select" }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            Ano Escolar
+                            <span class="badge bg-secondary ms-1">Ex: 6º, 7º, 9º</span>
+                        </label>
+                        {{ form.ano_escolar|add_class:"form-control" }}
+                        <div class="form-text">
+                            Informe apenas o número seguido de º (ex: <b>7º</b>, <b>9º</b>)
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Nome da Turma
+                            <span class="badge bg-secondary ms-1">A, B, C, Alfa…</span>
+                        </label>
+                        {{ form.nome|add_class:"form-control" }}
+                        <div class="form-text">
+                            Use apenas letras ou nomes simples (A, B, C, Alfa, Beta, etc.)
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Turno</label>
+                        {{ form.turno|add_class:"form-select" }}
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="text-primary mb-3">👥 Organização da Turma</h6>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Máximo de alunos</label>
+                        {{ form.max_alunos|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Professor Conselheiro</label>
+                        {{ form.professor_conselheiro|add_class:"form-select" }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Aluno Líder</label>
+                        {{ form.aluno_lider|add_class:"form-select" }}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'lista_turmas' %}" class="btn btn-outline-secondary">
+                        ⬅ Voltar
+                    </a>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        💾 Salvar alterações
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

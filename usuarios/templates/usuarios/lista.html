@@ -1,0 +1,321 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+      <i data-lucide="users"></i> Gerenciamento de Usuários
+    </h3>
+
+    <a href="{% url 'cadastrar_usuario' %}"
+       class="btn btn-success d-flex align-items-center gap-2 shadow-sm hover-scale"
+       data-bs-toggle="tooltip"
+       data-bs-placement="left"
+       title="Cadastrar um novo usuário no sistema">
+      <i data-lucide="user-plus"></i> Novo Usuário
+    </a>
+  </div>
+
+  <div class="card modern-card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table modern-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Perfil</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for u in usuarios %}
+          <tr id="userRow{{ u.pk }}" class="hover-row">
+            <td>
+              <div class="fw-semibold">{{ u.get_full_name }}</div>
+              <small class="text-muted">CPF: {{ u.cpf }}</small>
+            </td>
+
+            <td>
+              <span class="badge bg-primary-soft">
+                {{ u.get_perfil_display }}
+              </span>
+            </td>
+
+            <td>{{ u.email }}</td>
+
+            <td id="statusCell{{ u.pk }}">
+              {% if u.is_active %}
+                <span class="badge bg-success-soft">Ativo</span>
+              {% else %}
+                <span class="badge bg-danger-soft">Inativo</span>
+              {% endif %}
+            </td>
+
+            <td class="text-center">
+              <div class="d-flex justify-content-center gap-2">
+
+                <!-- EDITAR -->
+                <a href="{% url 'editar_usuario' u.pk %}"
+                   class="btn btn-icon btn-warning-soft"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Editar dados completos do usuário (nome, perfil, contato e status)">
+                  <i data-lucide="edit-3"></i>
+                </a>
+
+                <!-- STATUS -->
+                <button class="btn btn-icon btn-secondary-soft btn-status"
+                        data-id="{{ u.pk }}"
+                        data-name="{{ u.get_full_name }}"
+                        data-url="{% url 'alternar_status_usuario' u.pk %}"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Ativar ou desativar o acesso deste usuário ao sistema">
+                  <i data-lucide="refresh-cw"></i>
+                </button>
+
+                <!-- RESET -->
+                <button class="btn btn-icon btn-dark-soft btn-reset"
+                        data-id="{{ u.pk }}"
+                        data-name="{{ u.get_full_name }}"
+                        data-url="{% url 'resetar_senha_usuario' u.pk %}"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Redefinir senha para o padrão do sistema (123456)">
+                  <i data-lucide="key"></i>
+                </button>
+
+                <!-- DELETE -->
+                <button class="btn btn-icon btn-danger-soft btn-delete"
+                        data-id="{{ u.pk }}"
+                        data-name="{{ u.get_full_name }}"
+                        data-url="{% url 'excluir_usuario' u.pk %}"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Excluir permanentemente este usuário do sistema">
+                  <i data-lucide="trash-2"></i>
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  lucide.createIcons();
+
+  // ATIVAR TOOLTIP BOOTSTRAP
+  // ATIVAR TOOLTIP BOOTSTRAP (CORREÇÃO DEFINITIVA)
+const tooltipList = [];
+
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+    const tooltip = new bootstrap.Tooltip(el, {
+        trigger: 'hover',
+        container: 'body'
+    });
+
+    tooltipList.push(tooltip);
+});
+
+// Esconder tooltips ao clicar (evita travar)
+document.addEventListener('click', function () {
+    tooltipList.forEach(t => t.hide());
+});
+
+  function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+
+  function postAction(url) {
+      return fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+              'X-CSRFToken': getCSRFToken(),
+              'X-Requested-With': 'XMLHttpRequest'
+          }
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('HTTP ' + response.status);
+          }
+          return response.json();
+      });
+  }
+
+  // ALTERAR STATUS
+  document.querySelectorAll('.btn-status').forEach(btn => {
+      btn.addEventListener('click', function() {
+
+          const userId = this.dataset.id;
+          const userName = this.dataset.name;
+          const url = this.dataset.url;
+
+          Swal.fire({
+              title: 'Alterar status?',
+              text: userName,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Confirmar'
+          }).then(result => {
+
+              if (!result.isConfirmed) return;
+
+              postAction(url).then(data => {
+
+                  if (data.success) {
+
+                      const cell = document.getElementById(`statusCell${userId}`);
+
+                      cell.innerHTML = data.new_status
+                          ? '<span class="badge bg-success-soft">Ativo</span>'
+                          : '<span class="badge bg-danger-soft">Inativo</span>';
+
+                      Swal.fire('Sucesso', data.message, 'success');
+
+                  } else {
+                      Swal.fire('Erro', data.error, 'error');
+                  }
+
+              }).catch(() => {
+                  Swal.fire('Erro', 'Erro ao alterar status.', 'error');
+              });
+
+          });
+
+      });
+  });
+
+  // RESETAR SENHA
+  document.querySelectorAll('.btn-reset').forEach(btn => {
+      btn.addEventListener('click', function() {
+
+          const userName = this.dataset.name;
+          const url = this.dataset.url;
+
+          Swal.fire({
+              title: 'Resetar senha?',
+              html: `<strong>${userName}</strong><br>Nova senha será 123456`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Confirmar'
+          }).then(result => {
+
+              if (!result.isConfirmed) return;
+
+              postAction(url).then(data => {
+
+                  if (data.success) {
+                      Swal.fire('Sucesso', data.message, 'success');
+                  } else {
+                      Swal.fire('Erro', data.error, 'error');
+                  }
+
+              }).catch(() => {
+                  Swal.fire('Erro', 'Erro ao resetar senha.', 'error');
+              });
+
+          });
+
+      });
+  });
+
+  // EXCLUIR
+  document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', function() {
+
+          const userId = this.dataset.id;
+          const userName = this.dataset.name;
+          const url = this.dataset.url;
+
+          Swal.fire({
+              title: 'Excluir usuário?',
+              html: `<strong>${userName}</strong><br>Ação irreversível.`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Excluir',
+              confirmButtonColor: '#dc3545'
+          }).then(result => {
+
+              if (!result.isConfirmed) return;
+
+              postAction(url).then(data => {
+
+                  if (data.success) {
+
+                      const row = document.getElementById(`userRow${userId}`);
+                      if (row) row.remove();
+
+                      Swal.fire('Excluído!', data.message, 'success');
+
+                  } else {
+                      Swal.fire('Erro', data.error, 'error');
+                  }
+
+              }).catch(() => {
+                  Swal.fire('Erro', 'Erro ao excluir usuário.', 'error');
+              });
+
+          });
+
+      });
+  });
+
+});
+</script>
+
+<style>
+.fade-in { animation: fadeIn 0.4s ease-in; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.modern-card { border-radius: 14px; }
+.modern-table thead { background: #f8f9fa; font-weight: 600; }
+.hover-row:hover { background-color: #f5f9ff; transition: 0.2s; }
+.btn-icon { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; }
+.bg-primary-soft { background:#e7f1ff; color:#0d6efd; }
+.bg-success-soft { background:#e8f7ee; color:#198754; }
+.bg-danger-soft { background:#fdeaea; color:#dc3545; }
+.btn-warning-soft { background:#fff3cd; border:none; }
+.btn-secondary-soft { background:#e2e3e5; border:none; }
+.btn-dark-soft { background:#dee2e6; border:none; }
+.btn-danger-soft { background:#fde2e2; border:none; }
+
+/* Tooltip visual premium */
+.tooltip-inner {
+  background-color: #0d6efd;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #0d6efd;
+}
+</style>
+
+{% endblock %}

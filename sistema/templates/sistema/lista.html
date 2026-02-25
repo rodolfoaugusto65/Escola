@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+<h3 class="mb-4 text-primary fw-bold">
+⚙️ Módulos do Sistema
+</h3>
+
+<a href="{% url 'criar_modulo' %}" class="btn btn-success mb-3">
+➕ Novo Módulo
+</a>
+
+<div class="card shadow border-0">
+<div class="card-body">
+
+<table class="table table-hover">
+<thead class="table-dark">
+<tr>
+<th>Nome</th>
+<th>Descrição</th>
+<th>URL</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody>
+{% for m in modulos %}
+<tr>
+<td>{{ m.nome }}</td>
+<td>{{ m.descricao }}</td>
+<td>{{ m.url }}</td>
+<td>
+<a href="{% url 'editar_modulo' m.pk %}" class="btn btn-warning btn-sm">
+✏ Editar
+</a>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="4" class="text-center text-muted">
+Nenhum módulo cadastrado
+</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</div>
+
+{% endblock %}
