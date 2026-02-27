@@ -2,330 +2,470 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}GerEdu{% endblock %}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}GerEdu{% endblock %}</title>
 
-    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body {
-    font-family: "Inter", sans-serif;
-    background-color: #f9fafb;
-    overflow-x: hidden;
+body{
+    font-family:"Inter",sans-serif;
+    background:#f9fafb;
+    overflow-x:hidden;
 }
 
-/* ===== SIDEBAR ===== */
-.sidebar {
-    width: 240px;
-    min-height: 100vh;
-    background: linear-gradient(180deg, #1e293b, #0f172a);
-    color: #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem 0;
-    transition: width 0.35s cubic-bezier(.4,0,.2,1);
+/* ================= SIDEBAR (INALTERADA) ================= */
+.sidebar{
+    width:240px;
+    min-height:100vh;
+    background:linear-gradient(180deg,#1e293b,#0f172a);
+    color:#e2e8f0;
+    display:flex;
+    flex-direction:column;
+    padding:1rem 0;
+    transition:width .35s cubic-bezier(.4,0,.2,1);
+    position:relative;
+    z-index:2000;
+}
+.sidebar.collapsed{ width:70px; }
+
+.logo{
+    text-align:center;
+    font-size:1.4rem;
+    font-weight:600;
+    margin-bottom:1.5rem;
+    color:#38bdf8;
+}
+.logo svg{
+    width:60px !important;
+    height:60px !important;
+    animation:floatLogo 3s ease-in-out infinite;
+}
+@keyframes floatLogo{
+    0%,100%{ transform:translateY(0px);}
+    50%{ transform:translateY(-6px);}
+}
+.sidebar.collapsed .logo span{ display:none; }
+
+.sidebar a{
+    color:#cbd5e1;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:.85rem 1.5rem;
+    transition:all .25s ease;
+    border-left:3px solid transparent;
+}
+.sidebar a svg{
+    width:20px;
+    height:20px;
+    transition:transform .25s ease;
+}
+.sidebar.collapsed a svg{
+    width:28px;
+    height:28px;
+}
+.sidebar a:hover svg{
+    transform:translateX(4px) scale(1.1);
+}
+.sidebar.collapsed a span{ display:none; }
+.sidebar a:hover{
+    background:rgba(56,189,248,.12);
+    color:#38bdf8;
+    border-left-color:#38bdf8;
+}
+.sidebar a.active{
+    background:rgba(56,189,248,.18);
+    color:#38bdf8;
+    border-left-color:#38bdf8;
+    font-weight:600;
 }
 
-.sidebar.collapsed {
-    width: 70px;
+/* ================= CADEADO ================= */
+.sidebar-footer{
+    margin-top:auto;
+    padding-top:1rem;
+}
+.toggle-btn{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:.85rem 1.5rem;
+    cursor:pointer;
+    transition:all .25s ease;
+    color:#cbd5e1;
+}
+.toggle-btn:hover{
+    background:rgba(56,189,248,.12);
+    color:#38bdf8;
+}
+.locked{ color:#22c55e !important; }
+
+/* ================= TOPBAR (MELHORADA) ================= */
+/* ================= TOPBAR GLASS PREMIUM (ATUALIZADA) ================= */
+.topbar{
+    height:70px;
+    padding:0 28px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    position:sticky;
+    top:0;
+    z-index:1500;
+    position:relative;
+
+    background:rgba(255,255,255,.65);
+    backdrop-filter:blur(18px) saturate(160%);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+
+    border-bottom:1px solid rgba(255,255,255,.4);
+
+    transition:
+        background .35s cubic-bezier(.4,0,.2,1),
+        backdrop-filter .35s cubic-bezier(.4,0,.2,1),
+        box-shadow .35s cubic-bezier(.4,0,.2,1);
 }
 
-.sidebar .logo {
-    text-align: center;
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: #38bdf8;
-    transition: all 0.3s ease;
+.topbar.scrolled{
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(22px) saturate(180%);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:0 12px 30px rgba(0,0,0,.08);
 }
 
-.sidebar.collapsed .logo span {
-    display: none;
+/* brilho controlado */
+.topbar::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        120deg,
+        rgba(255,255,255,.45) 0%,
+        rgba(255,255,255,.15) 40%,
+        rgba(255,255,255,.05) 100%
+    );
+    pointer-events:none;
+    z-index:0;
+    opacity:.7;
 }
 
-.sidebar a {
-    color: #cbd5e1;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0.85rem 1.5rem;
-    transition: all 0.25s ease;
-    border-left: 3px solid transparent;
+.topbar > *{
+    position:relative;
+    z-index:2;
 }
 
-.sidebar.collapsed a span {
-    display: none;
+/* Indicador vertical */
+.title-indicator{
+    width:4px;
+    height:26px;
+    border-radius:4px;
+    background:linear-gradient(180deg,#38bdf8,#0ea5e9);
+    animation:pulseBar 2s infinite;
+}
+@keyframes pulseBar{
+    0%,100%{ opacity:1;}
+    50%{ opacity:.5;}
 }
 
-.sidebar a:hover {
-    background-color: rgba(56, 189, 248, 0.12);
-    color: #38bdf8;
-    border-left-color: #38bdf8;
+.page-title svg{
+    width:22px;
+    height:22px;
+    color:#38bdf8;
 }
 
-.toggle-btn {
-    cursor: pointer;
-    text-align: center;
-    margin-bottom: 1.5rem;
+.breadcrumb-custom{
+    font-size:.8rem;
+    color:#94a3b8;
+}
+.breadcrumb-custom span{
+    color:#64748b;
 }
 
-#toggleSidebar svg {
-    transition: transform 0.35s ease;
+/* USER MENU */
+.user-menu{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+}
+.user-avatar{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+    color:#fff;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.user-dropdown{
+    position:absolute;
+    top:120%;
+    right:0;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+    display:none;
+    min-width:180px;
+    z-index:4000;
+}
+.user-dropdown a{
+    display:block;
+    padding:10px 15px;
+    color:#475569;
+    text-decoration:none;
+}
+.user-dropdown a:hover{
+    background:#f1f5f9;
 }
 
-#toggleSidebar svg.rotate {
-    transform: rotate(180deg);
+/* MOBILE */
+.mobile-menu-btn{ display:none; cursor:pointer; }
+@media(max-width:768px){
+.mobile-menu-btn{ display:block; }
+.sidebar{
+position:fixed;
+left:-260px;
+top:0;
+height:100%;
+width:240px;
+transition:left .3s ease;
+}
+.sidebar.mobile-open{ left:0; }
+.sidebar.collapsed{ width:240px; }
 }
 
-/* ===== CONTENT ===== */
-.content {
-    flex: 1;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* ===== TOPBAR ===== */
-.topbar {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    padding: 0.8rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.page-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.page-title h5 {
-    margin: 0;
-    font-weight: 600;
-}
-
-/* ===== USER MENU ===== */
-.user-menu {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    position: relative;
-}
-
-.user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.user-dropdown {
-    position: absolute;
-    top: 120%;
-    right: 0;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-    display: none;
-    min-width: 180px;
-    z-index: 9999;
-}
-
-.user-dropdown a {
-    display: block;
-    padding: 10px 15px;
-    color: #475569;
-    text-decoration: none;
-}
-
-.user-dropdown a:hover {
-    background-color: #f1f5f9;
-}
-
-/* ===== FOOTER ===== */
-.footer {
-    background-color: #f8fafc;
-    padding: 0.7rem;
-    text-align: center;
-    font-size: 0.85rem;
-    color: #64748b;
-}
-
-/* ===== NOTIFICAÇÕES SaaS ===== */
-.saas-toast {
-    border-radius: 14px !important;
-    padding: 14px 18px !important;
-    font-size: 0.95rem !important;
-    backdrop-filter: blur(8px);
-    background: rgba(255,255,255,0.97) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-    border-left: 6px solid #38bdf8;
-    animation: slideInRight 0.4s ease;
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(50px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+/* TOAST */
+.swal2-container{ z-index:3000 !important; }
+.saas-toast{
+    border-radius:14px !important;
+    padding:14px 18px !important;
+    font-size:.95rem !important;
+    backdrop-filter:blur(8px);
+    background:rgba(255,255,255,.97) !important;
+    box-shadow:0 10px 30px rgba(0,0,0,.08) !important;
+    border-left:6px solid #38bdf8;
 }
 </style>
 </head>
+
 <body>
 
 <div class="wrapper d-flex">
 
-<nav class="sidebar" id="sidebar">
-    <div class="logo">
-        <i data-lucide="graduation-cap"></i>
-        <span>GerEdu</span>
-    </div>
+<!-- SIDEBAR INTACTA -->
+<nav class="sidebar collapsed" id="sidebar">
+<div class="logo">
+<i data-lucide="graduation-cap"></i>
+<span>GerEdu</span>
+</div>
 
-    <div class="toggle-btn" id="toggleSidebar">
-        <i data-lucide="chevrons-left"></i>
-    </div>
+<a href="{% url 'home' %}"><i data-lucide="home"></i><span>Início</span></a>
+<a href="{% url 'lista_alunos' %}"><i data-lucide="users"></i><span>Alunos</span></a>
+<a href="{% url 'lista_turmas' %}"><i data-lucide="network"></i><span>Turmas</span></a>
+<a href="{% url 'relatorio_alunos' %}"><i data-lucide="bar-chart-3"></i><span>Relatório</span></a>
+<a href="{% url 'lista_ocorrencias' %}"><i data-lucide="alert-triangle"></i><span>Ocorrências</span></a>
+<a href="{% url 'lista_frequencia' %}"><i data-lucide="calendar-check"></i><span>Frequência</span></a>
 
-    <a href="{% url 'home' %}"><i data-lucide="home"></i><span>Início</span></a>
-    <a href="{% url 'lista_alunos' %}"><i data-lucide="users"></i><span>Alunos</span></a>
-    <a href="{% url 'lista_turmas' %}"><i data-lucide="network"></i><span>Turmas</span></a>
-    <a href="{% url 'relatorio_alunos' %}"><i data-lucide="bar-chart-3"></i><span>Relatório</span></a>
-    <a href="{% url 'lista_ocorrencias' %}"><i data-lucide="alert-triangle"></i><span>Ocorrências</span></a>
-    <a href="{% url 'lista_frequencia' %}"><i data-lucide="calendar-check"></i><span>Frequência</span></a>
+{% if user.pode_gerenciar_usuarios %}
+<a href="{% url 'lista_usuarios' %}">
+<i data-lucide="settings"></i><span>Usuários</span>
+</a>
+{% endif %}
 
-    {% if user.pode_gerenciar_usuarios %}
-    <a href="{% url 'lista_usuarios' %}">
-        <i data-lucide="settings"></i><span>Usuários</span>
-    </a>
-    {% endif %}
+{% if user.is_authenticated %}
+<a href="{% url 'logout' %}">
+<i data-lucide="log-out"></i><span>Sair</span>
+</a>
+{% endif %}
 
-    {% if user.is_authenticated %}
-    <a href="{% url 'logout' %}">
-        <i data-lucide="log-out"></i><span>Sair</span>
-    </a>
-    {% endif %}
+<div class="sidebar-footer">
+<div class="toggle-btn" id="toggleSidebar">
+<i data-lucide="lock-open" id="lockIcon"></i>
+<span id="lockText">Fixar menu</span>
+</div>
+</div>
 </nav>
 
 <div class="content flex-grow-1">
 
-    <div class="topbar">
-        <div class="page-title">
-            {% block page_header %}
-            <i data-lucide="layout-dashboard"></i>
-            <h5>Painel Principal</h5>
-            {% endblock %}
-        </div>
+<!-- TOPBAR MELHORADA -->
+<div class="topbar" id="topbar">
 
-        {% if user.is_authenticated %}
-        <div class="user-menu" id="userMenu">
-            <div class="user-avatar">
-                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
-            </div>
-            <i data-lucide="chevron-down"></i>
+<div class="d-flex align-items-center gap-3">
+<div class="mobile-menu-btn" id="mobileMenuBtn">
+<i data-lucide="menu"></i>
+</div>
 
-            <div class="user-dropdown" id="userDropdown">
-                <a href="{% url 'perfil' %}">Perfil</a>
-                <a href="{% url 'logout' %}">Sair</a>
-            </div>
-        </div>
-        {% endif %}
-    </div>
+<div class="title-indicator"></div>
 
-    <main class="main p-3">
-
-        {% if messages %}
-        <script>
-        document.addEventListener("DOMContentLoaded", function() {
-
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 4000,
-                timerProgressBar: true,
-                customClass: { popup: 'saas-toast' }
-            });
-
-            {% for message in messages %}
-            Toast.fire({
-                icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
-                title: "{{ message|escapejs }}"
-            });
-            {% endfor %}
-        });
-        </script>
-        {% endif %}
-
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer class="footer">
-        © GerEdu - Desenvolvido por Welton
-    </footer>
+<div>
+<div class="page-title d-flex align-items-center gap-2">
+<i data-lucide="layout-dashboard" id="pageIcon"></i>
+<h5 class="mb-0" id="pageTitle">Painel Principal</h5>
+</div>
+<div class="breadcrumb-custom">
+Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
+</div>
 </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% if user.is_authenticated %}
+<div class="user-menu" id="userMenu">
+<div class="user-avatar">
+{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+</div>
+<i data-lucide="chevron-down"></i>
+<div class="user-dropdown" id="userDropdown">
+<a href="{% url 'perfil' %}">Perfil</a>
+<a href="{% url 'logout' %}">Sair</a>
+</div>
+</div>
+{% endif %}
+
+</div>
+
+<main class="main p-3">
+
+{% if messages %}
 <script>
-$(document).ready(function(){
-    $('.cpf-mask').mask('000.000.000-00');
+document.addEventListener("DOMContentLoaded",function(){
+const Toast=Swal.mixin({
+toast:true,
+position:'top-end',
+showConfirmButton:false,
+timer:4000,
+timerProgressBar:true,
+customClass:{popup:'saas-toast'}
+});
+{% for message in messages %}
+Toast.fire({
+icon:'{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
+title:"{{ message|escapejs }}"
+});
+{% endfor %}
 });
 </script>
+{% endif %}
+
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer text-center p-2">
+© GerEdu - Desenvolvido por Welton
+</footer>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 lucide.createIcons();
 
-const sidebar = document.getElementById("sidebar");
-const toggleBtn = document.getElementById("toggleSidebar");
-
-// Restaurar estado salvo
-if (localStorage.getItem("sidebar-collapsed") === "true") {
-    sidebar.classList.add("collapsed");
+/* Sombra dinâmica */
+window.addEventListener("scroll",()=>{
+const topbar=document.getElementById("topbar");
+if(window.scrollY>10){
+topbar.classList.add("scrolled");
+}else{
+topbar.classList.remove("scrolled");
 }
-
-toggleBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("collapsed");
-    toggleBtn.querySelector("svg").classList.toggle("rotate");
-
-    localStorage.setItem(
-        "sidebar-collapsed",
-        sidebar.classList.contains("collapsed")
-    );
 });
 
-const userMenu = document.getElementById("userMenu");
-const userDropdown = document.getElementById("userDropdown");
+/* Sidebar JS INTACTO */
+const sidebar=document.getElementById("sidebar");
+const toggleBtn=document.getElementById("toggleSidebar");
+const mobileMenuBtn=document.getElementById("mobileMenuBtn");
 
-if (userMenu) {
-    userMenu.addEventListener("click", () => {
-        userDropdown.style.display =
-            userDropdown.style.display === "block" ? "none" : "block";
-    });
+let locked=localStorage.getItem("sidebar-locked")==="true";
 
-    document.addEventListener("click", (e) => {
-        if (!userMenu.contains(e.target)) {
-            userDropdown.style.display = "none";
-        }
-    });
+function updateState(){
+const lockIcon=document.getElementById("lockIcon");
+if(locked){
+sidebar.classList.remove("collapsed");
+lockIcon.setAttribute("data-lucide","lock");
+lockIcon.classList.add("locked");
+document.getElementById("lockText").textContent="Desafixar menu";
+}else{
+sidebar.classList.add("collapsed");
+lockIcon.setAttribute("data-lucide","lock-open");
+lockIcon.classList.remove("locked");
+document.getElementById("lockText").textContent="Fixar menu";
 }
+lucide.createIcons();
+}
+updateState();
+
+sidebar.addEventListener("mouseenter",()=>{
+if(!locked && window.innerWidth>768){
+sidebar.classList.remove("collapsed");
+}
+});
+sidebar.addEventListener("mouseleave",()=>{
+if(!locked && window.innerWidth>768){
+sidebar.classList.add("collapsed");
+}
+});
+toggleBtn.addEventListener("click",()=>{
+locked=!locked;
+localStorage.setItem("sidebar-locked",locked);
+updateState();
+});
+mobileMenuBtn.addEventListener("click",()=>{
+sidebar.classList.toggle("mobile-open");
+});
+
+/* Aba ativa + ícone dinâmico */
+const currentPath=window.location.pathname;
+const pageTitle=document.getElementById("pageTitle");
+const breadcrumbTitle=document.getElementById("breadcrumbTitle");
+const pageIcon=document.getElementById("pageIcon");
+
+document.querySelectorAll(".sidebar a").forEach(link=>{
+if(link.getAttribute("href")===currentPath){
+link.classList.add("active");
+pageTitle.textContent=link.textContent.trim();
+breadcrumbTitle.textContent=link.textContent.trim();
+const iconName=link.querySelector("i").getAttribute("data-lucide");
+pageIcon.setAttribute("data-lucide",iconName);
+lucide.createIcons();
+}
+});
+
+/* ===== USER MENU CORRIGIDO DEFINITIVO ===== */
+document.addEventListener("DOMContentLoaded", function(){
+
+    const userMenu = document.getElementById("userMenu");
+    const userDropdown = document.getElementById("userDropdown");
+
+    if(userMenu && userDropdown){
+
+        userMenu.addEventListener("click", function(e){
+            e.stopPropagation();
+            userDropdown.classList.toggle("show");
+            userMenu.classList.toggle("active");
+        });
+
+        document.addEventListener("click", function(e){
+            if(!userMenu.contains(e.target)){
+                userDropdown.classList.remove("show");
+                userMenu.classList.remove("active");
+            }
+        });
+
+    }
+
+});
 </script>
 
 </body>
