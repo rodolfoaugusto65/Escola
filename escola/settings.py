@@ -1,5 +1,8 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -7,21 +10,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SEGURANÇA
 # ==================================================
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY não configurada no Railway.")
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
     os.environ.get("RAILWAY_PUBLIC_DOMAIN", ""),
     ".railway.app",
+    "127.0.0.1",
+    "localhost",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')}",
-]
+CSRF_TRUSTED_ORIGINS = []
+
+if os.environ.get("RAILWAY_PUBLIC_DOMAIN"):
+    CSRF_TRUSTED_ORIGINS.append(
+        f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN')}"
+    )
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -55,6 +60,7 @@ INSTALLED_APPS = [
     "frequencia",
 ]
 
+
 # ==================================================
 # MIDDLEWARE
 # ==================================================
@@ -72,6 +78,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "escola.urls"
 WSGI_APPLICATION = "escola.wsgi.application"
+
 
 # ==================================================
 # TEMPLATES
@@ -96,24 +103,36 @@ TEMPLATES = [
     },
 ]
 
+
 # ==================================================
-# BANCO DE DADOS (Railway PG*)
+# BANCO DE DADOS (INTELIGENTE)
 # ==================================================
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PGDATABASE"),
-        "USER": os.environ.get("PGUSER"),
-        "PASSWORD": os.environ.get("PGPASSWORD"),
-        "HOST": os.environ.get("PGHOST"),
-        "PORT": os.environ.get("PGPORT"),
-        "CONN_MAX_AGE": 600,
-        "OPTIONS": {
-            "sslmode": "require",
-        },
+if os.environ.get("PGDATABASE"):
+    # PRODUÇÃO (Railway PostgreSQL)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("PGDATABASE"),
+            "USER": os.environ.get("PGUSER"),
+            "PASSWORD": os.environ.get("PGPASSWORD"),
+            "HOST": os.environ.get("PGHOST"),
+            "PORT": os.environ.get("PGPORT"),
+            "CONN_MAX_AGE": 600,
+            "OPTIONS": {
+                "sslmode": "require",
+            },
+        }
     }
-}
+else:
+    # DESENVOLVIMENTO LOCAL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 
 # ==================================================
 # USUÁRIO CUSTOMIZADO
@@ -126,6 +145,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
+
 # ==================================================
 # LOGIN
 # ==================================================
@@ -133,6 +153,7 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = "/usuarios/login/"
 LOGOUT_REDIRECT_URL = "/usuarios/login/"
 LOGIN_REDIRECT_URL = "/"
+
 
 # ==================================================
 # PASSWORD VALIDATION
@@ -145,6 +166,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+
 # ==================================================
 # INTERNACIONALIZAÇÃO
 # ==================================================
@@ -154,14 +176,15 @@ TIME_ZONE = "America/Cuiaba"
 USE_I18N = True
 USE_TZ = True
 
+
 # ==================================================
 # STATIC FILES
 # ==================================================
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # ==================================================
 # EMAIL

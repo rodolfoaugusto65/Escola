@@ -15,7 +15,14 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import fonts
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+from io import BytesIO
 
 def verificar_permissao(user):
     if user.is_superuser:
@@ -176,23 +183,37 @@ def relatorio_ocorrencias(request):
 @login_required
 def imprimir_por_aluno(request, aluno_id):
     aluno = get_object_or_404(Aluno, pk=aluno_id)
+    ocorrencias = Ocorrencia.objects.filter(aluno=aluno).order_by("-data")
 
-    ocorrencias = Ocorrencia.objects.filter(
-        aluno=aluno
-    ).order_by("-data")
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
 
-    template = get_template("ocorrencias/imprimir_aluno.html")
+    elements.append(Paragraph(f"Relatório de Ocorrências - {aluno.nome}", styles["Heading1"]))
+    elements.append(Spacer(1, 12))
 
-    html = template.render({
-        "aluno": aluno,
-        "ocorrencias": ocorrencias
-    })
+    data = [["Código", "Tipo", "Status", "Data"]]
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'filename="relatorio_{aluno.nome}.pdf"'
+    for o in ocorrencias:
+        data.append([
+            o.codigo,
+            o.get_tipo_ocorrencia_display(),
+            o.get_status_display(),
+            o.data.strftime("%d/%m/%Y") if o.data else ""
+        ])
 
-    pisa.CreatePDF(html, dest=response)
-    return response
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type="application/pdf")
 
 @login_required
 def dashboard_enterprise(request):
@@ -263,19 +284,38 @@ def export_excel_ocorrencias(request):
 
 @login_required
 def imprimir_pdf_enterprise(request):
-    ocorrencias = Ocorrencia.objects.select_related("aluno","turma").all()
-    template = get_template("ocorrencias/imprimir_pdf_cabecalho.html")
+    ocorrencias = Ocorrencia.objects.select_related("aluno", "turma").all()
 
-    html = template.render({
-        "ocorrencias": ocorrencias,
-        "hoje": date.today(),
-        "escola_nome": "Sua Escola"
-    })
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'filename="ocorrencias_relatorio.pdf"'
-    pisa.CreatePDF(html, dest=response)
-    return response
+    elements.append(Paragraph("Relatório Geral de Ocorrências", styles["Heading1"]))
+    elements.append(Spacer(1, 12))
+
+    data = [["Código", "Aluno", "Turma", "Status", "Data"]]
+
+    for o in ocorrencias:
+        data.append([
+            o.codigo,
+            o.aluno.nome,
+            str(o.turma),
+            o.get_status_display(),
+            o.data.strftime("%d/%m/%Y") if o.data else ""
+        ])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type="application/pdf")
 
 @login_required
 def get_alunos_por_turma(request):
