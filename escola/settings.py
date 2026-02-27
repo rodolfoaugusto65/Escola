@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -20,6 +21,9 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
 ]
+
+# Remove valores vazios
+ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
 CSRF_TRUSTED_ORIGINS = []
 
@@ -76,6 +80,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 ROOT_URLCONF = "escola.urls"
 WSGI_APPLICATION = "escola.wsgi.application"
 
@@ -105,24 +110,19 @@ TEMPLATES = [
 
 
 # ==================================================
-# BANCO DE DADOS (INTELIGENTE)
+# BANCO DE DADOS (PROFISSIONAL RAILWAY + LOCAL)
 # ==================================================
 
-if os.environ.get("PGDATABASE"):
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
     # PRODUÇÃO (Railway PostgreSQL)
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("PGDATABASE"),
-            "USER": os.environ.get("PGUSER"),
-            "PASSWORD": os.environ.get("PGPASSWORD"),
-            "HOST": os.environ.get("PGHOST"),
-            "PORT": os.environ.get("PGPORT"),
-            "CONN_MAX_AGE": 600,
-            "OPTIONS": {
-                "sslmode": "require",
-            },
-        }
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
 else:
     # DESENVOLVIMENTO LOCAL
@@ -199,5 +199,10 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# ==================================================
+# PADRÃO AUTO FIELD
+# ==================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
