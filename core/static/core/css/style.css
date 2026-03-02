@@ -1,3 +1,4 @@
+
 /* =========================
    RESET
 ========================= */
@@ -338,4 +339,94 @@ button, .btn {
 
 .indicator-box {
   transition: 0.3s ease;
+}
+
+/* ================= TRANSIÇÃO SUAVE HTMX ================= */
+
+#mainContent {
+    transition: opacity .2s ease;
+}
+
+#mainContent.htmx-swapping {
+    opacity: 0;
+}
+
+.sidebar a.active {
+    background: rgba(255,255,255,0.25);
+    font-weight: 600;
+}
+
+
+/* ================= INPUTS ================= */
+
+.input-group-modern{
+    position:relative;
+    margin-bottom:20px;
+}
+
+.input-group-modern input{
+    width:100%;
+    height:48px;                 /* Altura mais elegante */
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.22);
+    background:rgba(255,255,255,0.07);
+    padding-left:46px;           /* espaço ícone esquerdo */
+    padding-right:46px;          /* espaço ícone direito */
+    color:#fff;
+    font-size:0.95rem;
+    outline:none;
+    transition:.2s ease;
+}
+
+.input-group-modern input::placeholder{
+    color:rgba(255,255,255,0.6);
+}
+
+.input-group-modern input:focus{
+    border-color:#38bdf8;
+    box-shadow:0 0 0 3px rgba(56,189,248,0.25);
+    background:rgba(255,255,255,0.12);
+}
+
+/* Ícone esquerdo */
+.input-icon-left{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    width:18px;
+    height:18px;
+    opacity:.7;
+}
+
+/* Toggle senha */
+.toggle-password{
+    position:absolute;
+    top:50%;
+    right:16px;
+    transform:translateY(-50%);
+    width:22px;      /* levemente maior */
+    height:22px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:.75;
+    transition:.2s ease;
+}
+
+.toggle-password:hover{
+    opacity:1;
+}
+
+.login-card .logo i{
+    width:120px;
+    height:120px;
+    color:#38bdf8;
+    animation:floatLogo 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 20px rgba(56,189,248,0.4));
+}
+@keyframes floatLogo {
+    0%,100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
 }

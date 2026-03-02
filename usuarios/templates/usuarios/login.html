@@ -2,208 +2,268 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Login - GerEdu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Login - GerEdu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-body {
-    margin: 0;
-    height: 100vh;
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: "Inter", sans-serif;
+
+/* ===== BASE ===== */
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:"Inter",system-ui,sans-serif;
+    background: radial-gradient(circle at 30% 20%, #1e293b, #0f172a 70%);
+    overflow:hidden;
 }
 
-.login-container {
-    width: 100%;
-    max-width: 420px;
+/* Glow */
+body::before{
+    content:"";
+    position:absolute;
+    width:600px;
+    height:600px;
+    background:radial-gradient(circle, rgba(56,189,248,0.25), transparent 70%);
+    top:-150px;
+    right:-150px;
+    filter:blur(80px);
 }
 
-.login-card {
-    background: rgba(255,255,255,0.98);
-    border-radius: 18px;
-    padding: 40px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    animation: fadeUp 0.6s ease;
+/* ===== CARD ===== */
+.login-card{
+    width:100%;
+    max-width:420px;
+    padding:50px 40px;
+    border-radius:24px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.15);
+    box-shadow:0 30px 70px rgba(0,0,0,0.45);
+    color:#fff;
+    animation:fadeUp .6s ease;
 }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes fadeUp{
+    from{opacity:0;transform:translateY(40px);}
+    to{opacity:1;transform:translateY(0);}
 }
 
-.logo {
-    text-align: center;
-    margin-bottom: 30px;
+/* ===== LOGO ===== */
+.logo{
+    text-align:center;
+    margin-bottom:35px;
 }
 
-.logo i {
-    color: #38bdf8;
-    width: 42px;
-    height: 42px;
+.logo i{
+    width:60px;
+    height:60px;
+    color:#38bdf8;
+    animation:jump 2.2s ease-in-out infinite;
 }
 
-.logo h2 {
-    margin-top: 10px;
-    font-weight: 600;
-    color: #0f172a;
+@keyframes jump{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-8px);}
 }
 
-.form-control {
-    border-radius: 12px;
-    padding: 12px;
+.logo h2{
+    margin-top:15px;
+    font-weight:600;
 }
 
-.btn-login {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    border: none;
-    border-radius: 12px;
-    padding: 12px;
-    font-weight: 600;
-    transition: 0.3s ease;
+.logo p{
+    font-size:.9rem;
+    opacity:.75;
 }
 
-.btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(14,165,233,0.3);
+/* ===== INPUTS ===== */
+.input-group-modern{
+    position:relative;
+    margin-bottom:20px;
 }
 
-.forgot-password {
-    text-align: center;
-    margin-top: 15px;
+.input-group-modern input{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.06);
+    padding-left:45px;
+    padding-right:45px;
+    color:#fff;
+    font-size:0.95rem;
+    outline:none;
+    transition:.2s ease;
 }
 
-.forgot-password a {
-    color: #64748b;
-    font-size: 0.9rem;
-    text-decoration: none;
+.input-group-modern input::placeholder{
+    color:rgba(255,255,255,0.6);
 }
 
-.forgot-password a:hover {
-    color: #0ea5e9;
+.input-group-modern input:focus{
+    border-color:#38bdf8;
+    box-shadow:0 0 0 3px rgba(56,189,248,0.25);
+    background:rgba(255,255,255,0.12);
 }
 
-.footer-login {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 0.8rem;
-    color: #94a3b8;
+.input-icon-left{
+    position:absolute;
+    top:50%;
+    left:15px;
+    transform:translateY(-50%);
+    width:18px;
+    height:18px;
+    opacity:.75;
 }
 
-/* Toast SaaS */
-.saas-toast {
-    border-radius: 14px !important;
-    padding: 14px 18px !important;
-    font-size: 0.95rem !important;
-    backdrop-filter: blur(8px);
-    background: rgba(255,255,255,0.97) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-    border-left: 6px solid #38bdf8;
+/* Toggle */
+.toggle-password{
+    position:absolute;
+    top:50%;
+    right:15px;
+    transform:translateY(-50%);
+    width:20px;
+    height:20px;
+    cursor:pointer;
+    opacity:.75;
+    transition:.2s;
 }
+
+.toggle-password:hover{
+    opacity:1;
+}
+
+/* ===== BUTTON ===== */
+.btn-login{
+    width:100%;
+    height:48px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+    font-weight:600;
+    color:#fff;
+    transition:.3s ease;
+    box-shadow:0 12px 30px rgba(14,165,233,0.35);
+}
+
+.btn-login:hover{
+    transform:translateY(-2px);
+    box-shadow:0 20px 45px rgba(14,165,233,0.5);
+}
+
+.forgot{
+    margin-top:15px;
+    text-align:center;
+    font-size:.85rem;
+}
+
+.forgot a{
+    color:#38bdf8;
+    text-decoration:none;
+}
+
+.footer{
+    margin-top:30px;
+    text-align:center;
+    font-size:.75rem;
+    opacity:.6;
+}
+
 </style>
 </head>
 <body>
 
-<div class="login-container">
-    <div class="login-card">
+<div class="login-card">
 
-        <div class="logo">
-            <i data-lucide="graduation-cap"></i>
-            <h2>GerEdu</h2>
-            <p class="text-muted small">Sistema de Gestão Escolar</p>
-        </div>
-
-        <form method="POST">
-            {% csrf_token %}
-
-            <div class="mb-3">
-                <label class="form-label">CPF</label>
-                <input type="text" name="username" class="form-control cpf-mask" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Senha</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-
-            <div class="d-grid">
-                <button type="submit" class="btn btn-login text-white">
-                    Entrar
-                </button>
-            </div>
-        </form>
-
-        <div class="forgot-password">
-            <a href="#" id="forgotLink">Esqueceu a senha?</a>
-        </div>
-
-        <div class="footer-login">
-            © GerEdu - Desenvolvido por Welton
-        </div>
-
+    <div class="logo">
+        <i data-lucide="graduation-cap"></i>
+        <h2>GerEdu</h2>
+        <p>Sistema de Gestão Escolar</p>
     </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="input-group-modern">
+            <i data-lucide="id-card" class="input-icon-left"></i>
+            <input type="text" name="username" class="cpf-mask" placeholder="Digite seu CPF" required>
+        </div>
+
+        <div class="input-group-modern">
+            <i data-lucide="lock" class="input-icon-left"></i>
+            <input type="password" name="password" id="passwordInput" placeholder="Digite sua senha" required>
+            <i data-lucide="eye" class="toggle-password" id="togglePassword"></i>
+        </div>
+
+        <button type="submit" class="btn-login">
+            Entrar
+        </button>
+    </form>
+
+    <div class="forgot">
+        <a href="#" id="forgotLink">Esqueceu a senha?</a>
+    </div>
+
+    <div class="footer">
+        © GerEdu • Desenvolvido por Welton
+    </div>
+
 </div>
 
-{% if messages %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        customClass: { popup: 'saas-toast' }
-    });
-
-    {% for message in messages %}
-    Toast.fire({
-        icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
-        title: "{{ message|escapejs }}"
-    });
-    {% endfor %}
-
-});
-</script>
-{% endif %}
-
-<script>
-lucide.createIcons();
-
-document.getElementById("forgotLink").addEventListener("click", function(e){
-    e.preventDefault();
-
-    Swal.fire({
-        icon: 'info',
-        title: 'Recuperação de Senha',
-        text: 'Por favor, procure um administrador do sistema para redefinir sua senha.',
-        confirmButtonColor: '#0ea5e9'
-    });
-});
-</script>
 <script>
 document.addEventListener("DOMContentLoaded", function(){
 
-    const form = document.querySelector("form");
-    const cpfInput = document.querySelector("input[name='username']");
+    lucide.createIcons();
 
-    form.addEventListener("submit", function(){
-        if (cpfInput.value) {
-            // Remove tudo que não for número
-            cpfInput.value = cpfInput.value.replace(/\D/g, '');
-        }
+    const input = document.getElementById("passwordInput");
+
+    function ativarToggle() {
+
+        const toggle = document.getElementById("togglePassword");
+
+        toggle.addEventListener("click", function(){
+
+            const isHidden = input.type === "password";
+
+            // Alterna o tipo
+            input.type = isHidden ? "text" : "password";
+
+            // Troca o atributo
+            toggle.setAttribute("data-lucide", isHidden ? "eye-off" : "eye");
+
+            // Recria os ícones
+            lucide.createIcons();
+
+            // Reativa o evento (porque o SVG foi recriado)
+            ativarToggle();
+        });
+    }
+
+    ativarToggle();
+
+    /* Forgot */
+    document.getElementById("forgotLink").addEventListener("click",function(e){
+        e.preventDefault();
+        Swal.fire({
+            icon:'info',
+            title:'Recuperação de Senha',
+            text:'Procure o administrador do sistema.',
+            confirmButtonColor:'#0ea5e9'
+        });
     });
 
 });
 </script>
+
+<!-- jQuery + máscara CPF -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
@@ -212,5 +272,6 @@ $(document).ready(function(){
     $('.cpf-mask').mask('000.000.000-00');
 });
 </script>
+
 </body>
 </html>

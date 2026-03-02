@@ -7,10 +7,23 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from core.utils import render_smart
+
 
 def lista_alunos(request):
     alunos = Aluno.objects.all().order_by('nome')
-    return render(request, 'alunos/lista_alunos.html', {'alunos': alunos})
+
+    contexto = {
+        'alunos': alunos
+    }
+
+    template, contexto = render_smart(
+        request,
+        'alunos/lista_alunos.html',
+        contexto
+    )
+
+    return render(request, template, contexto)
 
 def cadastrar_aluno(request):
 
@@ -97,6 +110,7 @@ def relatorio_aluno_completo(request, aluno_id):
         'aluno': aluno
     })
 
+@login_required
 def relatorio_alunos(request):
 
     alunos = Aluno.objects.all()
@@ -145,11 +159,19 @@ def relatorio_alunos(request):
 
     turmas = Turma.objects.all().order_by('ano_letivo')
 
-    return render(request, 'alunos/relatorio_alunos.html', {
+    context = {
         'alunos': alunos.order_by('nome'),
         'turmas': turmas,
         'total': total,
         'total_paed': total_paed,
         'total_dependencia': total_dependencia,
         'total_transferidos': total_transferidos
-    })
+    }
+
+    template, context = render_smart(
+        request,
+        'alunos/relatorio_alunos.html',
+        context
+    )
+
+    return render(request, template, context)

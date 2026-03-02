@@ -18,4 +18,5 @@ urlpatterns = [
     path("exportar-excel/",views.export_excel_ocorrencias, name="export_excel_ocorrencias"),
     path("get-alunos/",views.get_alunos_por_turma, name="get_alunos_por_turma"),
     path("buscar-aluno/", views.buscar_aluno, name="buscar_aluno"),
+    path("excluir/<int:pk>/", views.excluir_ocorrencia, name="excluir_ocorrencia"),
     ]

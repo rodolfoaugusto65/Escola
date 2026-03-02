@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -105,12 +106,10 @@ body{
 }
 .locked{ color:#22c55e !important; }
 
-/* ================= TOPBAR (MELHORADA) ================= */
-/* ================= TOPBAR GLASS PREMIUM (ATUALIZADA) ================= */
+/* ================= TOPBAR GLASS PREMIUM ================= */
 .topbar{
     height:70px;
     padding:0 28px;
-
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -118,12 +117,10 @@ body{
     position:sticky;
     top:0;
     z-index:1500;
-    position:relative;
 
     background:rgba(255,255,255,.65);
     backdrop-filter:blur(18px) saturate(160%);
     -webkit-backdrop-filter:blur(18px) saturate(160%);
-
     border-bottom:1px solid rgba(255,255,255,.4);
 
     transition:
@@ -132,6 +129,7 @@ body{
         box-shadow .35s cubic-bezier(.4,0,.2,1);
 }
 
+/* Estado ao rolar */
 .topbar.scrolled{
     background:rgba(255,255,255,.85);
     backdrop-filter:blur(22px) saturate(180%);
@@ -139,7 +137,7 @@ body{
     box-shadow:0 12px 30px rgba(0,0,0,.08);
 }
 
-/* brilho controlado */
+/* Efeito de brilho */
 .topbar::after{
     content:"";
     position:absolute;
@@ -155,12 +153,14 @@ body{
     opacity:.7;
 }
 
+/* Garante que conteúdo fique acima do overlay */
 .topbar > *{
     position:relative;
     z-index:2;
 }
 
-/* Indicador vertical */
+/* ================= INDICADORES ================= */
+
 .title-indicator{
     width:4px;
     height:26px;
@@ -168,6 +168,7 @@ body{
     background:linear-gradient(180deg,#38bdf8,#0ea5e9);
     animation:pulseBar 2s infinite;
 }
+
 @keyframes pulseBar{
     0%,100%{ opacity:1;}
     50%{ opacity:.5;}
@@ -183,8 +184,29 @@ body{
     font-size:.8rem;
     color:#94a3b8;
 }
+
 .breadcrumb-custom span{
     color:#64748b;
+}
+
+/* ===== TIMERS ADICIONADOS SEM REMOVER NADA ===== */
+.topbar-tools{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-right:20px;
+}
+.tool-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:.85rem;
+    color:#475569;
+}
+.tool-item i{
+    width:18px;
+    height:18px;
+    color:#0ea5e9;
 }
 
 /* USER MENU */
@@ -217,6 +239,7 @@ body{
     min-width:180px;
     z-index:4000;
 }
+.user-dropdown.show{ display:block; }
 .user-dropdown a{
     display:block;
     padding:10px 15px;
@@ -227,7 +250,7 @@ body{
     background:#f1f5f9;
 }
 
-/* MOBILE */
+/* MOBILE INTACTO */
 .mobile-menu-btn{ display:none; cursor:pointer; }
 @media(max-width:768px){
 .mobile-menu-btn{ display:block; }
@@ -261,38 +284,85 @@ transition:left .3s ease;
 
 <div class="wrapper d-flex">
 
-<!-- SIDEBAR INTACTA -->
-<nav class="sidebar collapsed" id="sidebar">
+<!-- SIDEBAR SPA -->
+<nav class="sidebar" id="sidebar">
+
 <div class="logo">
-<i data-lucide="graduation-cap"></i>
-<span>GerEdu</span>
+    <i data-lucide="graduation-cap"></i>
+    <span>GerEdu</span>
 </div>
 
-<a href="{% url 'home' %}"><i data-lucide="home"></i><span>Início</span></a>
-<a href="{% url 'lista_alunos' %}"><i data-lucide="users"></i><span>Alunos</span></a>
-<a href="{% url 'lista_turmas' %}"><i data-lucide="network"></i><span>Turmas</span></a>
-<a href="{% url 'relatorio_alunos' %}"><i data-lucide="bar-chart-3"></i><span>Relatório</span></a>
-<a href="{% url 'lista_ocorrencias' %}"><i data-lucide="alert-triangle"></i><span>Ocorrências</span></a>
-<a href="{% url 'lista_frequencia' %}"><i data-lucide="calendar-check"></i><span>Frequência</span></a>
+<a hx-get="{% url 'home' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'home' %}">
+    <i data-lucide="home"></i><span>Início</span>
+</a>
+
+<a hx-get="{% url 'lista_alunos' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_alunos' %}">
+    <i data-lucide="users"></i><span>Alunos</span>
+</a>
+
+<a hx-get="{% url 'lista_turmas' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_turmas' %}">
+    <i data-lucide="network"></i><span>Turmas</span>
+</a>
+
+<a hx-get="{% url 'relatorio_alunos' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'relatorio_alunos' %}">
+    <i data-lucide="bar-chart-3"></i><span>Relatório</span>
+</a>
+
+<a hx-get="{% url 'lista_ocorrencias' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_ocorrencias' %}">
+    <i data-lucide="alert-triangle"></i><span>Ocorrências</span>
+</a>
+
+<a hx-get="{% url 'lista_frequencia' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_frequencia' %}">
+    <i data-lucide="calendar-check"></i><span>Frequência</span>
+</a>
 
 {% if user.pode_gerenciar_usuarios %}
-<a href="{% url 'lista_usuarios' %}">
-<i data-lucide="settings"></i><span>Usuários</span>
+<a hx-get="{% url 'lista_usuarios' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_usuarios' %}">
+    <i data-lucide="settings"></i><span>Usuários</span>
 </a>
 {% endif %}
 
 {% if user.is_authenticated %}
-<a href="{% url 'logout' %}">
-<i data-lucide="log-out"></i><span>Sair</span>
+<a href="{% url 'logout' %}" class="logout-link">
+    <i data-lucide="log-out"></i><span>Sair</span>
 </a>
 {% endif %}
 
 <div class="sidebar-footer">
-<div class="toggle-btn" id="toggleSidebar">
-<i data-lucide="lock-open" id="lockIcon"></i>
-<span id="lockText">Fixar menu</span>
+    <div class="toggle-btn" id="toggleSidebar">
+        <i data-lucide="lock-open" id="lockIcon"></i>
+        <span id="lockText">Fixar menu</span>
+    </div>
 </div>
-</div>
+
 </nav>
 
 <div class="content flex-grow-1">
@@ -318,6 +388,19 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
 </div>
 </div>
 
+<div class="d-flex align-items-center">
+
+<div class="topbar-tools">
+<div class="tool-item" title="Tempo de execução da sessão atual">
+<i data-lucide="clock"></i>
+<span id="sessionTimer">00:00:00</span>
+</div>
+<div class="tool-item" title="Tempo restante para sua próxima hidratação">
+<i data-lucide="droplet"></i>
+<span id="waterTimer">60:00</span>
+</div>
+</div>
+
 {% if user.is_authenticated %}
 <div class="user-menu" id="userMenu">
 <div class="user-avatar">
@@ -326,38 +409,26 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
 <i data-lucide="chevron-down"></i>
 <div class="user-dropdown" id="userDropdown">
 <a href="{% url 'perfil' %}">Perfil</a>
-<a href="{% url 'logout' %}">Sair</a>
+<a href="{% url 'logout' %}" class="logout-link">Sair</a>
 </div>
 </div>
 {% endif %}
 
 </div>
+</div>
 
-<main class="main p-3">
-
-{% if messages %}
-<script>
-document.addEventListener("DOMContentLoaded",function(){
-const Toast=Swal.mixin({
-toast:true,
-position:'top-end',
-showConfirmButton:false,
-timer:4000,
-timerProgressBar:true,
-customClass:{popup:'saas-toast'}
-});
-{% for message in messages %}
-Toast.fire({
-icon:'{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
-title:"{{ message|escapejs }}"
-});
-{% endfor %}
-});
-</script>
+{% if not request.htmx %}
+<main class="main p-3"
+      id="mainContent"
+      hx-on="htmx:beforeSwap: this.classList.add('htmx-swapping')"
+      hx-on="htmx:afterSwap: this.classList.remove('htmx-swapping')">
 {% endif %}
 
 {% block content %}{% endblock %}
+
+{% if not request.htmx %}
 </main>
+{% endif %}
 
 <footer class="footer text-center p-2">
 © GerEdu - Desenvolvido por Welton
@@ -366,90 +437,198 @@ title:"{{ message|escapejs }}"
 </div>
 </div>
 
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-lucide.createIcons();
+    lucide.createIcons();
 
-/* Sombra dinâmica */
-window.addEventListener("scroll",()=>{
-const topbar=document.getElementById("topbar");
-if(window.scrollY>10){
-topbar.classList.add("scrolled");
-}else{
-topbar.classList.remove("scrolled");
+    /* ================= Sombra dinâmica ================= */
+    window.addEventListener("scroll",()=>{
+        const topbar=document.getElementById("topbar");
+        if(topbar){
+            if(window.scrollY>10){
+                topbar.classList.add("scrolled");
+            }else{
+                topbar.classList.remove("scrolled");
+            }
+        }
+    });
+
+/* ================= SIDEBAR CONTROLE CORRIGIDO ================= */
+
+const sidebar = document.getElementById("sidebar");
+const toggleBtn = document.getElementById("toggleSidebar");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+
+let locked = localStorage.getItem("sidebar-locked");
+
+if (locked === null) {
+    locked = true; // padrão fixado
+    localStorage.setItem("sidebar-locked", "true");
+} else {
+    locked = locked === "true";
 }
+
+/* Aplica estado imediatamente */
+function applySidebarState() {
+    const lockIcon = document.getElementById("lockIcon");
+    const lockText = document.getElementById("lockText");
+
+    if (!sidebar || !lockIcon) return;
+
+    if (locked) {
+        sidebar.classList.remove("collapsed");
+        lockIcon.setAttribute("data-lucide", "lock");
+        lockIcon.classList.add("locked");
+        if (lockText) lockText.textContent = "Desafixar menu";
+    } else {
+        sidebar.classList.add("collapsed");
+        lockIcon.setAttribute("data-lucide", "lock-open");
+        lockIcon.classList.remove("locked");
+        if (lockText) lockText.textContent = "Fixar menu";
+    }
+
+    lucide.createIcons();
+}
+
+applySidebarState();
+
+/* Hover só funciona se NÃO estiver fixada */
+if (sidebar) {
+    sidebar.addEventListener("mouseenter", () => {
+        if (!locked && window.innerWidth > 768) {
+            sidebar.classList.remove("collapsed");
+        }
+    });
+
+    sidebar.addEventListener("mouseleave", () => {
+        if (!locked && window.innerWidth > 768) {
+            sidebar.classList.add("collapsed");
+        }
+    });
+}
+
+/* Botão fixar/desafixar */
+if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+        locked = !locked;
+        localStorage.setItem("sidebar-locked", locked);
+        applySidebarState();
+    });
+}
+
+/* Mobile */
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("mobile-open");
+    });
+}
+ /* ================= ABA ATIVA + SPA ESTÁVEL ================= */
+
+function updateActivePageInfo(){
+
+    const currentPath = window.location.pathname.replace(/\/+$/, "");
+
+    const pageTitle = document.getElementById("pageTitle");
+    const breadcrumbTitle = document.getElementById("breadcrumbTitle");
+    const pageIcon = document.getElementById("pageIcon");
+
+    let activeFound = false;
+
+    document.querySelectorAll(".sidebar a").forEach(link => {
+
+        const href = link.getAttribute("href");
+        if(!href) return;
+
+        const linkPath = href.replace(/\/+$/, "");
+
+        link.classList.remove("active");
+
+        // 🔥 Correção aplicada aqui
+        if (
+            (linkPath === "" && currentPath === "") ||
+            (linkPath !== "" && (
+                currentPath === linkPath ||
+                currentPath.startsWith(linkPath + "/")
+            ))
+        ){
+
+            link.classList.add("active");
+            activeFound = true;
+
+            const text = link.textContent.trim();
+
+            if(pageTitle) pageTitle.textContent = text;
+            if(breadcrumbTitle) breadcrumbTitle.textContent = text;
+
+            if(pageIcon){
+                const icon = link.querySelector("i");
+                if(icon){
+                    pageIcon.setAttribute(
+                        "data-lucide",
+                        icon.getAttribute("data-lucide")
+                    );
+                }
+            }
+        }
+    });
+
+    lucide.createIcons();
+
+    if(!activeFound){
+        console.warn("Nenhuma aba correspondente encontrada:", currentPath);
+    }
+}
+
+/* ================= ATIVAÇÃO INSTANTÂNEA (SEM FLICKER) ================= */
+
+function setActiveSidebar(link){
+
+    document.querySelectorAll(".sidebar a")
+        .forEach(l => l.classList.remove("active"));
+
+    link.classList.add("active");
+}
+
+
+/* Delegação de evento (funciona mesmo após HTMX) */
+document.addEventListener("click", function(e){
+
+    const link = e.target.closest(".sidebar a");
+    if(!link) return;
+
+    if(link.classList.contains("logout-link")) return;
+
+    setActiveSidebar(link);
 });
 
-/* Sidebar JS INTACTO */
-const sidebar=document.getElementById("sidebar");
-const toggleBtn=document.getElementById("toggleSidebar");
-const mobileMenuBtn=document.getElementById("mobileMenuBtn");
 
-let locked=localStorage.getItem("sidebar-locked")==="true";
+/* ================= HTMX INTEGRAÇÃO CORRETA ================= */
 
-function updateState(){
-const lockIcon=document.getElementById("lockIcon");
-if(locked){
-sidebar.classList.remove("collapsed");
-lockIcon.setAttribute("data-lucide","lock");
-lockIcon.classList.add("locked");
-document.getElementById("lockText").textContent="Desafixar menu";
-}else{
-sidebar.classList.add("collapsed");
-lockIcon.setAttribute("data-lucide","lock-open");
-lockIcon.classList.remove("locked");
-document.getElementById("lockText").textContent="Fixar menu";
-}
-lucide.createIcons();
-}
-updateState();
+/* Depois que a URL for realmente atualizada */
+document.body.addEventListener("htmx:afterSettle", function(evt){
 
-sidebar.addEventListener("mouseenter",()=>{
-if(!locked && window.innerWidth>768){
-sidebar.classList.remove("collapsed");
-}
-});
-sidebar.addEventListener("mouseleave",()=>{
-if(!locked && window.innerWidth>768){
-sidebar.classList.add("collapsed");
-}
-});
-toggleBtn.addEventListener("click",()=>{
-locked=!locked;
-localStorage.setItem("sidebar-locked",locked);
-updateState();
-});
-mobileMenuBtn.addEventListener("click",()=>{
-sidebar.classList.toggle("mobile-open");
+    if(evt.target.id === "mainContent"){
+
+        updateActivePageInfo();
+
+    }
+
 });
 
-/* Aba ativa + ícone dinâmico */
-const currentPath=window.location.pathname;
-const pageTitle=document.getElementById("pageTitle");
-const breadcrumbTitle=document.getElementById("breadcrumbTitle");
-const pageIcon=document.getElementById("pageIcon");
 
-document.querySelectorAll(".sidebar a").forEach(link=>{
-if(link.getAttribute("href")===currentPath){
-link.classList.add("active");
-pageTitle.textContent=link.textContent.trim();
-breadcrumbTitle.textContent=link.textContent.trim();
-const iconName=link.querySelector("i").getAttribute("data-lucide");
-pageIcon.setAttribute("data-lucide",iconName);
-lucide.createIcons();
-}
-});
+/* ================= INICIALIZAÇÃO ================= */
 
-/* ===== USER MENU CORRIGIDO DEFINITIVO ===== */
-document.addEventListener("DOMContentLoaded", function(){
-
+updateActivePageInfo();
+    /* ================= USER MENU ================= */
     const userMenu = document.getElementById("userMenu");
     const userDropdown = document.getElementById("userDropdown");
 
     if(userMenu && userDropdown){
-
         userMenu.addEventListener("click", function(e){
             e.stopPropagation();
             userDropdown.classList.toggle("show");
@@ -462,10 +641,235 @@ document.addEventListener("DOMContentLoaded", function(){
                 userMenu.classList.remove("active");
             }
         });
-
     }
 
+ /* ================= CONFIRMAÇÃO AO SAIR RESTAURADA ================= */
+document.querySelectorAll(".logout-link").forEach(link=>{
+
+    link.addEventListener("click", function(e){
+        e.preventDefault();
+
+        const logoutUrl = link.href;
+
+        Swal.fire({
+            title: "Tem certeza?",
+            text: "Depois não diga que eu não avisei... o sistema vai sentir sua falta 😌",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sim, encerrar tudo",
+            cancelButtonText: "Não, deixa eu ficar",
+            confirmButtonColor: "#ef4444"
+        }).then((result)=>{
+
+            if(result.isConfirmed){
+
+                localStorage.removeItem("geredu_session_start");
+                localStorage.removeItem("geredu_water_start");
+
+                window.location.href = logoutUrl;
+            }
+
+        });
+
+    });
+
 });
+/* ================= SESSION TIMER DEFINITIVO ================= */
+
+function initSessionTimer(){
+
+    const sessionEl = document.getElementById("sessionTimer");
+    if(!sessionEl) return;
+
+    // Garante que só exista UM intervalo global
+    if(window.sessionInterval){
+        clearInterval(window.sessionInterval);
+        window.sessionInterval = null;
+    }
+
+    let sessionStart = localStorage.getItem("geredu_session_start");
+
+    // Só cria se ainda não existir (primeiro acesso pós-login)
+    if(!sessionStart){
+        sessionStart = Date.now();
+        localStorage.setItem("geredu_session_start", sessionStart);
+    }else{
+        sessionStart = parseInt(sessionStart);
+    }
+
+    function updateSessionTimer(){
+        const diff = Math.floor((Date.now() - sessionStart) / 1000);
+
+        const h = String(Math.floor(diff/3600)).padStart(2,'0');
+        const m = String(Math.floor((diff%3600)/60)).padStart(2,'0');
+        const s = String(diff%60).padStart(2,'0');
+
+        sessionEl.textContent = `${h}:${m}:${s}`;
+    }
+
+    updateSessionTimer();
+    window.sessionInterval = setInterval(updateSessionTimer,1000);
+}
+
+
+/* ================= WATER TIMER DEFINITIVO ================= */
+
+function initWaterTimer(){
+
+    const waterEl = document.getElementById("waterTimer");
+    if(!waterEl) return;
+
+    if(window.waterInterval){
+        clearInterval(window.waterInterval);
+        window.waterInterval = null;
+    }
+
+    let waterStart = localStorage.getItem("geredu_water_start");
+
+    if(!waterStart){
+        waterStart = Date.now();
+        localStorage.setItem("geredu_water_start", waterStart);
+    }else{
+        waterStart = parseInt(waterStart);
+    }
+
+    let waterAlertOpen = false;
+
+    function updateWaterTimer(){
+
+        const diff = Math.floor((Date.now() - waterStart) / 1000);
+        const remaining = 3600 - diff;
+
+        if(remaining <= 0 && !waterAlertOpen){
+
+            waterAlertOpen = true;
+
+            Swal.fire({
+                title:"💧 Hora da Água!",
+                text:"Pare um minuto. Beba água. Cuide da sua saúde.",
+                icon:"info",
+                confirmButtonColor:"#0ea5e9",
+                allowOutsideClick:false
+            }).then(()=>{
+                waterStart = Date.now();
+                localStorage.setItem("geredu_water_start", waterStart);
+                waterAlertOpen = false;
+            });
+
+            return;
+        }
+
+        const m = String(Math.floor(Math.max(0,remaining)/60)).padStart(2,'0');
+        const s = String(Math.max(0,remaining)%60).padStart(2,'0');
+
+        waterEl.textContent = `${m}:${s}`;
+    }
+
+    updateWaterTimer();
+    window.waterInterval = setInterval(updateWaterTimer,1000);
+}
+
+
+/* ===== INICIALIZAÇÃO GARANTIDA ===== */
+
+function safeInitTimers(){
+    const sessionExists = document.getElementById("sessionTimer");
+    const waterExists = document.getElementById("waterTimer");
+
+    if(sessionExists) initSessionTimer();
+    if(waterExists) initWaterTimer();
+}
+
+safeInitTimers();
+
+/* ================= DJANGO MESSAGES ================= */
+
+{% if messages %}
+const Toast = Swal.mixin({
+    toast:true,
+    position:'top-end',
+    showConfirmButton:false,
+    timer:4000,
+    timerProgressBar:true,
+    customClass:{popup:'saas-toast'}
+});
+
+{% for message in messages %}
+Toast.fire({
+    icon:'{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
+    title:"{{ message|escapejs }}"
+});
+{% endfor %}
+{% endif %}
+
+document.body.addEventListener("htmx:afterSwap", function(evt) {
+    if (evt.target.id === "mainContent") {
+        lucide.createIcons();
+    }
+});
+
+
+document.addEventListener("click", function(e){
+
+    const btn = e.target.closest(".btn-excluir");
+    if(!btn || btn.classList.contains("disabled")) return;
+
+    e.preventDefault();
+
+    const url = btn.dataset.url;
+
+    Swal.fire({
+        title: "Tem certeza?",
+        text: "Essa ação não poderá ser desfeita.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sim, excluir",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#ef4444"
+    }).then((result)=>{
+
+        if(result.isConfirmed){
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                if(data.success){
+
+                    Swal.fire({
+                        icon: "success",
+                        title: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // Remove a linha da tabela
+                    btn.closest("tr").remove();
+
+                } else {
+
+                    Swal.fire({
+                        icon: "error",
+                        title: data.error
+                    });
+
+                }
+
+            });
+
+        }
+
+    });
+
+});
+
+
 </script>
 
 </body>

@@ -3,7 +3,6 @@ from django.db.models import Q, Count
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import get_template
-#from xhtml2pdf import pisa
 import openpyxl
 from .models import Ocorrencia
 from .forms import OcorrenciaForm
@@ -23,6 +22,10 @@ from reportlab.lib import fonts
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from io import BytesIO
+from core.utils import render_smart
+from django.views.decorators.http import require_POST
+from django.contrib import messages
+from django.db import IntegrityError
 
 def verificar_permissao(user):
     if user.is_superuser:
@@ -96,7 +99,13 @@ def lista_ocorrencias(request):
         "resolvidas": Ocorrencia.objects.filter(status="RESOLVIDA").count(),
     }
 
-    return render(request, "ocorrencias/lista.html", context)
+    template, context = render_smart(
+        request,
+        "ocorrencias/lista.html",
+        context
+    )
+
+    return render(request, template, context)
 
 
 @login_required
@@ -408,3 +417,36 @@ def busca_ajax(request):
     ]
 
     return JsonResponse(data, safe=False)
+
+
+
+@login_required
+@require_POST
+def excluir_ocorrencia(request, pk):
+
+    if not request.user.pode_gerenciar_usuarios:
+        raise PermissionDenied
+
+    ocorrencia = get_object_or_404(Ocorrencia, pk=pk)
+    codigo = ocorrencia.codigo
+
+    try:
+        ocorrencia.delete()
+
+    except IntegrityError:
+        msg = "Não foi possível excluir a ocorrência por dependências no banco."
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': msg}, status=400)
+
+        messages.error(request, msg)
+        return redirect('lista_ocorrencias')
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': f'Ocorrência {codigo} excluída com sucesso.'
+        })
+
+    messages.success(request, f"🗑️ Ocorrência {codigo} excluída com sucesso.")
+    return redirect('lista_ocorrencias')

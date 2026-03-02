@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from datetime import datetime
-
+from core.utils import render_smart
 from .models import Frequencia, FrequenciaAluno
 from alunos.models import Aluno
 from turmas.models import Turma
@@ -82,12 +82,20 @@ def lista_frequencias(request):
             (r['presencas'] / r['total']) * 100 if r['total'] else 0
         )
 
-    return render(request, 'frequencia/lista.html', {
+    contexto = {
         'turmas': turmas,
         'alunos': alunos,
         'resumo': resumo,
         'request': request
-    })
+    }
+
+    template, contexto = render_smart(
+        request,
+        'frequencia/lista.html',
+        contexto
+    )
+
+    return render(request, template, contexto)
 
 
 @login_required

@@ -12,7 +12,7 @@ from .models import Usuario
 from .forms import UsuarioForm, EditarUsuarioForm
 from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse_lazy
-
+from core.utils import render_smart
 
 User = get_user_model()
 
@@ -96,11 +96,24 @@ def editar_dados_view(request):
 # 🏢 LISTA GERENCIAL
 # ======================================================
 
+
+
 @login_required
 @user_passes_test(is_admin_ou_coord)
 def lista_usuarios_view(request):
     usuarios = Usuario.objects.all().order_by('first_name')
-    return render(request, 'usuarios/lista.html', {'usuarios': usuarios})
+
+    contexto = {
+        'usuarios': usuarios
+    }
+
+    template, contexto = render_smart(
+        request,
+        'usuarios/lista.html',
+        contexto
+    )
+
+    return render(request, template, contexto)
 
 
 # ======================================================

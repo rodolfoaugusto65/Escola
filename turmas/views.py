@@ -3,12 +3,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Turma
 from .forms import TurmaForm
-
+from core.utils import render_smart
 
 @login_required
 def lista_turmas(request):
     turmas = Turma.objects.all()
-    return render(request, 'turmas/lista_turmas.html', {'turmas': turmas})
+
+    context = {
+        'turmas': turmas
+    }
+
+    template, context = render_smart(
+        request,
+        'turmas/lista_turmas.html',
+        context
+    )
+
+    return render(request, template, context)
 
 
 @login_required
