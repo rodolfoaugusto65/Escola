@@ -1,109 +1,212 @@
 {% extends base_template %}
 {% block content %}
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 fade-in">
 
-<h3 class="mb-4 text-primary fw-bold">
-📌 Gestão de Ocorrências
+<!-- ================= HEADER ================= -->
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 page-header">
+
+<div>
+
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-1">
+<i data-lucide="alert-triangle"></i>
+Gestão de Ocorrências
 </h3>
 
+<div class="text-muted small">
+Monitoramento disciplinar da escola
+</div>
+
+</div>
+
+<div class="d-flex gap-2">
+
+<a href="{% url 'criar_ocorrencia' %}" class="btn btn-success btn-modern">
+<i data-lucide="plus"></i>
+Nova Ocorrência
+</a>
+
+</div>
+
+</div>
+
+
 <!-- ================= DASHBOARD ================= -->
-<div class="row mb-4 g-3 text-center">
 
-<div class="col-md-3">
-<div class="card shadow border-0 bg-light">
-<div class="card-body">
-<h6 class="text-muted">Total</h6>
-<h2 class="text-primary fw-bold">{{ total }}</h2>
-</div>
-</div>
-</div>
+<div class="row g-4 mb-4 dashboard-cards">
 
-<div class="col-md-3">
-<div class="card shadow border-0 bg-light">
-<div class="card-body">
-<h6 class="text-muted">Abertas</h6>
-<h2 class="text-danger fw-bold">{{ abertas }}</h2>
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card total-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Total</div>
+<div class="dashboard-value">{{ total }}</div>
+<div class="dashboard-sub">Ocorrências registradas</div>
 </div>
 </div>
 </div>
 
-<div class="col-md-3">
-<div class="card shadow border-0 bg-light">
-<div class="card-body">
-<h6 class="text-muted">Em andamento</h6>
-<h2 class="text-warning fw-bold">{{ andamento }}</h2>
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card open-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Abertas</div>
+<div class="dashboard-value">{{ abertas }}</div>
+<div class="dashboard-sub">Aguardando análise</div>
 </div>
 </div>
 </div>
 
-<div class="col-md-3">
-<div class="card shadow border-0 bg-light">
-<div class="card-body">
-<h6 class="text-muted">Resolvidas</h6>
-<h2 class="text-success fw-bold">{{ resolvidas }}</h2>
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card progress-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Em andamento</div>
+<div class="dashboard-value">{{ andamento }}</div>
+<div class="dashboard-sub">Em processo</div>
+</div>
+</div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card resolved-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Resolvidas</div>
+<div class="dashboard-value">{{ resolvidas }}</div>
+<div class="dashboard-sub">Casos concluídos</div>
 </div>
 </div>
 </div>
 
 </div>
+
 
 <!-- ================= FILTROS ================= -->
-<div class="card shadow border-0 mb-4">
+
+<div class="card modern-card shadow-sm mb-4 filters-panel">
+
 <div class="card-body">
 
 <form method="get" class="row g-3 align-items-end">
 
+<!-- BUSCA -->
 <div class="col-md-3">
-<label class="fw-bold small">Busca geral</label>
+
+<label class="filter-label">
+<i data-lucide="search"></i> Busca
+</label>
+
 <input name="busca"
 value="{{ request.GET.busca }}"
 class="form-control"
 placeholder="Código, aluno ou matrícula">
+
 </div>
 
+
+<!-- TURMA -->
 <div class="col-md-2">
-<label class="fw-bold small">Turma</label>
+
+<label class="filter-label">
+<i data-lucide="layers"></i> Turma
+</label>
+
 <select name="turma" class="form-select">
+
 <option value="">Todas</option>
+
 {% for t in turmas %}
 <option value="{{ t.id }}"
 {% if request.GET.turma == t.id|stringformat:"s" %}selected{% endif %}>
 {{ t }}
 </option>
 {% endfor %}
+
 </select>
+
 </div>
 
+
+<!-- ALUNO -->
 <div class="col-md-2">
-<label class="fw-bold small">Aluno</label>
+
+<label class="filter-label">
+<i data-lucide="user"></i> Aluno
+</label>
+
 <select name="aluno" class="form-select">
+
 <option value="">Todos</option>
+
 {% for a in alunos %}
 <option value="{{ a.id }}"
 {% if request.GET.aluno == a.id|stringformat:"s" %}selected{% endif %}>
 {{ a.nome }}
 </option>
 {% endfor %}
+
 </select>
+
 </div>
 
+
+<!-- SITUAÇÃO -->
 <div class="col-md-2">
-<label class="fw-bold small">Data</label>
-<input type="date" name="data"
+
+<label class="filter-label">
+<i data-lucide="flag"></i> Situação
+</label>
+
+<select name="status" class="form-select">
+
+<option value="">Todas</option>
+
+<option value="ABERTA"
+{% if request.GET.status == "ABERTA" %}selected{% endif %}>
+Abertas
+</option>
+
+<option value="ANDAMENTO"
+{% if request.GET.status == "ANDAMENTO" %}selected{% endif %}>
+Em andamento
+</option>
+
+<option value="RESOLVIDA"
+{% if request.GET.status == "RESOLVIDA" %}selected{% endif %}>
+Resolvidas
+</option>
+
+</select>
+
+</div>
+
+
+<!-- DATA -->
+<div class="col-md-2">
+
+<label class="filter-label">
+<i data-lucide="calendar"></i> Data
+</label>
+
+<input type="date"
+name="data"
 value="{{ request.GET.data }}"
 class="form-control">
+
 </div>
 
+
+<!-- BOTÕES -->
 <div class="col-md-3 d-flex gap-2">
-<button class="btn btn-primary w-100">
-🔍 Buscar
+
+<button class="btn btn-primary btn-modern w-100">
+<i data-lucide="search"></i>
+Buscar
 </button>
 
 <a href="{% url 'lista_ocorrencias' %}"
-class="btn btn-outline-secondary">
+class="btn btn-outline-secondary btn-modern">
 Limpar
 </a>
+
 </div>
 
 </form>
@@ -111,117 +214,75 @@ Limpar
 </div>
 </div>
 
-<!-- ================= AÇÕES GERAIS ================= -->
-<div class="mb-3 d-flex gap-2 flex-wrap">
 
-<a href="{% url 'criar_ocorrencia' %}" class="btn btn-success shadow-sm">
-➕ Nova Ocorrência
+<!-- ================= AÇÕES ================= -->
+
+<div class="d-flex justify-content-between flex-wrap mb-3 gap-2">
+
+<div class="d-flex gap-2 flex-wrap">
+
+<a href="{% url 'dashboard_ocorrencias' %}" class="btn btn-info btn-modern text-white">
+<i data-lucide="bar-chart"></i> Dashboard
 </a>
 
-<a href="{% url 'dashboard_ocorrencias' %}" class="btn btn-info shadow-sm">
-📊 Dashboard
+<a href="{% url 'relatorio_ocorrencias' %}" class="btn btn-dark btn-modern">
+<i data-lucide="file-text"></i> Relatório
 </a>
 
-<a href="{% url 'relatorio_ocorrencias' %}" class="btn btn-dark shadow-sm">
-📄 Relatórios
-</a>
-
-<a href="{% url 'dashboard_enterprise' %}" class="btn btn-primary shadow-sm">
-🏢 Enterprise
-</a>
-
-<a href="{% url 'export_excel_ocorrencias' %}" class="btn btn-success shadow-sm">
-📥 Excel
-</a>
-
-<a href="{% url 'imprimir_pdf_enterprise' %}" class="btn btn-dark shadow-sm">
-🖨 PDF Completo
+<a href="{% url 'dashboard_enterprise' %}" class="btn btn-primary btn-modern">
+<i data-lucide="building"></i> Enterprise
 </a>
 
 </div>
 
+<div class="d-flex gap-2 flex-wrap">
+
+<a href="{% url 'export_excel_ocorrencias' %}" class="btn btn-success btn-modern">
+<i data-lucide="download"></i> Excel
+</a>
+
+<a href="{% url 'imprimir_pdf_enterprise' %}" class="btn btn-outline-dark btn-modern">
+<i data-lucide="printer"></i> PDF
+</a>
+
+</div>
+
+</div>
+
+
 <!-- ================= TABELA ================= -->
-<div class="card shadow border-0">
-<div class="card-body p-0">
+
+<div class="card modern-card shadow-sm">
 
 <div class="table-responsive">
 
-<table class="table table-hover align-middle mb-0">
+<table class="table modern-table align-middle mb-0">
 
-<thead class="table-dark text-center">
+<thead class="table-light">
+
 <tr>
 
-<th>
-<a href="?ordenar=codigo" class="text-white text-decoration-none">
-Código 🔽
-</a>
-</th>
-
-<th>
-<a href="?ordenar=aluno__nome" class="text-white text-decoration-none">
-Aluno 🔽
-</a>
-</th>
-
-<th>
-<a href="?ordenar=turma__nome" class="text-white text-decoration-none">
-Turma 🔽
-</a>
-</th>
-
-<th>
-<a href="?ordenar=tipo_ocorrencia" class="text-white text-decoration-none">
-Tipo 🔽
-</a>
-</th>
-
-<th>
-<a href="?ordenar=status" class="text-white text-decoration-none">
-Status 🔽
-</a>
-</th>
-
-<th>
-<a href="?ordenar=data" class="text-white text-decoration-none">
-Data 🔽
-</a>
-</th>
-
-<th>Ações</th>
+<th><a href="?ordenar=codigo">Código</a></th>
+<th><a href="?ordenar=aluno__nome">Aluno</a></th>
+<th><a href="?ordenar=turma__nome">Turma</a></th>
+<th><a href="?ordenar=tipo_ocorrencia">Tipo</a></th>
+<th>Status</th>
+<th><a href="?ordenar=data">Data</a></th>
+<th class="text-center">Ações</th>
 
 </tr>
+
 </thead>
-
-<nav>
-<ul class="pagination justify-content-center">
-
-{% if ocorrencias.has_previous %}
-<li class="page-item">
-<a class="page-link" href="?page={{ ocorrencias.previous_page_number }}">«</a>
-</li>
-{% endif %}
-
-{% for num in ocorrencias.paginator.page_range %}
-<li class="page-item {% if ocorrencias.number == num %}active{% endif %}">
-<a class="page-link" href="?page={{ num }}">{{ num }}</a>
-</li>
-{% endfor %}
-
-{% if ocorrencias.has_next %}
-<li class="page-item">
-<a class="page-link" href="?page={{ ocorrencias.next_page_number }}">»</a>
-</li>
-{% endif %}
-
-</ul>
-</nav>
 
 <tbody>
 
 {% for o in ocorrencias %}
+
 <tr>
 
-<td class="fw-bold text-primary">{{ o.codigo }}</td>
+<td class="fw-semibold text-primary">
+{{ o.codigo }}
+</td>
 
 <td>{{ o.aluno.nome }}</td>
 
@@ -229,62 +290,83 @@ Data 🔽
 
 <td>{{ o.get_tipo_ocorrencia_display }}</td>
 
-<td class="text-center">
-<span class="badge px-3 py-2
-{% if o.status == 'ABERTA' %}bg-danger
-{% elif o.status == 'ANDAMENTO' %}bg-warning text-dark
-{% else %}bg-success{% endif %}">
+<td>
+
+<span class="badge badge-status px-3 py-2
+{% if o.status == 'ABERTA' %}status-danger
+{% elif o.status == 'ANDAMENTO' %}status-warning
+{% else %}status-success{% endif %}">
+
 {{ o.get_status_display }}
+
 </span>
+
 </td>
 
 <td>{{ o.data|date:"d/m/Y" }}</td>
 
 <td class="text-center">
-<div class="btn-group">
+
+<div class="btn-group btn-group-sm">
 
 <a href="{% url 'detalhe_ocorrencia' o.pk %}"
-class="btn btn-outline-info btn-sm">👁</a>
+class="btn btn-outline-info">
+<i data-lucide="eye"></i>
+</a>
 
 <a href="{% url 'editar_ocorrencia' o.pk %}"
-class="btn btn-outline-warning btn-sm">✏</a>
+class="btn btn-outline-warning">
+<i data-lucide="edit"></i>
+</a>
 
 <a href="{% url 'imprimir_ocorrencia' o.pk %}"
 target="_blank"
-class="btn btn-outline-dark btn-sm">🖨</a>
+class="btn btn-outline-dark">
+<i data-lucide="printer"></i>
+</a>
 
 <a href="{% url 'imprimir_por_aluno' o.aluno.id %}"
 target="_blank"
-class="btn btn-outline-secondary btn-sm">
-📄
+class="btn btn-outline-secondary">
+<i data-lucide="file"></i>
 </a>
 
-<!-- 🔥 BOTÃO EXCLUIR ADICIONADO -->
 <a href="#"
-   class="btn btn-outline-danger btn-sm btn-excluir {% if not user.pode_gerenciar_usuarios %}disabled{% endif %}"
-   data-url="{% url 'excluir_ocorrencia' o.pk %}">
-   🗑
+class="btn btn-outline-danger btn-excluir {% if not user.pode_gerenciar_usuarios %}disabled{% endif %}"
+data-url="{% url 'excluir_ocorrencia' o.pk %}">
+<i data-lucide="trash-2"></i>
 </a>
-
 
 </div>
+
 </td>
 
 </tr>
 
 {% empty %}
+
 <tr>
-<td colspan="7" class="text-center text-muted py-5">
-Nenhuma ocorrência encontrada.
+
+<td colspan="7" class="text-center py-5">
+
+<i data-lucide="search-x" style="width:40px;height:40px;color:#94a3b8"></i>
+
+<p class="mt-3 text-muted">
+Nenhuma ocorrência encontrada com os filtros aplicados.
+</p>
+
 </td>
+
 </tr>
+
 {% endfor %}
 
 </tbody>
+
 </table>
 
 </div>
-</div>
+
 </div>
 
 </div>

@@ -190,6 +190,8 @@ body{
 }
 
 /* ===== TIMERS ADICIONADOS SEM REMOVER NADA ===== */
+
+
 .topbar-tools{
     display:flex;
     align-items:center;
@@ -391,6 +393,20 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
 <div class="d-flex align-items-center">
 
 <div class="topbar-tools">
+<div class="tool-item" title="Total de alunos cadastrados">
+<i data-lucide="users"></i>
+<span>{{ total_alunos }}</span>
+</div>
+
+<div class="tool-item" title="Alunos do turno vespertino">
+<i data-lucide="sun"></i>
+<span>{{ total_vespertino }}</span>
+</div>
+
+<div class="tool-item" title="Alunos do turno noturno">
+<i data-lucide="moon"></i>
+<span>{{ total_noturno }}</span>
+</div>
 <div class="tool-item" title="Tempo de execução da sessão atual">
 <i data-lucide="clock"></i>
 <span id="sessionTimer">00:00:00</span>
@@ -809,68 +825,367 @@ document.body.addEventListener("htmx:afterSwap", function(evt) {
 });
 
 
+/* ================= CSRF TOKEN DINÂMICO ================= */
+
+function getCSRFToken(){
+    const name = "csrftoken";
+    const cookies = document.cookie.split(";");
+
+    for(let cookie of cookies){
+        cookie = cookie.trim();
+
+        if(cookie.startsWith(name + "=")){
+            return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+    }
+
+    return null;
+}
+
+
+/* ================= SISTEMA GLOBAL DE AÇÕES (UX SAAS) ================= */
+
+function showToast(icon,message){
+
+    const Toast = Swal.mixin({
+        toast:true,
+        position:'top-end',
+        showConfirmButton:false,
+        timer:3500,
+        timerProgressBar:true,
+        customClass:{popup:'saas-toast'}
+    });
+
+    Toast.fire({
+        icon:icon,
+        title:message
+    });
+
+}
+
+
+/* ================= EXCLUSÃO PADRÃO DO SISTEMA ================= */
+
 document.addEventListener("click", function(e){
 
-    const btn = e.target.closest(".btn-excluir");
-    if(!btn || btn.classList.contains("disabled")) return;
+const btn = e.target.closest(".btn-excluir");
 
-    e.preventDefault();
+if(!btn) return;
 
-    const url = btn.dataset.url;
+e.preventDefault();
 
-    Swal.fire({
-        title: "Tem certeza?",
-        text: "Essa ação não poderá ser desfeita.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sim, excluir",
-        cancelButtonText: "Cancelar",
-        confirmButtonColor: "#ef4444"
-    }).then((result)=>{
+const url = btn.dataset.url;
 
-        if(result.isConfirmed){
+if(!url){
+console.error("Botão excluir sem data-url:", btn);
+return;
+}
 
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
+Swal.fire({
+title:"Tem certeza?",
+text:"Essa ação não poderá ser desfeita.",
+icon:"warning",
+showCancelButton:true,
+confirmButtonText:"Sim, excluir",
+cancelButtonText:"Cancelar",
+confirmButtonColor:"#ef4444"
+}).then((result)=>{
 
-                if(data.success){
+if(!result.isConfirmed) return;
 
-                    Swal.fire({
-                        icon: "success",
-                        title: data.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+fetch(url,{
+method:"POST",
+headers:{
+"X-CSRFToken":getCSRFToken(),
+"X-Requested-With":"XMLHttpRequest"
+}
+})
+.then(res=>{
 
-                    // Remove a linha da tabela
-                    btn.closest("tr").remove();
+if(!res.ok){
+throw new Error("Erro HTTP");
+}
 
-                } else {
+return res.json();
 
-                    Swal.fire({
-                        icon: "error",
-                        title: data.error
-                    });
+})
+.then(data=>{
 
-                }
+if(data.success){
 
-            });
+showToast("success","Registro excluído");
 
-        }
+const row = btn.closest("tr");
 
-    });
+if(row){
+row.style.transition="all .25s ease";
+row.style.opacity="0";
+row.style.transform="scale(.96)";
+
+setTimeout(()=>{
+row.remove();
+},250);
+}
+
+}else{
+
+Swal.fire({
+icon:"error",
+title:data.error || "Erro ao excluir."
+});
+
+}
+
+})
+.catch((err)=>{
+
+console.error(err);
+
+Swal.fire({
+icon:"error",
+title:"Erro de comunicação com o servidor."
+});
+
+});
+
+});
 
 });
 
 
 </script>
+<script>
 
+/* =====================================================
+FILTROS AUTOMÁTICOS GLOBAIS (funciona com HTMX)
+===================================================== */
+
+function iniciarFiltros(){
+
+const filtroForm = document.getElementById("formFiltros");
+const buscaForm = document.getElementById("formBusca");
+
+const turno = document.querySelector('select[name="turno"]');
+const ano = document.querySelector('select[name="ano"]');
+const turma = document.querySelector('select[name="turma"]');
+
+const buscaInput = document.querySelector('input[name="busca"]');
+
+
+/* =====================================================
+FILTRO AUTOMÁTICO
+===================================================== */
+
+document.querySelectorAll(".auto-filter").forEach(select => {
+
+select.removeEventListener("change", autoFiltroHandler);
+select.addEventListener("change", autoFiltroHandler);
+
+});
+
+function autoFiltroHandler(){
+
+if(!filtroForm) return;
+
+filtroForm.submit();
+
+}
+
+
+/* =====================================================
+RESET HIERÁRQUICO
+Turno → Ano → Turma
+===================================================== */
+
+if(turno){
+
+turno.removeEventListener("change", turnoHandler);
+turno.addEventListener("change", turnoHandler);
+
+function turnoHandler(){
+
+if(ano) ano.selectedIndex = 0;
+if(turma) turma.selectedIndex = 0;
+
+if(filtroForm) filtroForm.submit();
+
+}
+
+}
+
+
+if(ano){
+
+ano.removeEventListener("change", anoHandler);
+ano.addEventListener("change", anoHandler);
+
+function anoHandler(){
+
+if(turma) turma.selectedIndex = 0;
+
+if(filtroForm) filtroForm.submit();
+
+}
+
+}
+
+
+if(turma){
+
+turma.removeEventListener("change", turmaHandler);
+turma.addEventListener("change", turmaHandler);
+
+function turmaHandler(){
+
+if(filtroForm) filtroForm.submit();
+
+}
+
+}
+
+
+/* =====================================================
+BUSCA INTELIGENTE (tipo Google)
+===================================================== */
+
+let typingTimer;
+const delay = 350;
+
+if(buscaInput){
+
+buscaInput.removeEventListener("keyup", buscaHandler);
+buscaInput.addEventListener("keyup", buscaHandler);
+
+function buscaHandler(){
+
+clearTimeout(typingTimer);
+
+const texto = this.value.trim();
+
+if(texto.length >= 3){
+
+typingTimer = setTimeout(() => {
+
+if(buscaForm) buscaForm.submit();
+
+}, delay);
+
+}
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+RODAR SEMPRE
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", iniciarFiltros);
+
+
+/* =====================================================
+SUPORTE HTMX
+===================================================== */
+
+document.body.addEventListener("htmx:afterSwap", function(){
+
+iniciarFiltros();
+
+});
+
+</script>
+
+<script>
+
+/* =========================================================
+SISTEMA GLOBAL DE FILTROS AUTOMÁTICOS
+Funciona em todas as páginas (Alunos, Turmas, etc)
+Compatível com HTMX
+========================================================= */
+
+function iniciarFiltros(){
+
+const filtroForm = document.getElementById("formFiltros");
+const buscaForm = document.getElementById("formBusca");
+
+const buscaInput = document.querySelector('input[name="busca"]');
+
+if(!filtroForm && !buscaForm){
+return;
+}
+
+
+/* =========================================================
+FILTROS AUTOMÁTICOS
+========================================================= */
+
+document.querySelectorAll(".auto-filter").forEach(select => {
+
+select.addEventListener("change", function(){
+
+if(filtroForm){
+filtroForm.submit();
+}
+
+});
+
+});
+
+
+/* =========================================================
+BUSCA INTELIGENTE (tipo Google)
+========================================================= */
+
+let typingTimer;
+const delay = 350;
+
+if(buscaInput){
+
+buscaInput.addEventListener("keyup", function(){
+
+clearTimeout(typingTimer);
+
+const texto = this.value.trim();
+
+if(texto.length >= 3){
+
+typingTimer = setTimeout(() => {
+
+if(buscaForm){
+buscaForm.submit();
+}
+
+}, delay);
+
+}
+
+});
+
+}
+
+}
+
+
+/* =========================================================
+RODAR AO CARREGAR PÁGINA
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", iniciarFiltros);
+
+
+/* =========================================================
+SUPORTE HTMX
+========================================================= */
+
+document.body.addEventListener("htmx:afterSwap", function(){
+
+iniciarFiltros();
+
+});
+
+</script>
 </body>
 </html>

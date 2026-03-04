@@ -1,0 +1,463 @@
+/* =========================
+   RESET
+========================= */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+/* =========================
+   BASE
+========================= */
+body{
+    font-family:"Segoe UI",system-ui,sans-serif;
+    background:#f6f8fb;
+    color:#212529;
+    overflow-x:hidden;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.wrapper{
+    display:flex;
+    min-height:100vh;
+}
+
+.content{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+.main{
+    padding:30px;
+    flex:1;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar{
+    width:240px;
+    background:linear-gradient(180deg,#0d6efd,#0b5ed7);
+    color:#fff;
+    transition:width .35s cubic-bezier(.4,0,.2,1);
+    overflow:hidden;
+}
+
+.sidebar.collapsed{
+    width:70px;
+}
+
+.sidebar.collapsed span{
+    display:none;
+}
+
+.sidebar.collapsed i{
+    font-size:1.8rem;
+}
+
+/* LOGO */
+
+.sidebar .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:18px;
+    font-size:1.2rem;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+/* MENU */
+
+.sidebar a{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px 18px;
+    color:#fff;
+    text-decoration:none;
+    transition:background .2s ease;
+    white-space:nowrap;
+}
+
+.sidebar a:hover{
+    background:rgba(255,255,255,.15);
+}
+
+.sidebar a.active{
+    background:rgba(255,255,255,.25);
+    font-weight:600;
+}
+
+.sidebar i{
+    font-size:1.5rem;
+    transition:font-size .3s ease;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar{
+    height:60px;
+    background:#fff;
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
+}
+
+.user-info{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.user-info span{
+    font-weight:500;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer{
+    text-align:center;
+    padding:15px;
+    color:#6c757d;
+    font-size:.9rem;
+    background:#f8f9fa;
+}
+
+/* =========================
+   CARDS
+========================= */
+.card{
+    border-radius:14px;
+    border:none;
+    box-shadow:0 4px 18px rgba(0,0,0,.05);
+    transition:transform .2s ease,box-shadow .2s ease;
+}
+
+.card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 28px rgba(0,0,0,.07);
+}
+
+.modern-card{
+    border-radius:14px;
+    border:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.05);
+}
+
+/* =========================
+   LOGIN MODERNO
+========================= */
+.login-wrapper{
+    min-height:100vh;
+    background:linear-gradient(135deg,#0d6efd,#084298);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.login-card{
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(12px);
+    border-radius:16px;
+    padding:35px;
+    width:100%;
+    max-width:420px;
+    color:#fff;
+    box-shadow:0 20px 40px rgba(0,0,0,.25);
+    transition:transform .3s ease,box-shadow .3s ease;
+}
+
+.login-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 30px 60px rgba(0,0,0,.3);
+}
+
+.login-card h4{
+    font-weight:600;
+    text-align:center;
+    margin-bottom:25px;
+}
+
+/* INPUT LOGIN */
+
+.login-card .form-control{
+    height:48px;
+    border-radius:8px;
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    color:#fff !important;
+    font-size:15px;
+}
+
+.login-card .form-control::placeholder{
+    color:rgba(255,255,255,.75);
+}
+
+.login-card .form-control:focus{
+    background:rgba(255,255,255,.25);
+    border-color:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.15);
+}
+
+/* =========================
+   INPUTS MODERNOS
+========================= */
+
+.input-group-modern{
+    position:relative;
+    margin-bottom:20px;
+}
+
+.input-group-modern input{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.07);
+    padding-left:46px;
+    padding-right:46px;
+    color:#fff;
+    font-size:.95rem;
+}
+
+.input-group-modern input::placeholder{
+    color:rgba(255,255,255,.6);
+}
+
+.input-group-modern input:focus{
+    border-color:#38bdf8;
+    box-shadow:0 0 0 3px rgba(56,189,248,.25);
+}
+
+/* ÍCONES INPUT */
+
+.input-icon-left{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    width:18px;
+    height:18px;
+    opacity:.7;
+}
+
+.toggle-password{
+    position:absolute;
+    top:50%;
+    right:16px;
+    transform:translateY(-50%);
+    width:22px;
+    height:22px;
+    cursor:pointer;
+    opacity:.75;
+}
+
+.toggle-password:hover{
+    opacity:1;
+}
+
+/* =========================
+   TABELAS
+========================= */
+
+.table{
+    font-size:.92rem;
+}
+
+.table thead{
+    background:#f8fafc;
+    font-weight:600;
+}
+
+.table thead th{
+    border-bottom:1px solid #eef2f7;
+}
+
+.table tbody tr{
+    transition:background .15s ease;
+}
+
+.table tbody tr:hover{
+    background:#f9fbff;
+}
+
+.table-dark{
+    background:#1e293b !important;
+}
+
+.table-responsive{
+    border-radius:14px;
+    overflow:hidden;
+}
+
+/* =========================
+   STATUS BADGES
+========================= */
+
+.badge-status{
+    padding:5px 10px;
+    border-radius:8px;
+    font-size:.75rem;
+}
+
+.status-danger{background:#fee2e2;color:#dc2626;}
+.status-warning{background:#fef3c7;color:#92400e;}
+.status-success{background:#dcfce7;color:#166534;}
+
+/* =========================
+   BOTÕES
+========================= */
+
+.btn{
+    border-radius:8px;
+    font-weight:500;
+    transition:all .2s ease;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+}
+
+.btn-modern{
+    border-radius:10px;
+    padding:6px 14px;
+    font-size:.85rem;
+}
+
+/* =========================
+   DASHBOARD CARDS
+========================= */
+
+.stat-card{
+    padding:20px;
+    border-radius:16px;
+    text-align:center;
+}
+
+.stat-title{
+    font-size:.8rem;
+    color:#64748b;
+    margin-bottom:6px;
+}
+
+.stat-value{
+    font-size:1.9rem;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+.stat-primary{background:#f1f5ff;color:#2563eb;}
+.stat-danger{background:#fff1f2;color:#dc2626;}
+.stat-warning{background:#fff7ed;color:#d97706;}
+.stat-success{background:#f0fdf4;color:#16a34a;}
+
+/* =========================
+   FORMULÁRIOS
+========================= */
+
+.form-control,
+.form-select{
+    border-radius:10px;
+    border:1px solid #e2e8f0;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:#0d6efd;
+    box-shadow:0 0 0 3px rgba(13,110,253,.1);
+}
+
+/* =========================
+   PAGINAÇÃO
+========================= */
+
+.pagination .page-link{
+    border-radius:8px;
+    margin:0 3px;
+    border:none;
+    color:#334155;
+}
+
+.pagination .page-item.active .page-link{
+    background:#0d6efd;
+}
+
+/* =========================
+   ANIMAÇÕES
+========================= */
+
+.fade-in{
+    animation:fadeIn .35s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes fadeIn{
+    from{opacity:0;transform:translateY(6px);}
+    to{opacity:1;transform:translateY(0);}
+}
+
+/* =========================
+   TRANSIÇÃO HTMX
+========================= */
+
+#mainContent{
+    transition:opacity .2s ease;
+}
+
+#mainContent.htmx-swapping{
+    opacity:0;
+}
+
+/* ================= DASHBOARD OCORRÊNCIAS FIX ================= */
+
+.stat-card{
+    padding:22px;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    min-height:90px;
+}
+
+.stat-title{
+    font-size:.8rem;
+    color:rgba(255,255,255,.8);
+    margin-bottom:4px;
+}
+
+.stat-value{
+    font-size:1.9rem;
+    font-weight:700;
+}
+
+/* cores corrigidas */
+
+.stat-primary{
+    background:#eef4ff;
+    color:#2563eb;
+}
+
+.stat-danger{
+    background:#fff1f2;
+    color:#dc2626;
+}
+
+.stat-warning{
+    background:#fff7ed;
+    color:#d97706;
+}
+
+.stat-success{
+    background:#f0fdf4;
+    color:#16a34a;
+}

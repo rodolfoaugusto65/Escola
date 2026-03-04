@@ -5,335 +5,304 @@
 
 <div class="container-fluid mt-4 fade-in">
 
-  <!-- =========================
-       CONTADORES ESTATÍSTICOS
-  ========================== -->
-  <div class="row g-3 mb-4">
+<!-- ================= HEADER ================= -->
 
-    <div class="col-md-3">
-      <div class="stat-card bg-primary-soft">
-        <small>Total</small>
-        <h4>{{ total }}</h4>
-      </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 page-header">
 
-    <div class="col-md-3">
-      <div class="stat-card bg-success-soft">
-        <small>PAED</small>
-        <h4>{{ total_paed }}</h4>
-      </div>
-    </div>
+<div>
 
-    <div class="col-md-3">
-      <div class="stat-card bg-warning-soft">
-        <small>Dependência</small>
-        <h4>{{ total_dependencia }}</h4>
-      </div>
-    </div>
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-1">
+<i data-lucide="users"></i>
+Relatório de Alunos
+</h3>
 
-    <div class="col-md-3">
-      <div class="stat-card bg-danger-soft">
-        <small>Transferidos</small>
-        <h4>{{ total_transferidos }}</h4>
-      </div>
-    </div>
+<div class="text-muted small">
+Monitoramento geral dos alunos da escola
+</div>
 
-  </div>
+</div>
 
+<div class="d-flex gap-2">
 
-  <!-- CABEÇALHO -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
-      <i data-lucide="file-text"></i>
-      Relatório de Alunos
-    </h3>
+<button onclick="window.print()" class="btn btn-success btn-modern">
+<i data-lucide="printer"></i>
+Imprimir
+</button>
 
-    <div class="d-flex gap-2">
-      <button onclick="window.print()"
-              class="btn btn-success btn-modern d-flex align-items-center gap-2">
-        <i data-lucide="printer"></i>
-        Imprimir
-      </button>
+<a href="{% url 'cadastrar_aluno' %}" class="btn btn-primary btn-modern">
+<i data-lucide="user-plus"></i>
+Novo Aluno
+</a>
 
-      <a href="{% url 'cadastrar_aluno' %}"
-         class="btn btn-primary btn-modern d-flex align-items-center gap-2"
-         data-tooltip="Cadastrar novo aluno">
-        <i data-lucide="user-plus"></i>
-        Novo Aluno
-      </a>
-    </div>
-  </div>
+</div>
 
-
-  <!-- CARD PRINCIPAL -->
-  <div class="card modern-card shadow-sm border-0">
-
-    <div class="card-body">
-
-      <!-- =========================
-           FILTROS COMPLETOS
-      ========================== -->
-      <form method="get" class="row g-3 align-items-end mb-4">
-
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Pesquisar</label>
-          <input type="text"
-                 name="q"
-                 value="{{ request.GET.q }}"
-                 class="form-control"
-                 placeholder="Nome ou matrícula">
-        </div>
-
-        <div class="col-md-2">
-          <label class="form-label fw-semibold">Tipo</label>
-          <select name="tipo" class="form-select">
-            <option value="nome" {% if request.GET.tipo == 'nome' %}selected{% endif %}>Nome</option>
-            <option value="matricula" {% if request.GET.tipo == 'matricula' %}selected{% endif %}>Matrícula</option>
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Turma</label>
-          <select name="turma" class="form-select">
-            <option value="">Todas</option>
-            {% for turma in turmas %}
-              <option value="{{ turma.id }}"
-                {% if request.GET.turma == turma.id|stringformat:"s" %}selected{% endif %}>
-                {{ turma }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-4 d-flex flex-wrap gap-3">
-
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" name="dependencia" value="1"
-                   {% if request.GET.dependencia == '1' %}checked{% endif %}>
-            <label class="form-check-label">Dependência</label>
-          </div>
-
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" name="trabalhador" value="1"
-                   {% if request.GET.trabalhador == '1' %}checked{% endif %}>
-            <label class="form-check-label">Trabalhador</label>
-          </div>
-
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" name="paed" value="1"
-                   {% if request.GET.paed == '1' %}checked{% endif %}>
-            <label class="form-check-label">PAED</label>
-          </div>
-
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" name="transferido" value="1"
-                   {% if request.GET.transferido == '1' %}checked{% endif %}>
-            <label class="form-check-label">Transferido</label>
-          </div>
-
-        </div>
-
-        <div class="col-md-2">
-          <button type="submit"
-                  class="btn btn-primary btn-modern w-100 d-flex align-items-center justify-content-center gap-2">
-            <i data-lucide="search"></i>
-            Filtrar
-          </button>
-        </div>
-
-        <div class="col-md-2">
-          <a href="{% url 'relatorio_alunos' %}"
-             class="btn btn-secondary btn-modern w-100">
-            Limpar
-          </a>
-        </div>
-
-      </form>
-
-
-      {% if alunos %}
-
-      <div class="table-responsive">
-        <table class="table modern-table align-middle">
-
-          <thead>
-            <tr>
-              <th>Aluno</th>
-              <th>Matrícula</th>
-              <th>Turma</th>
-              <th>Indicadores</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {% for aluno in alunos %}
-            <tr class="hover-row">
-
-              <td class="fw-semibold">
-                {{ aluno.nome }}
-              </td>
-
-              <td>
-                <span class="badge bg-primary-soft">
-                  {{ aluno.matricula }}
-                </span>
-              </td>
-
-              <td>
-                {{ aluno.turma|default:"—" }}
-              </td>
-
-              <td>
-                {% if aluno.possui_dependencia %}
-                  <span class="badge bg-warning">Dependência</span>
-                {% endif %}
-
-                {% if aluno.aluno_trabalhador %}
-                  <span class="badge bg-info text-dark">Trabalhador</span>
-                {% endif %}
-
-                {% if aluno.aluno_paed %}
-                  <span class="badge bg-success">PAED</span>
-                {% endif %}
-
-                {% if aluno.transferido %}
-                  <span class="badge bg-danger">Transferido</span>
-                {% endif %}
-              </td>
-
-              <td class="text-center">
-                <div class="d-flex justify-content-center gap-2">
-
-                  <a href="{% url 'editar_aluno' aluno.id %}"
-                     class="btn btn-icon btn-warning-soft tooltip-btn"
-                     data-tooltip="Editar aluno">
-                    <i data-lucide="edit-3"></i>
-                  </a>
-
-                  <a href="{% url 'relatorio_aluno_completo' aluno.id %}"
-                     class="btn btn-icon btn-success-soft tooltip-btn"
-                     data-tooltip="Relatório completo">
-                    <i data-lucide="file-text"></i>
-                  </a>
-
-                </div>
-              </td>
-
-            </tr>
-            {% endfor %}
-
-          </tbody>
-
-        </table>
-      </div>
-
-      {% else %}
-      <div class="text-center p-5 text-muted">
-        <i data-lucide="users" style="width:50px;height:50px;"></i>
-        <p class="mt-3 mb-0">Nenhum aluno encontrado.</p>
-      </div>
-      {% endif %}
-
-    </div>
-  </div>
 </div>
 
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
+<!-- ================= DASHBOARD ================= -->
 
-  lucide.createIcons();
+<div class="row g-4 mb-4 dashboard-cards">
 
-  document.querySelectorAll('.tooltip-btn').forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-      const text = this.dataset.tooltip;
-      if (!text) return;
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card total-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Total</div>
+<div class="dashboard-value">{{ total }}</div>
+<div class="dashboard-sub">Alunos cadastrados</div>
+</div>
+</div>
+</div>
 
-      const tooltip = document.createElement('div');
-      tooltip.className = 'custom-tooltip';
-      tooltip.innerText = text;
-      document.body.appendChild(tooltip);
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card progress-card">
+<div class="card-body text-center">
+<div class="dashboard-title">PAED</div>
+<div class="dashboard-value">{{ total_paed }}</div>
+<div class="dashboard-sub">Programa educacional</div>
+</div>
+</div>
+</div>
 
-      const rect = this.getBoundingClientRect();
-      tooltip.style.top = (rect.top - 40) + "px";
-      tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + "px";
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card open-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Dependência</div>
+<div class="dashboard-value">{{ total_dependencia }}</div>
+<div class="dashboard-sub">Disciplinas pendentes</div>
+</div>
+</div>
+</div>
 
-      this._tooltip = tooltip;
-    });
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card resolved-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Transferidos</div>
+<div class="dashboard-value">{{ total_transferidos }}</div>
+<div class="dashboard-sub">Alunos transferidos</div>
+</div>
+</div>
+</div>
 
-    btn.addEventListener('mouseleave', function() {
-      if (this._tooltip) this._tooltip.remove();
-    });
-  });
-
-});
-</script>
+</div>
 
 
-<style>
-.modern-card { border-radius: 14px; }
+<!-- ================= FILTROS ================= -->
 
-.stat-card {
-  padding:20px;
-  border-radius:14px;
-  text-align:center;
-  font-weight:600;
-}
+<div class="card modern-card shadow-sm mb-4 filters-panel">
 
-.modern-table thead {
-  background: #f8f9fa;
-  font-weight: 600;
-}
+<div class="card-body">
 
-.hover-row:hover {
-  background-color: #f5f9ff;
-  transition: 0.2s;
-}
+<form method="get" class="row g-3 align-items-end">
 
-.btn-modern {
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
+<div class="col-md-3">
 
-.btn-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-}
+<label class="filter-label">
+<i data-lucide="search"></i> Busca
+</label>
 
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+<input type="text"
+name="q"
+value="{{ request.GET.q }}"
+class="form-control"
+placeholder="Nome ou matrícula">
 
-.bg-primary-soft { background:#e7f1ff; color:#0d6efd; }
-.bg-success-soft { background:#d1f7e3; color:#198754; }
-.bg-warning-soft { background:#fff3cd; color:#856404; }
-.bg-danger-soft { background:#fde2e2; color:#dc3545; }
+</div>
 
-.btn-warning-soft { background:#fff3cd; border:none; }
-.btn-success-soft { background:#d1f7e3; border:none; }
 
-.custom-tooltip {
-  position: fixed;
-  background: #1e293b;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  z-index: 9999;
-  white-space: nowrap;
-}
+<div class="col-md-2">
 
-@media print {
-  form, .btn { display:none !important; }
-}
-</style>
+<label class="filter-label">Tipo</label>
+
+<select name="tipo" class="form-select">
+<option value="nome" {% if request.GET.tipo == 'nome' %}selected{% endif %}>Nome</option>
+<option value="matricula" {% if request.GET.tipo == 'matricula' %}selected{% endif %}>Matrícula</option>
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="layers"></i> Turma
+</label>
+
+<select name="turma" class="form-select">
+
+<option value="">Todas</option>
+
+{% for turma in turmas %}
+<option value="{{ turma.id }}"
+{% if request.GET.turma == turma.id|stringformat:"s" %}selected{% endif %}>
+{{ turma }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-4 d-flex flex-wrap gap-3">
+
+<div class="form-check form-switch">
+<input class="form-check-input" type="checkbox" name="dependencia" value="1"
+{% if request.GET.dependencia == '1' %}checked{% endif %}>
+<label class="form-check-label">Dependência</label>
+</div>
+
+<div class="form-check form-switch">
+<input class="form-check-input" type="checkbox" name="trabalhador" value="1"
+{% if request.GET.trabalhador == '1' %}checked{% endif %}>
+<label class="form-check-label">Trabalhador</label>
+</div>
+
+<div class="form-check form-switch">
+<input class="form-check-input" type="checkbox" name="paed" value="1"
+{% if request.GET.paed == '1' %}checked{% endif %}>
+<label class="form-check-label">PAED</label>
+</div>
+
+<div class="form-check form-switch">
+<input class="form-check-input" type="checkbox" name="transferido" value="1"
+{% if request.GET.transferido == '1' %}checked{% endif %}>
+<label class="form-check-label">Transferido</label>
+</div>
+
+</div>
+
+
+<div class="col-md-2">
+
+<button type="submit" class="btn btn-primary btn-modern w-100">
+<i data-lucide="search"></i>
+Filtrar
+</button>
+
+</div>
+
+
+<div class="col-md-2">
+
+<a href="{% url 'relatorio_alunos' %}"
+class="btn btn-outline-secondary btn-modern w-100">
+Limpar
+</a>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<!-- ================= TABELA ================= -->
+
+<div class="card modern-card shadow-sm">
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead class="table-light">
+
+<tr>
+<th>Aluno</th>
+<th class="text-center">Matrícula</th>
+<th>Turma</th>
+<th>Indicadores</th>
+<th class="text-center">Ações</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for aluno in alunos %}
+
+<tr>
+
+<td class="fw-semibold">
+{{ aluno.nome }}
+</td>
+
+<td class="text-center">
+
+<span class="badge matricula-badge">
+{{ aluno.matricula }}
+</span>
+
+</td>
+
+<td>
+{{ aluno.turma|default:"—" }}
+</td>
+
+<td>
+
+{% if aluno.possui_dependencia %}
+<span class="badge bg-warning">Dependência</span>
+{% endif %}
+
+{% if aluno.aluno_trabalhador %}
+<span class="badge bg-info text-dark">Trabalhador</span>
+{% endif %}
+
+{% if aluno.aluno_paed %}
+<span class="badge bg-success">PAED</span>
+{% endif %}
+
+{% if aluno.transferido %}
+<span class="badge bg-danger">Transferido</span>
+{% endif %}
+
+</td>
+
+<td class="text-center">
+
+<div class="btn-group btn-group-sm">
+
+<a href="{% url 'editar_aluno' aluno.id %}" class="btn btn-outline-warning">
+<i data-lucide="edit"></i>
+</a>
+
+<a href="{% url 'relatorio_aluno_completo' aluno.id %}" class="btn btn-outline-success">
+<i data-lucide="file-text"></i>
+</a>
+
+</div>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="5" class="text-center py-5">
+
+<i data-lucide="users-x" style="width:40px;height:40px;color:#94a3b8"></i>
+
+<p class="mt-3 text-muted">
+Nenhum aluno encontrado com os filtros aplicados.
+</p>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
 
 {% endblock %}

@@ -50,6 +50,7 @@ def lista_ocorrencias(request):
     busca = request.GET.get("busca")
     turma = request.GET.get("turma")
     aluno = request.GET.get("aluno")
+    status = request.GET.get("status")
     data = request.GET.get("data")
 
     if busca:
@@ -65,10 +66,13 @@ def lista_ocorrencias(request):
     if aluno:
         ocorrencias = ocorrencias.filter(aluno_id=aluno)
 
+    if status:
+        ocorrencias = ocorrencias.filter(status=status)
+
     if data:
         ocorrencias = ocorrencias.filter(data=data)
 
-    # ===== ORDENAÇÃO DUPLA =====
+    # ===== ORDENAÇÃO =====
     ordenar = request.GET.get("ordenar", "-data")
 
     campos_validos = [
@@ -80,23 +84,28 @@ def lista_ocorrencias(request):
         "data", "-data",
     ]
 
-    if ordenar in campos_validos:
-        ocorrencias = ocorrencias.order_by(ordenar)
+    if ordenar not in campos_validos:
+        ordenar = "-data"
+
+    ocorrencias = ocorrencias.order_by(ordenar)
 
     # ===== PAGINAÇÃO =====
     paginator = Paginator(ocorrencias, 20)
     page = request.GET.get("page")
     ocorrencias = paginator.get_page(page)
 
+    # ===== CONTADORES =====
+    base = Ocorrencia.objects.all()
+
     context = {
         "ocorrencias": ocorrencias,
-        "turmas": Turma.objects.all(),
-        "alunos": Aluno.objects.all(),
+        "turmas": Turma.objects.all().order_by("ano_escolar", "nome"),
+        "alunos": Aluno.objects.all().order_by("nome"),
 
-        "total": Ocorrencia.objects.count(),
-        "abertas": Ocorrencia.objects.filter(status="ABERTA").count(),
-        "andamento": Ocorrencia.objects.filter(status="ANDAMENTO").count(),
-        "resolvidas": Ocorrencia.objects.filter(status="RESOLVIDA").count(),
+        "total": base.count(),
+        "abertas": base.filter(status="ABERTA").count(),
+        "andamento": base.filter(status="ANDAMENTO").count(),
+        "resolvidas": base.filter(status="RESOLVIDA").count(),
     }
 
     template, context = render_smart(

@@ -2,227 +2,431 @@
 {% block title %}Turmas{% endblock %}
 
 {% block content %}
+
 <div class="container-fluid mt-4 fade-in">
 
-  <!-- CABEÇALHO -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
-          <i data-lucide="layers"></i>
-          Turmas Cadastradas
-      </h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-      <a href="{% url 'cadastrar_turma' %}"
-         class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
-          <i data-lucide="plus"></i>
-          Nova Turma
-      </a>
-  </div>
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+<i data-lucide="layers"></i>
+Gerenciamento de Turmas
+</h3>
 
-  <div class="card modern-card shadow-sm border-0">
-    <div class="card-body">
+<div class="d-flex gap-2">
 
-      {% if turmas %}
+<a href="{% url 'cadastrar_turma' %}"
+class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="plus"></i>
+Nova Turma
+</a>
 
-      <div class="table-responsive">
-        <table class="table modern-table align-middle">
-
-          <thead>
-            <tr>
-                <th>Ano</th>
-                <th>Etapa</th>
-                <th>Série</th>
-                <th>Turma</th>
-                <th>Turno</th>
-                <th>Máx</th>
-                <th>Conselheiro</th>
-                <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-          {% for t in turmas %}
-            <tr class="hover-row">
-
-                <td><span class="badge bg-primary-soft">{{ t.ano_letivo }}</span></td>
-                <td>{{ t.get_etapa_display }}</td>
-                <td>{{ t.ano_escolar }}</td>
-                <td class="fw-semibold">{{ t.nome }}</td>
-                <td>{{ t.get_turno_display }}</td>
-                <td>{{ t.max_alunos }}</td>
-                <td>{{ t.professor_conselheiro|default:"—" }}</td>
-
-                <td class="text-center">
-                  <div class="d-flex justify-content-center gap-2">
-
-                    <!-- EDITAR -->
-                    <a href="{% url 'editar_turma' t.id %}"
-                       class="btn btn-icon btn-warning-soft tooltip-btn"
-                       data-tooltip="Editar turma">
-                        <i data-lucide="edit-3"></i>
-                    </a>
-
-                    <!-- EXCLUIR (POST CORRETO) -->
-                    <form method="POST"
-                          action="{% url 'excluir_turma' t.id %}"
-                          class="d-inline formExcluir">
-                        {% csrf_token %}
-                        <button type="button"
-                                class="btn btn-icon btn-danger-soft tooltip-btn btnExcluir"
-                                data-nome="{{ t.nome }}"
-                                data-tooltip="Excluir turma">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                    </form>
-
-                  </div>
-                </td>
-
-            </tr>
-          {% endfor %}
-          </tbody>
-
-        </table>
-      </div>
-
-      {% else %}
-
-      <div class="text-center p-5 text-muted">
-        <i data-lucide="layers" style="width:50px;height:50px;"></i>
-        <p class="mt-3 mb-0">Nenhuma turma cadastrada.</p>
-      </div>
-
-      {% endif %}
-
-    </div>
-  </div>
+</div>
 </div>
 
-<!-- ========================= SCRIPTS ========================= -->
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
+<!-- BUSCA -->
 
-  lucide.createIcons();
+<div class="card modern-card shadow-sm border-0 mb-3">
+<div class="card-body">
 
-  // ================= TOOLTIP =================
-  document.querySelectorAll('.tooltip-btn').forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-      const text = this.dataset.tooltip;
-      if (!text) return;
+<form method="get" id="formBusca">
 
-      const tooltip = document.createElement('div');
-      tooltip.className = 'custom-tooltip';
-      tooltip.innerText = text;
-      document.body.appendChild(tooltip);
+<div class="input-group">
 
-      const rect = this.getBoundingClientRect();
-      tooltip.style.top = (rect.top - 40) + "px";
-      tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + "px";
+<span class="input-group-text">
+<i data-lucide="search"></i>
+</span>
 
-      this._tooltip = tooltip;
-    });
+<input
+type="text"
+name="busca"
+class="form-control"
+placeholder="Buscar turma, série, etapa ou ano..."
+value="{{ request.GET.busca }}">
 
-    btn.addEventListener('mouseleave', function() {
-      if (this._tooltip) this._tooltip.remove();
-    });
-  });
+<button class="btn btn-primary">
+Buscar
+</button>
 
-  // ================= EXCLUSÃO VIA POST =================
-  document.querySelectorAll(".btnExcluir").forEach(btn => {
-    btn.addEventListener("click", function(e) {
+</div>
 
-      e.preventDefault();
+</form>
 
-      const form = this.closest(".formExcluir");
-      const nome = this.dataset.nome;
+</div>
+</div>
 
-      Swal.fire({
-        title: "Excluir turma?",
-        text: "Turma: " + nome,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#dc3545",
-        confirmButtonText: "Excluir",
-        cancelButtonText: "Cancelar"
-      }).then(result => {
-        if (result.isConfirmed) {
-          form.submit(); // POST real
-        }
-      });
 
-    });
-  });
 
-});
-</script>
+<!-- FILTROS -->
 
-{% if messages %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    {% for message in messages %}
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
-            title: '{{ message|escapejs }}',
-            showConfirmButton: false,
-            timer: 3500,
-            timerProgressBar: true
-        });
-    {% endfor %}
-});
-</script>
+<div class="card modern-card shadow-sm border-0 mb-3">
+<div class="card-body">
+
+<form method="get" id="formFiltros" class="row g-3 align-items-end">
+
+<input type="hidden" name="busca" value="{{ request.GET.busca }}">
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="calendar"></i> Ano
+</label>
+
+<select name="ano" class="form-select auto-filter">
+
+<option value="">Todos</option>
+
+{% for a in anos %}
+<option value="{{ a }}" {% if request.GET.ano == a|stringformat:"s" %}selected{% endif %}>
+{{ a }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="layers"></i> Série
+</label>
+
+<select name="serie" class="form-select auto-filter">
+
+<option value="">Todas</option>
+
+{% for s in series %}
+<option value="{{ s }}" {% if request.GET.serie == s %}selected{% endif %}>
+{{ s }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="network"></i> Turma
+</label>
+
+<select name="turma" class="form-select auto-filter">
+
+<option value="">Todas</option>
+
+{% for t in nomes_turma %}
+<option value="{{ t }}" {% if request.GET.turma == t %}selected{% endif %}>
+{{ t }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="sun"></i> Turno
+</label>
+
+<select name="turno" class="form-select auto-filter">
+
+<option value="">Todos</option>
+
+{% for t in turnos %}
+<option value="{{ t }}" {% if request.GET.turno == t %}selected{% endif %}>
+
+{% if t == "VES" %}
+Vespertino
+{% elif t == "NOT" %}
+Noturno
+{% else %}
+{{ t }}
 {% endif %}
 
-<!-- ========================= ESTILO ========================= -->
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-0">
+
+{% if page_obj %}
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead>
+
+<tr>
+
+<th class="sortable">
+<a href="?ordem=ano_letivo">
+Ano
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=etapa">
+Etapa
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=ano_escolar">
+Série
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=nome">
+Turma
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=turno">
+Turno
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>
+Máx
+</th>
+
+<th>
+Conselheiro
+</th>
+
+<th class="text-center">
+Ações
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for t in page_obj %}
+
+<tr class="hover-row">
+
+<td>
+<span class="badge bg-primary-soft">
+{{ t.ano_letivo }}
+</span>
+</td>
+
+<td>{{ t.get_etapa_display }}</td>
+
+<td>{{ t.ano_escolar }}</td>
+
+<td class="fw-semibold">
+{{ t.nome }}
+</td>
+
+<td>
+
+{% if t.turno == "VES" %}
+Vespertino
+{% elif t.turno == "NOT" %}
+Noturno
+{% else %}
+{{ t.turno }}
+{% endif %}
+
+</td>
+
+<td>{{ t.max_alunos }}</td>
+
+<td>{{ t.professor_conselheiro|default:"—" }}</td>
+
+
+<td class="text-center">
+
+<div class="d-flex justify-content-center gap-2">
+
+<a href="{% url 'editar_turma' t.id %}"
+class="btn btn-icon btn-warning-soft">
+<i data-lucide="edit-3"></i>
+</a>
+
+<button
+class="btn btn-icon btn-danger-soft btn-excluir"
+data-url="{% url 'excluir_turma' t.id %}">
+<i data-lucide="trash-2"></i>
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- PAGINAÇÃO -->
+
+<div class="p-3">
+
+<nav>
+
+<ul class="pagination justify-content-center mb-0">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}">
+Anterior
+</a>
+</li>
+
+{% endif %}
+
+
+{% for num in page_obj.paginator.page_range %}
+
+{% if page_obj.number == num %}
+
+<li class="page-item active">
+<span class="page-link">{{ num }}</span>
+</li>
+
+{% else %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ num }}">
+{{ num }}
+</a>
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}">
+Próximo
+</a>
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+</div>
+
+
+{% else %}
+
+<div class="p-5 text-center text-muted">
+
+<i data-lucide="layers" style="width:50px;height:50px;"></i>
+
+<p class="mt-3 mb-0">
+Nenhuma turma cadastrada.
+</p>
+
+</div>
+
+{% endif %}
+
+</div>
+</div>
+</div>
+
+
 
 <style>
-.modern-card { border-radius:14px; }
 
-.modern-table thead {
-  background:#f8f9fa;
-  font-weight:600;
+.filter-label{
+display:flex;
+align-items:center;
+gap:6px;
+font-size:.85rem;
+font-weight:600;
+color:#475569;
+margin-bottom:4px;
 }
 
-.hover-row:hover {
-  background-color:#f5f9ff;
-  transition:0.2s;
+.modern-card{
+border-radius:14px;
 }
 
-.btn-modern {
-  border-radius:10px;
-  padding:8px 16px;
-  font-weight:500;
-  transition:all 0.2s ease;
+.hover-row:hover{
+background:#f8fbff;
 }
 
-.btn-modern:hover {
-  transform:translateY(-2px);
-  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+.btn-modern{
+border-radius:10px;
+padding:8px 16px;
+font-weight:500;
 }
 
-.btn-icon {
-  width:36px;
-  height:36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.btn-icon{
+width:36px;
+height:36px;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-.bg-primary-soft { background:#e7f1ff; color:#0d6efd; }
-.btn-warning-soft { background:#fff3cd; border:none; }
-.btn-danger-soft { background:#ffe2e2; border:none; }
-
-.custom-tooltip {
-  position:fixed;
-  background:#1e293b;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  font-size:12px;
-  z-index:9999;
-  white-space:nowrap;
+.bg-primary-soft{
+background:#e7f1ff;
+color:#0d6efd;
 }
+
+.btn-warning-soft{
+background:#fff3cd;
+border:none;
+}
+
+.btn-danger-soft{
+background:#fde2e2;
+border:none;
+}
+
 </style>
 
 {% endblock %}

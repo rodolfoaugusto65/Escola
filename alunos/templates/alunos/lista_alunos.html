@@ -5,243 +5,462 @@
 
 <div class="container-fluid mt-4 fade-in">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
-      <i data-lucide="graduation-cap"></i>
-      Gerenciamento de Alunos
-    </h3>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-    <div class="d-flex gap-2">
-      <a href="{% url 'cadastrar_aluno' %}"
-         class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
-        <i data-lucide="user-plus"></i>
-        Novo Aluno
-      </a>
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+<i data-lucide="graduation-cap"></i>
+Gerenciamento de Alunos
+</h3>
 
-      <a href="{% url 'relatorio_alunos' %}"
-         class="btn btn-info btn-modern d-flex align-items-center gap-2 shadow-sm text-white">
-        <i data-lucide="file-text"></i>
-        Relatório
-      </a>
-    </div>
-  </div>
+<div class="d-flex gap-2">
 
-  <div class="card modern-card shadow-sm border-0">
-    <div class="card-body p-0">
+<a href="{% url 'cadastrar_aluno' %}"
+class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="user-plus"></i>
+Novo Aluno
+</a>
 
-      {% if alunos %}
+<a href="{% url 'relatorio_alunos' %}"
+class="btn btn-info btn-modern d-flex align-items-center gap-2 shadow-sm text-white">
+<i data-lucide="file-text"></i>
+Relatório
+</a>
 
-      <div class="table-responsive">
-        <table class="table modern-table align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Aluno</th>
-              <th>Matrícula</th>
-              <th>Nascimento</th>
-              <th>Turma</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {% for aluno in alunos %}
-            <tr id="alunoRow{{ aluno.id }}" class="hover-row">
-
-              <td><div class="fw-semibold">{{ aluno.nome }}</div></td>
-
-              <td>
-                <span class="badge bg-primary-soft">
-                  {{ aluno.matricula }}
-                </span>
-              </td>
-
-              <td>{{ aluno.data_nascimento|date:"d/m/Y" }}</td>
-
-              <td>
-                {% if aluno.turma_ano_letivo %}
-                  {{ aluno.turma_ano_letivo }} —
-                  {{ aluno.turma_etapa }} —
-                  {{ aluno.turma_ano_escolar }} {{ aluno.turma_nome }}
-                {% else %}
-                  <span class="text-muted">Sem turma</span>
-                {% endif %}
-              </td>
-
-              <td class="text-center">
-                <div class="d-flex justify-content-center gap-2">
-
-                  <a href="{% url 'editar_aluno' aluno.id %}"
-                     class="btn btn-icon btn-warning-soft">
-                    <i data-lucide="edit-3"></i>
-                  </a>
-
-                  <button type="button"
-                          class="btn btn-icon btn-danger-soft btn-delete-aluno"
-                          data-id="{{ aluno.id }}"
-                          data-nome="{{ aluno.nome }}"
-                          data-url="{% url 'excluir_aluno' aluno.id %}">
-                    <i data-lucide="trash-2"></i>
-                  </button>
-
-                </div>
-              </td>
-
-            </tr>
-            {% endfor %}
-          </tbody>
-
-        </table>
-      </div>
-
-      {% else %}
-        <div class="p-5 text-center text-muted">
-          <i data-lucide="users" style="width:50px;height:50px;"></i>
-          <p class="mt-3 mb-0">Nenhum aluno cadastrado.</p>
-        </div>
-      {% endif %}
-
-    </div>
-  </div>
+</div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
 
-  lucide.createIcons();
+<!-- BUSCA INTELIGENTE -->
 
-  function getCSRFToken() {
-      return document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='))
-        ?.split('=')[1];
-  }
+<div class="card modern-card shadow-sm border-0 mb-3">
+<div class="card-body">
 
-  document.querySelectorAll(".btn-delete-aluno").forEach(btn => {
+<form method="get" id="formBusca">
 
-    btn.addEventListener("click", function() {
+<div class="input-group">
 
-      const alunoId = this.dataset.id;
-      const alunoNome = this.dataset.nome;
-      const url = this.dataset.url;
-      const row = document.getElementById(`alunoRow${alunoId}`);
+<span class="input-group-text">
+<i data-lucide="search"></i>
+</span>
 
-      Swal.fire({
-        title: "Excluir aluno?",
-        html: `<strong>${alunoNome}</strong><br>Ação irreversível.`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Excluir",
-        confirmButtonColor: "#dc3545"
-      }).then(result => {
+<input
+type="text"
+name="busca"
+class="form-control"
+placeholder="Buscar aluno, matrícula, turma ou ano..."
+value="{{ request.GET.busca }}">
 
-        if (!result.isConfirmed) return;
+<button class="btn btn-primary">
+Buscar
+</button>
 
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": getCSRFToken(),
-            "X-Requested-With": "XMLHttpRequest"
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
+</div>
 
-          if (data.success) {
+</form>
 
-            if (row) row.remove();
-
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "success",
-              title: data.message,
-              showConfirmButton: false,
-              timer: 3000
-            });
-
-          } else {
-            Swal.fire("Erro", data.error, "error");
-          }
-
-        })
-        .catch(() => {
-          Swal.fire("Erro", "Erro ao excluir aluno.", "error");
-        });
-
-      });
-
-    });
-
-  });
-
-});
+</div>
+</div>
 
 
-/* =====================================
-   CONTROLE DINÂMICO DOS INDICADORES
-======================================*/
+<!-- FILTROS -->
 
-function toggleDependentField(checkboxSelector, fieldSelector) {
+<div class="card modern-card shadow-sm border-0 mb-3">
+<div class="card-body">
 
-  const checkbox = document.querySelector(checkboxSelector);
-  const field = document.querySelector(fieldSelector);
+<form method="get" id="formFiltros" class="row g-3 align-items-end">
 
-  if (!checkbox || !field) return;
+<input type="hidden" name="busca" value="{{ request.GET.busca }}">
 
-  function updateState() {
-    if (checkbox.checked) {
-      field.disabled = false;
-      field.closest(".indicator-box").classList.remove("box-disabled");
-    } else {
-      field.disabled = true;
-      field.value = "";
-      field.closest(".indicator-box").classList.add("box-disabled");
-    }
-  }
+<div class="col-md-3">
 
-  checkbox.addEventListener("change", updateState);
+<label class="filter-label">
+<i data-lucide="sun"></i> Turno
+</label>
 
-  // Executa ao carregar a página
-  updateState();
-}
+<select name="turno" class="form-select filter-select auto-filter">
 
-/* PAED */
-toggleDependentField(
-  'input[name="aluno_paed"]',
-  '.paed-field'
-);
+<option value="">Todos</option>
 
-/* FICAI */
-toggleDependentField(
-  'input[name="aluno_busca_ativa"]',
-  '.ficai-field'
-);
-</script>
+{% for t in turnos %}
+<option value="{{ t }}" {% if request.GET.turno == t %}selected{% endif %}>
+
+{% if t == "VES" %}
+Vespertino
+{% elif t == "NOT" %}
+Noturno
+{% else %}
+{{ t }}
+{% endif %}
+
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="layers"></i> Ano
+</label>
+
+<select name="ano" class="form-select filter-select auto-filter">
+
+<option value="">Todos</option>
+
+{% for ano in anos %}
+<option value="{{ ano }}" {% if request.GET.ano == ano %}selected{% endif %}>
+{{ ano }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="network"></i> Turma
+</label>
+
+<select name="turma" class="form-select filter-select auto-filter">
+
+<option value="">Todas</option>
+
+{% for t in turmas %}
+<option value="{{ t }}" {% if request.GET.turma == t %}selected{% endif %}>
+{{ t }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-2 d-flex gap-2">
+
+<button class="btn btn-primary w-100 btn-modern">
+<i data-lucide="filter"></i>
+Filtrar
+</button>
+
+<a href="{% url 'lista_alunos' %}"
+class="btn btn-outline-secondary w-100">
+<i data-lucide="x"></i>
+Limpar
+</a>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-0">
+
+{% if page_obj %}
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead>
+
+<tr>
+
+<th class="sortable">
+<a href="?ordem=nome&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+Aluno
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=matricula&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+Matrícula
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordem=data_nascimento&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+Nascimento
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>
+Turma
+</th>
+
+<th class="text-center">
+Ações
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for aluno in page_obj %}
+
+<tr class="hover-row">
+
+<td>
+
+<div class="aluno-cell">
+
+<span class="aluno-nome">
+{{ aluno.nome }}
+</span>
+
+</div>
+
+</td>
+
+
+<td>
+
+<span class="badge bg-primary-soft">
+{{ aluno.matricula }}
+</span>
+
+</td>
+
+
+<td>
+{{ aluno.data_nascimento|date:"d/m/Y" }}
+</td>
+
+
+<td>
+
+{% if aluno.turma_ano_letivo %}
+
+<span class="turma-badge">
+
+{{ aluno.turma_ano_letivo }} —
+{{ aluno.turma_ano_escolar }}{{ aluno.turma_nome }}
+
+</span>
+
+{% else %}
+
+<span class="text-muted">Sem turma</span>
+
+{% endif %}
+
+</td>
+
+
+<td class="text-center">
+
+<div class="d-flex justify-content-center gap-2">
+
+<a href="{% url 'editar_aluno' aluno.id %}"
+class="btn btn-icon btn-warning-soft">
+<i data-lucide="edit-3"></i>
+</a>
+
+<button
+class="btn btn-icon btn-danger-soft btn-excluir"
+data-url="{% url 'excluir_aluno' aluno.id %}">
+<i data-lucide="trash-2"></i>
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- PAGINAÇÃO -->
+
+<div class="p-3">
+
+<nav>
+
+<ul class="pagination justify-content-center mb-0">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+Anterior
+</a>
+</li>
+
+{% endif %}
+
+
+{% for num in page_obj.paginator.page_range %}
+
+{% if page_obj.number == num %}
+
+<li class="page-item active">
+<span class="page-link">{{ num }}</span>
+</li>
+
+{% else %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ num }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+{{ num }}
+</a>
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+Próximo
+</a>
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+</div>
+
+
+{% else %}
+
+<div class="p-5 text-center text-muted">
+
+<i data-lucide="users" style="width:50px;height:50px;"></i>
+
+<p class="mt-3 mb-0">
+Nenhum aluno cadastrado.
+</p>
+
+</div>
+
+{% endif %}
+
+</div>
+</div>
+</div>
 
 <style>
-.modern-card { border-radius: 14px; }
-.modern-table thead { background: #f8f9fa; font-weight: 600; }
-.hover-row:hover { background-color: #f5f9ff; transition: 0.2s; }
-.btn-modern {
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+
+.filter-label{
+display:flex;
+align-items:center;
+gap:6px;
+font-size:.85rem;
+font-weight:600;
+color:#475569;
+margin-bottom:4px;
 }
-.btn-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+.filter-select{
+border-radius:10px;
 }
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+
+.aluno-cell{
+display:flex;
+align-items:center;
+gap:10px;
 }
-.bg-primary-soft { background:#e7f1ff; color:#0d6efd; }
-.btn-warning-soft { background:#fff3cd; border:none; }
-.btn-danger-soft { background:#fde2e2; border:none; }
+
+.aluno-nome{
+font-weight:600;
+}
+
+.sortable a{
+text-decoration:none;
+color:#334155;
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.sortable a:hover{
+color:#0ea5e9;
+}
+
+.turma-badge{
+background:#f1f5f9;
+padding:4px 10px;
+border-radius:8px;
+font-size:.85rem;
+}
+
+.modern-card{
+border-radius:14px;
+}
+
+.hover-row:hover{
+background:#f8fbff;
+}
+
+.btn-modern{
+border-radius:10px;
+padding:8px 16px;
+font-weight:500;
+transition:.2s;
+}
+
+.btn-modern:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.btn-icon{
+width:36px;
+height:36px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.bg-primary-soft{
+background:#e7f1ff;
+color:#0d6efd;
+}
+
+.btn-warning-soft{
+background:#fff3cd;
+border:none;
+}
+
+.btn-danger-soft{
+background:#fde2e2;
+border:none;
+}
 </style>
 
 {% endblock %}

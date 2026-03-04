@@ -8,18 +8,120 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from core.utils import render_smart
-
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 def lista_alunos(request):
-    alunos = Aluno.objects.all().order_by('nome')
+
+    alunos = Aluno.objects.select_related("turma").all()
+
+    # =========================
+    # PARÂMETROS
+    # =========================
+
+    busca = request.GET.get("busca")
+    turno = request.GET.get("turno")
+    ano = request.GET.get("ano")
+    turma = request.GET.get("turma")
+
+    # =========================
+    # BUSCA INTELIGENTE
+    # =========================
+
+    if busca:
+        alunos = alunos.filter(
+            Q(nome__icontains=busca) |
+            Q(matricula__icontains=busca) |
+            Q(turma__nome__icontains=busca) |
+            Q(turma__ano_escolar__icontains=busca)
+        )
+
+    # =========================
+    # FILTROS
+    # =========================
+
+    if turno:
+        alunos = alunos.filter(turma__turno=turno)
+
+    if ano:
+        alunos = alunos.filter(turma__ano_escolar=ano)
+
+    if turma:
+        alunos = alunos.filter(turma__nome=turma)
+
+    # =========================
+    # ORDENAÇÃO
+    # =========================
+
+    ordem = request.GET.get("ordem", "nome")
+
+    if ordem == "nome":
+        alunos = alunos.order_by("nome")
+
+    elif ordem == "-nome":
+        alunos = alunos.order_by("-nome")
+
+    elif ordem == "matricula":
+        alunos = alunos.order_by("matricula")
+
+    elif ordem == "-matricula":
+        alunos = alunos.order_by("-matricula")
+
+    elif ordem == "data_nascimento":
+        alunos = alunos.order_by("data_nascimento")
+
+    elif ordem == "-data_nascimento":
+        alunos = alunos.order_by("-data_nascimento")
+
+    else:
+        alunos = alunos.order_by("nome")
+
+    # =========================
+    # PAGINAÇÃO
+    # =========================
+
+    paginator = Paginator(alunos, 50)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # =========================
+    # FILTROS DINÂMICOS
+    # =========================
+
+    turmas_qs = Turma.objects.all()
+
+    if turno:
+        turmas_qs = turmas_qs.filter(turno=turno)
+
+    if ano:
+        turmas_qs = turmas_qs.filter(ano_escolar=ano)
+
+    turnos = Turma.objects.values_list("turno", flat=True).distinct().order_by("turno")
+
+    anos = turmas_qs.values_list(
+        "ano_escolar",
+        flat=True
+    ).distinct().order_by("ano_escolar")
+
+    turmas = turmas_qs.values_list(
+        "nome",
+        flat=True
+    ).distinct().order_by("nome")
+
+    # =========================
+    # CONTEXTO
+    # =========================
 
     contexto = {
-        'alunos': alunos
+        "page_obj": page_obj,
+        "turnos": turnos,
+        "anos": anos,
+        "turmas": turmas
     }
 
     template, contexto = render_smart(
         request,
-        'alunos/lista_alunos.html',
+        "alunos/lista_alunos.html",
         contexto
     )
 
@@ -48,6 +150,9 @@ def cadastrar_aluno(request):
         form = AlunoForm()
 
     return render(request, 'alunos/cadastrar_aluno.html', {'form': form})
+
+
+
 
 
 def editar_aluno(request, id):
