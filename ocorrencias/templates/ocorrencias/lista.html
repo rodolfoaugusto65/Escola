@@ -266,7 +266,7 @@ Limpar
 <th><a href="?ordenar=aluno__nome">Aluno</a></th>
 <th><a href="?ordenar=turma__nome">Turma</a></th>
 <th><a href="?ordenar=tipo_ocorrencia">Tipo</a></th>
-<th>Status</th>
+<th><a href="?ordenar=status">Status</a></th>
 <th><a href="?ordenar=data">Data</a></th>
 <th class="text-center">Ações</th>
 
@@ -288,14 +288,47 @@ Limpar
 
 <td>{{ o.turma }}</td>
 
-<td>{{ o.get_tipo_ocorrencia_display }}</td>
+<td class="text-center">
 
-<td>
+<span class="tipo-badge 
+{% if o.tipo_ocorrencia == 'DISCIPLINAR' %}tipo-disciplinar
+{% elif o.tipo_ocorrencia == 'ATRASO' %}tipo-atraso
+{% elif o.tipo_ocorrencia == 'UNIFORME' %}tipo-uniforme
+{% else %}tipo-outros{% endif %}">
 
-<span class="badge badge-status px-3 py-2
-{% if o.status == 'ABERTA' %}status-danger
-{% elif o.status == 'ANDAMENTO' %}status-warning
-{% else %}status-success{% endif %}">
+{% if o.tipo_ocorrencia == 'DISCIPLINAR' %}
+<i data-lucide="alert-triangle"></i>
+
+{% elif o.tipo_ocorrencia == 'ATRASO' %}
+<i data-lucide="clock"></i>
+
+{% elif o.tipo_ocorrencia == 'UNIFORME' %}
+<i data-lucide="user"></i>
+
+{% else %}
+<i data-lucide="file"></i>
+{% endif %}
+
+{{ o.get_tipo_ocorrencia_display }}
+
+</span>
+
+</td>
+
+<td class="text-center">
+
+<span class="status-badge
+{% if o.status == 'ABERTA' %}status-open
+{% elif o.status == 'ANDAMENTO' %}status-progress
+{% else %}status-resolved{% endif %}">
+
+{% if o.status == 'ABERTA' %}
+<i data-lucide="alert-circle"></i>
+{% elif o.status == 'ANDAMENTO' %}
+<i data-lucide="clock"></i>
+{% else %}
+<i data-lucide="check-circle"></i>
+{% endif %}
 
 {{ o.get_status_display }}
 

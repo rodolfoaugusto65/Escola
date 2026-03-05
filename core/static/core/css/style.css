@@ -640,3 +640,192 @@ font-weight:600;
 letter-spacing:.5px;
 
 }
+
+/* =========================
+   BADGES PADRÃO SISTEMA
+========================= */
+
+.tipo-badge,
+.status-badge{
+
+display:inline-flex;
+align-items:center;
+justify-content:center;
+gap:6px;
+
+min-width:150px;
+height:36px;
+
+padding:0 14px;
+
+border-radius:8px;
+
+font-size:.8rem;
+font-weight:600;
+
+line-height:1;
+
+}
+
+
+/* =========================
+   TIPOS DE OCORRÊNCIA
+========================= */
+
+.tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status-badge.status-open{
+background:#FECACA !important;
+color:#991B1B !important;
+border:1px solid #F87171 !important;
+}
+
+.status-badge.status-progress{
+background:#FEF08A !important;
+color:#854D0E !important;
+border:1px solid #FACC15 !important;
+}
+
+.status-badge.status-resolved{
+background:#BBF7D0 !important;
+color:#065F46 !important;
+border:1px solid #4ADE80 !important;
+}
+
+
+/* ícones */
+
+.tipo-badge i,
+.status-badge i{
+
+width:16px;
+height:16px;
+
+}
+
+/* =========================
+   CORREÇÃO FINAL TIPOS
+========================= */
+
+.tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+/* força ícone herdar cor correta */
+
+.tipo-badge svg{
+color:inherit !important;
+stroke:currentColor !important;
+}
+
+/* =========================
+   FORÇA CORES DOS TIPOS
+========================= */
+
+.modern-table .tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.modern-table .tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.modern-table .tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.modern-table .tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+* =========================
+   FIX TIPOS OCORRÊNCIA
+========================= */
+
+.modern-table .tipo-badge{
+background:#f1f5f9;
+border:1px solid #cbd5f1;
+color:#334155;
+}
+
+.modern-table .tipo-disciplinar{
+background:#fee2e2 !important;
+border-color:#ef4444 !important;
+color:#991b1b !important;
+}
+
+.modern-table .tipo-atraso{
+background:#fef3c7 !important;
+border-color:#facc15 !important;
+color:#92400e !important;
+}
+
+.modern-table .tipo-uniforme{
+background:#e0f2fe !important;
+border-color:#38bdf8 !important;
+color:#075985 !important;
+}
+
+.modern-table .tipo-outros{
+background:#ede9fe !important;
+border-color:#a78bfa !important;
+color:#5b21b6 !important;
+}
+
+
+
+
