@@ -6,15 +6,20 @@ from alunos.models import Aluno
 
 class OcorrenciaForm(forms.ModelForm):
 
-    # Campos extras/override do ModelForm
     data = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={"type": "date"})
+        widget=forms.DateInput(
+            attrs={"type": "date"},
+            format="%Y-%m-%d"
+        )
     )
 
     ficai_data = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={"type": "date"})
+        widget=forms.DateInput(
+            attrs={"type": "date"},
+            format="%Y-%m-%d"
+        )
     )
 
     class Meta:
@@ -22,8 +27,8 @@ class OcorrenciaForm(forms.ModelForm):
         exclude = ["codigo", "usuario", "criado_em"]
 
         widgets = {
-            "data": forms.DateInput(attrs={"type": "date"}),
-            "ficai_data": forms.DateInput(attrs={"type": "date"}),
+            "data": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "ficai_data": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -34,23 +39,22 @@ class OcorrenciaForm(forms.ModelForm):
             self.fields["data"].initial = timezone.now().date()
 
         if self.instance.pk and self.instance.data:
-            self.initial["data"] = self.instance.data
+            self.fields["data"].initial = self.instance.data
 
         if self.instance.pk and getattr(self.instance, "ficai_data", None):
-            self.initial["ficai_data"] = self.instance.ficai_data
+            self.fields["ficai_data"].initial = self.instance.ficai_data
 
         # 🔥 FILTRO DE ALUNOS POR TURMA
 
-        # padrão: nenhum aluno
         self.fields["aluno"].queryset = Aluno.objects.none()
 
-        # se estiver editando
+        # edição
         if self.instance.pk and self.instance.turma:
             self.fields["aluno"].queryset = Aluno.objects.filter(
                 turma=self.instance.turma
             )
 
-        # se veio turma do POST (criação)
+        # criação via POST
         if "turma" in self.data:
             try:
                 turma_id = int(self.data.get("turma"))
@@ -63,7 +67,7 @@ class OcorrenciaForm(forms.ModelForm):
     def save(self, commit=True):
         obj = super().save(commit=False)
 
-        # 🔥 sincroniza turma com a turma atual do aluno
+        # sincroniza turma com aluno
         if obj.aluno and obj.aluno.turma:
             obj.turma = obj.aluno.turma
 

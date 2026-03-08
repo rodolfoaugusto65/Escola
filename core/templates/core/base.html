@@ -393,6 +393,19 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
 
 <div class="d-flex align-items-center">
 
+<div class="global-search">
+
+<input
+    type="text"
+    id="studentSearch"
+    placeholder="Buscar aluno... (Ctrl + B)"
+    autocomplete="off"
+/>
+
+<div id="studentSuggestions" class="search-suggestions"></div>
+
+</div>
+
 <div class="topbar-tools">
 <div class="tool-item" title="Total de alunos cadastrados">
 <i data-lucide="users"></i>
@@ -691,6 +704,227 @@ document.querySelectorAll(".logout-link").forEach(link=>{
     });
 
 });
+
+/* =========================================================
+APRESENTAR A PARTE DIGITADA NO RESULTADO DA PESQUISA
+========================================================= */
+function highlight(text, query){
+
+if(!query) return text;
+
+const regex = new RegExp(`(${query})`, "gi");
+
+return text.replace(regex, `<span class="search-highlight">$1</span>`);
+
+}
+
+
+/* =========================================================
+BUSCA GLOBAL DE ALUNOS
+========================================================= */
+
+function initStudentSearch(){
+
+const input = document.getElementById("studentSearch");
+const box = document.getElementById("studentSuggestions");
+
+if(!input || !box) return;
+
+let timer;
+let results = [];
+let selectedIndex = -1;
+
+
+/* ================= INPUT ================= */
+
+input.addEventListener("input",function(){
+
+clearTimeout(timer);
+
+const query = this.value.trim();
+
+if(query.length < 2){
+box.classList.remove("show");
+return;
+}
+
+timer = setTimeout(()=>{
+
+fetch("/core/buscar-alunos/?q=" + encodeURIComponent(query))
+
+.then(res => res.json())
+
+.then(data => {
+
+results = data.results || [];
+selectedIndex = -1;
+
+box.innerHTML = "";
+
+if(results.length === 0){
+box.classList.remove("show");
+return;
+}
+
+results.forEach((aluno,index)=>{
+
+const item = document.createElement("div");
+item.className = "search-item";
+
+const nomeHighlight = highlight(aluno.nome, query);
+
+let ocorrencias = aluno.ocorrencias || 0;
+
+let statusIcon = "🟢";
+let statusClass = "ocorrencias-ok";
+
+if(ocorrencias >= 3){
+statusIcon = "🔴";
+statusClass = "ocorrencias-alerta";
+}
+else if(ocorrencias >= 1){
+statusIcon = "🟡";
+statusClass = "ocorrencias-atencao";
+}
+
+item.innerHTML = `
+<div class="search-row">
+
+<div class="search-info-area">
+
+<div class="search-main">
+${highlight(aluno.nome, query)}
+</div>
+
+<div class="search-meta">
+${aluno.matricula} • ${aluno.turma || ""} • 
+Ocorrências: ${aluno.ocorrencias || 0}
+</div>
+
+<div class="search-actions">
+
+<a class="search-btn relatorio"
+href="${aluno.url_relatorio}">
+Relatório
+</a>
+
+<a class="search-btn ocorrencia"
+href="${aluno.url_ocorrencia}">
+Ocorrência
+</a>
+
+<a class="search-btn historico"
+href="${aluno.url_ocorrencias}">
+Ver ocorrências
+</a>
+
+</div>
+
+</div>
+
+</div>
+`;
+
+item.addEventListener("click",()=>{
+window.location.href = aluno.url_relatorio;
+});
+
+box.appendChild(item);
+
+});
+
+box.classList.add("show");
+
+});
+
+},250);
+
+});
+
+
+/* ================= TECLADO ================= */
+
+input.addEventListener("keydown",function(e){
+
+const items = box.querySelectorAll(".search-item");
+
+if(e.key === "ArrowDown"){
+
+e.preventDefault();
+selectedIndex++;
+
+if(selectedIndex >= items.length){
+selectedIndex = 0;
+}
+
+updateSelection(items);
+
+}
+
+if(e.key === "ArrowUp"){
+
+e.preventDefault();
+selectedIndex--;
+
+if(selectedIndex < 0){
+selectedIndex = items.length - 1;
+}
+
+updateSelection(items);
+
+}
+
+if(e.key === "Enter"){
+
+if(selectedIndex >= 0 && results[selectedIndex]){
+window.location.href = "/alunos/" + results[selectedIndex].id + "/";
+}
+
+}
+
+});
+
+function updateSelection(items){
+
+items.forEach(i => i.classList.remove("active"));
+
+if(items[selectedIndex]){
+items[selectedIndex].classList.add("active");
+}
+
+}
+
+}
+
+
+/* =========================================================
+ATALHO GLOBAL CTRL+B
+========================================================= */
+
+document.addEventListener("keydown",function(e){
+
+if(e.ctrlKey && e.key.toLowerCase() === "b"){
+
+e.preventDefault();
+
+const input = document.getElementById("studentSearch");
+
+if(input){
+input.focus();
+input.select();
+}
+
+}
+
+});
+
+
+/* ================= INIT ================= */
+
+document.addEventListener("DOMContentLoaded", initStudentSearch);
+document.body.addEventListener("htmx:afterSwap", initStudentSearch);
+
+
 /* ================= SESSION TIMER DEFINITIVO ================= */
 
 function initSessionTimer(){

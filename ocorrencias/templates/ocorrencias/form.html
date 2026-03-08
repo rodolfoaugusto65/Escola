@@ -186,6 +186,55 @@ document.getElementById("id_turma").addEventListener("change", function(){
         });
 });
 
+// =============================
+// AUTO CARREGAR ALUNO VIA URL
+// =============================
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const params = new URLSearchParams(window.location.search);
+    const matricula = params.get("matricula");
+
+    if(!matricula) return;
+
+    fetch(`/ocorrencias/buscar-aluno/?q=${matricula}`)
+    .then(r => r.json())
+    .then(data => {
+
+        if(!data.length) return;
+
+        const aluno = data[0];
+
+        // seleciona turma
+        document.getElementById("id_turma").value = aluno.turma_id;
+
+        // carrega alunos da turma
+        fetch(`/ocorrencias/get-alunos/?turma=${aluno.turma_id}`)
+        .then(r => r.json())
+        .then(lista => {
+
+            const select = document.getElementById("id_aluno");
+            select.innerHTML = "";
+
+            lista.forEach(a => {
+
+                const opt = document.createElement("option");
+                opt.value = a.id;
+                opt.text = `${a.nome} (${a.matricula})`;
+
+                select.appendChild(opt);
+
+            });
+
+            // seleciona automaticamente o aluno
+            select.value = aluno.id;
+
+        });
+
+    });
+
+});
+
 </script>
 
 {% endblock %}

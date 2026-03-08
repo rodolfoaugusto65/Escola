@@ -49,7 +49,7 @@ def lista_ocorrencias(request):
     # ===== FILTROS =====
     busca = request.GET.get("busca")
     turma = request.GET.get("turma")
-    aluno = request.GET.get("aluno")
+    aluno = request.GET.get("aluno") or request.GET.get("matricula")
     status = request.GET.get("status")
     data = request.GET.get("data")
 
@@ -64,7 +64,15 @@ def lista_ocorrencias(request):
         ocorrencias = ocorrencias.filter(turma_id=turma)
 
     if aluno:
-        ocorrencias = ocorrencias.filter(aluno_id=aluno)
+        # tenta por matrícula primeiro
+        ocorrencias_matricula = ocorrencias.filter(aluno__matricula=aluno)
+
+        if ocorrencias_matricula.exists():
+            ocorrencias = ocorrencias_matricula
+        else:
+            # fallback para ID
+            if str(aluno).isdigit():
+                ocorrencias = ocorrencias.filter(aluno_id=int(aluno))
 
     if status:
         ocorrencias = ocorrencias.filter(status=status)
@@ -89,16 +97,27 @@ def lista_ocorrencias(request):
 
     ocorrencias = ocorrencias.order_by(ordenar)
 
-    # ===== PAGINAÇÃO =====
-    paginator = Paginator(ocorrencias, 20)
-    page = request.GET.get("page")
-    ocorrencias = paginator.get_page(page)
+    # ===== PAGINAÇÃO MODERNA =====
+    mostrar = request.GET.get("mostrar", 10)
 
-    # ===== CONTADORES =====
-    base = Ocorrencia.objects.all()
+    try:
+        mostrar = int(mostrar)
+    except:
+        mostrar = 10
+
+    paginator = Paginator(ocorrencias, mostrar)
+
+    page = request.GET.get("page")
+    page_obj = paginator.get_page(page)
+
+    # ===== CONTADORES (RESPEITANDO FILTROS) =====
+    base = ocorrencias
 
     context = {
-        "ocorrencias": ocorrencias,
+        "ocorrencias": page_obj,
+        "page_obj": page_obj,
+        "mostrar": mostrar,
+
         "turmas": Turma.objects.all().order_by("ano_escolar", "nome"),
         "alunos": Aluno.objects.all().order_by("nome"),
 
@@ -116,10 +135,27 @@ def lista_ocorrencias(request):
 
     return render(request, template, context)
 
-
 @login_required
 def criar_ocorrencia(request):
+
+    aluno_id = request.GET.get("aluno")
+    matricula = request.GET.get("matricula")
+
+    aluno = None
+
+    # prioridade para matrícula (identificador universal)
+    if matricula:
+        aluno = Aluno.objects.filter(matricula=matricula).first()
+
+    # fallback para id
+    elif aluno_id:
+        aluno = Aluno.objects.filter(pk=aluno_id).first()
+
     form = OcorrenciaForm(request.POST or None)
+
+    if aluno:
+        form.initial["aluno"] = aluno
+        form.initial["turma"] = aluno.turma
 
     if form.is_valid():
         obj = form.save(commit=False)
@@ -132,14 +168,23 @@ def criar_ocorrencia(request):
 
 @login_required
 def editar_ocorrencia(request, pk):
+
     o = get_object_or_404(Ocorrencia, pk=pk)
-    form = OcorrenciaForm(request.POST or None, instance=o)
 
-    if form.is_valid():
-        form.save()
-        return redirect("detalhe_ocorrencia", pk=o.pk)
+    if request.method == "POST":
+        form = OcorrenciaForm(request.POST, instance=o)
 
-    return render(request, "ocorrencias/form.html", {"form": form})
+        if form.is_valid():
+            form.save()
+            return redirect("detalhe_ocorrencia", pk=o.pk)
+
+    else:
+        form = OcorrenciaForm(instance=o)
+
+    return render(request, "ocorrencias/form.html", {
+        "form": form,
+        "ocorrencia": o
+    })
 
 
 @login_required

@@ -5,11 +5,11 @@ from .forms import AlunoForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from core.utils import render_smart
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import Http404
 
 def lista_alunos(request):
 
@@ -209,16 +209,32 @@ def excluir_aluno(request, pk):
             "error": "Erro interno ao excluir."
         })
 
+
+
 def relatorio_aluno_completo(request, aluno_id):
-    aluno = get_object_or_404(Aluno, id=aluno_id)
+
+    aluno = None
+
+    # tenta buscar pela matrícula
+    aluno = Aluno.objects.filter(matricula=aluno_id).first()
+
+    # se não encontrou tenta pelo ID
+    if not aluno and str(aluno_id).isdigit():
+        aluno = Aluno.objects.filter(id=int(aluno_id)).first()
+
+    if not aluno:
+        raise Http404("Aluno não encontrado")
+
     return render(request, 'alunos/relatorio_aluno_completo.html', {
         'aluno': aluno
     })
 
+
+
 @login_required
 def relatorio_alunos(request):
 
-    alunos = Aluno.objects.all()
+    alunos = Aluno.objects.select_related("turma").all()
 
     # =========================
     # FILTRO TEXTO
@@ -262,10 +278,33 @@ def relatorio_alunos(request):
     total_dependencia = alunos.filter(possui_dependencia=True).count()
     total_transferidos = alunos.filter(transferido=True).count()
 
+    # =========================
+    # PAGINAÇÃO MODERNA
+    # =========================
+    mostrar = request.GET.get("mostrar", 10)
+
+    try:
+        mostrar = int(mostrar)
+    except:
+        mostrar = 10
+
+    paginator = Paginator(alunos.order_by("nome"), mostrar)
+
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # =========================
+    # TURMAS
+    # =========================
     turmas = Turma.objects.all().order_by('ano_letivo')
 
+    # =========================
+    # CONTEXTO
+    # =========================
     context = {
-        'alunos': alunos.order_by('nome'),
+        'alunos': alunos.order_by('nome'),  # mantém compatibilidade
+        'page_obj': page_obj,               # usado na tabela
+        'mostrar': mostrar,
         'turmas': turmas,
         'total': total,
         'total_paed': total_paed,

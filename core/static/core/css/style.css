@@ -826,6 +826,299 @@ border-color:#a78bfa !important;
 color:#5b21b6 !important;
 }
 
+/* ================= BUSCA GLOBAL ================= */
+
+.global-search{
+position:relative;
+margin-right:28px;
+}
+
+#studentSearch{
+width:340px;
+height:42px;
+border-radius:14px;
+border:1px solid #e5e7eb;
+padding:0 16px;
+font-size:.92rem;
+background:#fff;
+transition:.2s;
+}
+
+#studentSearch:focus{
+outline:none;
+border-color:#38bdf8;
+box-shadow:0 0 0 3px rgba(56,189,248,.15);
+}
+
+/* ================= RESULTADOS ================= */
+
+.search-suggestions{
+position:absolute;
+top:48px;
+left:0;
+width:100%;
+background:#fff;
+border-radius:14px;
+box-shadow:0 14px 35px rgba(0,0,0,.12);
+display:none;
+overflow:hidden;
+z-index:5000;
+}
+
+.search-suggestions.show{
+display:block;
+}
+
+.search-item{
+padding:10px 16px;
+cursor:pointer;
+transition:.15s;
+border-bottom:1px solid #f1f5f9;
+}
+
+.search-item:last-child{
+border-bottom:none;
+}
+
+.search-item:hover,
+.search-item.active{
+background:#f8fafc;
+}
+
+/* ================= TEXTO ================= */
+
+.search-main{
+font-weight:600;
+font-size:.9rem;
+color:#0f172a;
+line-height:1.25;
+white-space:normal;
+word-break:break-word;
+}
+
+.search-meta{
+font-size:.75rem;
+color:#64748b;
+margin-top:2px;
+}
 
 
+/* ================= RESULTADO DA BUSCA ================= */
 
+.search-row{
+padding:10px 14px;
+border-bottom:1px solid #f1f5f9;
+transition:.15s;
+}
+
+.search-row:hover{
+background:#f8fafc;
+}
+
+
+/* área de texto */
+
+.search-info-area{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+
+/* nome */
+
+.search-main{
+font-weight:600;
+font-size:.95rem;
+color:#1e293b;
+}
+
+
+/* metadados */
+
+.search-meta{
+font-size:.78rem;
+color:#64748b;
+}
+
+
+/* botões */
+
+.search-actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+flex-wrap:wrap;
+}
+
+
+/* estilo padrão botão */
+
+.search-btn{
+font-size:.72rem;
+padding:4px 10px;
+border-radius:6px;
+text-decoration:none;
+font-weight:500;
+transition:.15s;
+display:inline-block;
+}
+
+
+/* relatório */
+
+.search-btn.relatorio{
+background:#e0f2fe;
+color:#0369a1;
+}
+
+.search-btn.relatorio:hover{
+background:#bae6fd;
+}
+
+
+/* nova ocorrência */
+
+.search-btn.ocorrencia{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.search-btn.ocorrencia:hover{
+background:#fecaca;
+}
+
+
+/* ver ocorrências */
+
+.search-btn.historico{
+background:#eef2ff;
+color:#4338ca;
+}
+
+.search-btn.historico:hover{
+background:#e0e7ff;
+}
+
+/* ================= RESULTADO DA BUSCA ================= */
+
+.search-row{
+padding:10px 14px;
+border-bottom:1px solid #f1f5f9;
+transition:.15s;
+}
+
+.search-row:hover{
+background:#f8fafc;
+}
+
+
+/* área de texto */
+
+.search-info-area{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+
+/* nome */
+
+.search-main{
+font-weight:600;
+font-size:.95rem;
+color:#1e293b;
+}
+
+
+/* metadados */
+
+.search-meta{
+font-size:.78rem;
+color:#64748b;
+}
+
+
+/* botões */
+
+.search-actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+flex-wrap:nowrap;
+align-items:center;
+}
+
+
+/* estilo padrão botão */
+
+.search-btn{
+font-size:.72rem;
+padding:4px 10px;
+border-radius:6px;
+text-decoration:none;
+font-weight:500;
+transition:.15s;
+white-space:nowrap;
+}
+
+
+/* relatório */
+
+.search-btn.relatorio{
+background:#e0f2fe;
+color:#0369a1;
+}
+
+.search-btn.relatorio:hover{
+background:#bae6fd;
+}
+
+
+/* nova ocorrência */
+
+.search-btn.ocorrencia{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.search-btn.ocorrencia:hover{
+background:#fecaca;
+}
+
+
+/* ver ocorrências */
+
+.search-btn.historico{
+background:#eef2ff;
+color:#4338ca;
+}
+
+.search-btn.historico:hover{
+background:#e0e7ff;
+}
+
+/* ================= STATUS OCORRÊNCIAS ================= */
+
+.ocorrencias-badge{
+font-weight:600;
+margin-left:4px;
+}
+
+/* aluno tranquilo */
+
+.ocorrencias-ok{
+color:#16a34a;
+}
+
+/* atenção */
+
+.ocorrencias-atencao{
+color:#ca8a04;
+}
+
+/* crítico */
+
+.ocorrencias-alerta{
+color:#dc2626;
+}
