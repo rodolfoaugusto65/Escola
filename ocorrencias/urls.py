@@ -19,4 +19,10 @@ urlpatterns = [
     path("get-alunos/",views.get_alunos_por_turma, name="get_alunos_por_turma"),
     path("buscar-aluno/", views.buscar_aluno, name="buscar_aluno"),
     path("excluir/<int:pk>/", views.excluir_ocorrencia, name="excluir_ocorrencia"),
+    path("ocorrencias/contador/<int:aluno_id>/", views.contador_ocorrencias),
+    path(
+    "ocorrencias/alerta-ocorrencias/",
+    views.alerta_ocorrencias,
+    name="alerta_ocorrencias"
+)
     ]

@@ -792,7 +792,7 @@ color:#5b21b6 !important;
 border:1px solid #a78bfa !important;
 }
 
-* =========================
+/* =========================
    FIX TIPOS OCORRÊNCIA
 ========================= */
 
@@ -1121,4 +1121,132 @@ color:#ca8a04;
 
 .ocorrencias-alerta{
 color:#dc2626;
+}
+
+/* ===== TIPOS DE OCORRÊNCIA ===== */
+
+.tipo-badge{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 10px;
+border-radius:8px;
+font-size:.8rem;
+font-weight:600;
+}
+
+.tipo-disciplinar{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+.tipo-atraso{
+background:#fef3c7;
+color:#92400e;
+}
+
+.tipo-uniforme{
+background:#dbeafe;
+color:#1e40af;
+}
+
+.tipo-outros{
+background:#e2e8f0;
+color:#334155;
+}
+
+
+/* ===== STATUS ===== */
+
+.status-badge{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 10px;
+border-radius:8px;
+font-size:.8rem;
+font-weight:600;
+}
+
+.status-open{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+.status-progress{
+background:#fef3c7;
+color:#92400e;
+}
+
+.status-resolved{
+background:#dcfce7;
+color:#166534;
+}
+
+/* ================= BOTÕES DE AÇÃO ================= */
+
+.btn-icon{
+width:38px;
+height:38px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:10px;
+transition:all .2s ease;
+}
+
+.btn-icon i{
+width:18px;
+height:18px;
+}
+
+
+/* cores suaves */
+
+.btn-info-soft{
+background:#e0f2fe;
+color:#0369a1;
+border:none;
+}
+
+.btn-warning-soft{
+background:#fef3c7;
+color:#92400e;
+border:none;
+}
+
+.btn-dark-soft{
+background:#e2e8f0;
+color:#1e293b;
+border:none;
+}
+
+.btn-secondary-soft{
+background:#f1f5f9;
+color:#334155;
+border:none;
+}
+
+.btn-danger-soft{
+background:#fee2e2;
+color:#b91c1c;
+border:none;
+}
+
+
+/* hover elegante */
+
+.btn-icon:hover{
+transform:translateY(-1px);
+box-shadow:0 4px 8px rgba(0,0,0,.08);
+}
+
+.btn-primary-soft{
+background:#e7f1ff;
+color:#0d6efd;
+border:none;
+}
+
+.htmx-settling{
+opacity:.6;
 }

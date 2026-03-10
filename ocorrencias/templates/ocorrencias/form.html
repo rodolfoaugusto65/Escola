@@ -112,6 +112,8 @@ Buscar
 </div>
 </div>
 
+<div id="alertaOcorrencias"></div>
+
 <!-- ================= JS PRO ================= -->
 
 <script>
@@ -159,11 +161,22 @@ function buscarAluno(){
                         select.appendChild(opt);
                     });
 
+                    // seleciona automaticamente o aluno
                     select.value = aluno.id;
+                    verificarOcorrencias(aluno.id);
                 });
 
         });
 }
+
+const alunoSelect = document.getElementById("id_aluno");
+
+if(alunoSelect){
+    alunoSelect.addEventListener("change", function(){
+        verificarOcorrencias(this.value);
+    });
+}
+
 
 // FILTRAR POR TURMA
 document.getElementById("id_turma").addEventListener("change", function(){
@@ -234,6 +247,88 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 
 });
+
+</script>
+
+<script>
+
+const OCORRENCIAS_ALUNO = {
+total: {{ total_ocorrencias|default:0 }},
+tipos: [
+{% for o in ocorrencias_resumo %}
+{
+tipo: "{{ o.tipo_ocorrencia }}",
+total: {{ o.total }}
+},
+{% endfor %}
+]
+};
+
+document.addEventListener("DOMContentLoaded", function(){
+
+if(OCORRENCIAS_ALUNO.total === 0) return;
+
+let lista = "";
+
+OCORRENCIAS_ALUNO.tipos.forEach(o => {
+
+lista += `<li><b>${o.tipo}</b>: ${o.total}</li>`;
+
+});
+
+Swal.fire({
+icon: "warning",
+title: "Histórico disciplinar do aluno",
+html: `
+Este estudante já possui <b>${OCORRENCIAS_ALUNO.total}</b> ocorrência(s).
+
+<br><br>
+<b>Distribuição por tipo:</b>
+
+<ul style="text-align:left">
+${lista}
+</ul>
+`,
+confirmButtonText: "Continuar registro",
+confirmButtonColor: "#0ea5e9"
+});
+
+});
+
+function verificarOcorrencias(alunoId){
+
+    fetch(`/ocorrencias/alerta-ocorrencias/?aluno=${alunoId}`)
+    .then(r => r.json())
+    .then(data => {
+
+        if(!data.total) return;
+
+        let lista = "";
+
+        data.tipos.forEach(o => {
+            lista += `<li><b>${o.tipo}</b>: ${o.total}</li>`;
+        });
+
+        Swal.fire({
+            icon:"warning",
+            title:"Histórico disciplinar do aluno",
+            html:`
+            Este estudante já possui <b>${data.total}</b> ocorrência(s).
+
+            <br><br>
+            <b>Distribuição por tipo:</b>
+
+            <ul style="text-align:left">
+            ${lista}
+            </ul>
+            `,
+            confirmButtonText:"Continuar registro",
+            confirmButtonColor:"#0ea5e9"
+        });
+
+    });
+
+}
 
 </script>
 

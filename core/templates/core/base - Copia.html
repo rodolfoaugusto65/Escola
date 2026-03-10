@@ -327,20 +327,22 @@ transition:left .3s ease;
     <i data-lucide="bar-chart-3"></i><span>Relatório</span>
 </a>
 
-<a href="{% url 'lista_ocorrencias' %}"
-class="sidebar-link btn-ocorrencias"
-data-permissao="{{ user.pode_gerenciar_usuarios }}"
-data-tipo="{{ user.get_perfil_display }}"
-data-usuario="{{ user.get_full_name|default:user.username }}"
-hx-get="{% url 'lista_ocorrencias' %}"
-hx-target="#mainContent"
-hx-swap="innerHTML"
-hx-push-url="true">
-
-<i data-lucide="alert-triangle"></i>
-<span>Ocorrências</span>
-
+{% if user.pode_gerenciar_usuarios %}
+<a hx-get="{% url 'lista_ocorrencias' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'lista_ocorrencias' %}">
+    <i data-lucide="alert-triangle"></i>
+    <span>Ocorrências</span>
 </a>
+{% else %}
+<a href="#"
+   class="sidebar-link bloquear-ocorrencias">
+    <i data-lucide="alert-triangle"></i>
+    <span>Ocorrências</span>
+</a>
+{% endif %}
 
 <a hx-get="{% url 'lista_frequencia' %}"
    hx-target="#mainContent"
@@ -351,13 +353,24 @@ hx-push-url="true">
 </a>
 
 {% if user.pode_gerenciar_usuarios %}
+
 <a hx-get="{% url 'lista_usuarios' %}"
    hx-target="#mainContent"
    hx-swap="innerHTML"
    hx-push-url="true"
    href="{% url 'lista_usuarios' %}">
-    <i data-lucide="settings"></i><span>Usuários</span>
+    <i data-lucide="settings"></i>
+    <span>Usuários</span>
 </a>
+
+{% else %}
+
+<a href="#"
+   class="bloquear-usuarios">
+    <i data-lucide="settings"></i>
+    <span>Usuários</span>
+</a>
+
 {% endif %}
 
 {% if user.is_authenticated %}
@@ -480,6 +493,7 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
 
 
 <script src="https://unpkg.com/lucide@latest"></script>
+
 <script>
     lucide.createIcons();
 
@@ -815,19 +829,13 @@ href="${aluno.url_relatorio}">
 Relatório
 </a>
 
-<a class="search-btn ocorrencia btn-ocorrencias"
-href="${aluno.url_ocorrencia}"
-data-permissao="${window.GEREDU_USER.permissao}"
-data-tipo="${window.GEREDU_USER.perfil}"
-data-usuario="${window.GEREDU_USER.nome}">
+<a class="search-btn ocorrencia bloquear-ocorrencias"
+href="${aluno.url_ocorrencia}">
 Ocorrência
 </a>
 
-<a class="search-btn historico btn-ocorrencias"
-href="${aluno.url_ocorrencias}"
-data-permissao="${window.GEREDU_USER.permissao}"
-data-tipo="${window.GEREDU_USER.perfil}"
-data-usuario="${window.GEREDU_USER.nome}">
+<a class="search-btn historico bloquear-ocorrencias"
+href="${aluno.url_ocorrencias}">
 Ver ocorrências
 </a>
 
@@ -1119,9 +1127,7 @@ function showToast(icon,message){
 }
 
 
-/* =========================================================
-EXCLUSÃO PADRÃO DO SISTEMA (COM CONTROLE DE PERMISSÃO)
-========================================================= */
+/* ================= EXCLUSÃO PADRÃO DO SISTEMA (PERMISSÃO INTELIGENTE) ================= */
 
 document.addEventListener("click", function(e){
 
@@ -1131,9 +1137,8 @@ if(!btn) return;
 e.preventDefault();
 
 const url = btn.dataset.url;
-const permissao = window.GEREDU_USER.permissao;
-const tipoUsuario = window.GEREDU_USER.perfil;
-const nomeUsuario = window.GEREDU_USER.nome;
+const permissao = btn.dataset.permissao === "True";
+const tipoUsuario = btn.dataset.tipo || "Usuário";
 
 if(!url){
 console.error("Botão excluir sem data-url:", btn);
@@ -1147,10 +1152,8 @@ if(!permissao){
 Swal.fire({
 icon:"warning",
 title:"Acesso restrito",
-html:`
-O usuário <b>${nomeUsuario}</b> (<b>${tipoUsuario}</b>) não possui permissão para excluir registros.<br><br>
-Caso necessite realizar essa ação, procure um <b>Gestor do sistema</b>.
-`,
+html:`Seu usuário <b>${tipoUsuario}</b> não tem permissão para excluir registros.<br><br>
+Procure um gestor para realizar essa ação.`,
 confirmButtonColor:"#0ea5e9"
 });
 
@@ -1235,46 +1238,168 @@ title:"Erro de comunicação com o servidor."
 
 });
 
+
 /* =========================================================
-BLOQUEIO GLOBAL DO MÓDULO DE OCORRÊNCIAS
+BLOQUEIO DO MÓDULO DE USUÁRIOS
 ========================================================= */
 
-document.addEventListener("click", function(e){
-
-const btn = e.target.closest(".btn-ocorrencias");
-if(!btn) return;
-
-const permissao = window.GEREDU_USER?.permissao;
-const tipoUsuario = window.GEREDU_USER?.perfil || "Usuário";
-const nomeUsuario = window.GEREDU_USER?.nome || "Usuário";
-
-/* tem permissão */
-if(permissao) return;
-
-/* BLOQUEIA COMPLETAMENTE */
-e.preventDefault();
-e.stopPropagation();
-e.stopImmediatePropagation();
-
-/* cancela HTMX */
-if(btn.hasAttribute("hx-get")){
-btn.removeAttribute("hx-get");
-}
+function mostrarBloqueioUsuarios(){
 
 Swal.fire({
-icon:"warning",
+icon:"info",
 title:"Acesso restrito",
 html:`
-O usuário <b>${nomeUsuario}</b> (<b>${tipoUsuario}</b>) não possui permissão para acessar o módulo de <b>Ocorrências</b>.<br><br>
-Caso necessite registrar ou consultar ocorrências,
-procure um <b>Gestor do sistema</b>.
+Seu usuário não possui permissão para gerenciar <b>Usuários</b>.<br><br>
+Para criar, editar ou excluir usuários,
+procure um <b>Gestor do Sistema</b>.
 `,
 confirmButtonColor:"#0ea5e9"
 });
 
-}, true); // ⚠️ CAPTURE MODE
+}
+
+document.addEventListener("click", function(e){
+
+const bloqueado = e.target.closest(".bloquear-usuarios");
+
+if(!bloqueado) return;
+
+e.preventDefault();
+
+mostrarBloqueioUsuarios();
+
+});
 
 
+/* =========================================================
+BLOQUEIO GLOBAL DO MÓDULO DE OCORRÊNCIAS
+========================================================= */
+
+function mostrarBloqueioOcorrencias(){
+
+Swal.fire({
+icon:"info",
+title:"Acesso restrito",
+html:`
+O módulo de <b>Ocorrências</b> está restrito para o seu perfil de usuário.<br><br>
+Caso necessite registrar ou alterar ocorrências,
+procure um <b>Gestor Escolar</b>.
+`,
+confirmButtonColor:"#0ea5e9"
+});
+
+}
+
+document.addEventListener("click", function(e){
+
+/* se usuário tem permissão, não bloqueia */
+if(window.usuarioPodeOcorrencias){
+return;
+}
+
+const bloqueado = e.target.closest(".bloquear-ocorrencias");
+
+if(!bloqueado) return;
+
+e.preventDefault();
+e.stopPropagation();
+
+mostrarBloqueioOcorrencias();
+
+});
+
+/* =========================================================
+INTERCEPTAR CLIQUES
+========================================================= */
+
+document.addEventListener("click", function(e){
+
+const bloqueado = e.target.closest(".bloquear-ocorrencias");
+
+if(!bloqueado) return;
+
+ impede navegação 
+ e.preventDefault();
+e.stopPropagation(); 
+
+impede HTMX */
+if(bloqueado.hasAttribute("hx-get") || bloqueado.hasAttribute("hx-post")){
+bloqueado.removeAttribute("hx-get");
+bloqueado.removeAttribute("hx-post");
+}
+
+mostrarBloqueioOcorrencias();
+
+});
+
+/* =========================================================
+INTERCEPTAR ENTER EM LINKS BLOQUEADOS
+========================================================= */
+
+document.addEventListener("keydown", function(e){
+
+if(e.key !== "Enter") return;
+
+const el = document.activeElement;
+
+if(el && el.classList.contains("bloquear-ocorrencias")){
+
+e.preventDefault();
+mostrarBloqueioOcorrencias();
+
+}
+
+});
+
+
+
+/* ================= ALERTA DE OCORRÊNCIAS DO ALUNO ================= */
+
+function verificarOcorrenciasAluno(){
+
+const alerta = document.getElementById("alertaOcorrencias");
+if(!alerta) return;
+
+const qtd = parseInt(alerta.dataset.ocorrencias || 0);
+const aluno = alerta.dataset.aluno || "Aluno";
+
+if(qtd === 0) return;
+
+/* ===== ALERTA AMARELO ===== */
+
+if(qtd >= 1 && qtd < 3){
+
+Swal.fire({
+icon:"info",
+title:"Atenção",
+html:`O aluno <b>${aluno}</b> possui <b>${qtd}</b> ocorrência(s) registrada(s).`,
+confirmButtonColor:"#f59e0b"
+});
+
+}
+
+/* ===== ALERTA VERMELHO ===== */
+
+if(qtd >= 3){
+
+Swal.fire({
+icon:"warning",
+title:"Aluno com muitas ocorrências",
+html:`
+O aluno <b>${aluno}</b> possui <b>${qtd}</b> ocorrências registradas.<br><br>
+⚠️ Recomenda-se acompanhamento pedagógico.
+`,
+confirmButtonColor:"#ef4444"
+});
+
+}
+
+}
+
+/* ===== EXECUTAR ===== */
+
+document.addEventListener("DOMContentLoaded", verificarOcorrenciasAluno);
+document.body.addEventListener("htmx:afterSwap", verificarOcorrenciasAluno);
 
 /* =====================================================
 FILTROS AUTOMÁTICOS GLOBAIS (funciona com HTMX)
@@ -1506,55 +1631,9 @@ iniciarFiltros();
 
 });
 
-/* ================= TOOLTIP GLOBAL ================= */
-
-document.addEventListener("DOMContentLoaded", function(){
-
-var tooltipTriggerList = [].slice.call(
-document.querySelectorAll('[data-bs-toggle="tooltip"]')
-)
-
-tooltipTriggerList.map(function (tooltipTriggerEl) {
-return new bootstrap.Tooltip(tooltipTriggerEl)
-})
-
-})
-
-
 </script>
 
 <script src="https://unpkg.com/lucide@latest"></script>
-
-<script>
-function renderIcons(){
-    if(window.lucide){
-        lucide.createIcons();
-    }
-}
-
-document.addEventListener("DOMContentLoaded", renderIcons);
-document.addEventListener("htmx:afterSwap", renderIcons);
-</script>
-
-<script>
-window.GEREDU_USER = {
-    nome: "{{ user.get_full_name|default:user.username }}",
-    perfil: "{{ user.get_perfil_display }}",
-    permissao: {{ user.pode_gerenciar_usuarios|yesno:"true,false" }}
-};
-
-document.addEventListener("DOMContentLoaded", function(){
-
-const tooltipTriggerList = [].slice.call(
-document.querySelectorAll('[data-bs-toggle="tooltip"]')
-)
-
-tooltipTriggerList.map(function (tooltipTriggerEl) {
-return new bootstrap.Tooltip(tooltipTriggerEl)
-})
-
-});
-</script>
 
 <script>
 function renderIcons(){

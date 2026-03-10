@@ -90,15 +90,15 @@
                 </button>
 
                 <!-- DELETE -->
-                <button class="btn btn-icon btn-danger-soft btn-delete"
-                        data-id="{{ u.pk }}"
-                        data-name="{{ u.get_full_name }}"
-                        data-url="{% url 'excluir_usuario' u.pk %}"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="Excluir permanentemente este usuário do sistema">
-                  <i data-lucide="trash-2"></i>
-                </button>
+                <button class="btn btn-icon btn-danger-soft btn-excluir"
+        data-url="{% url 'excluir_usuario' u.pk %}"
+        data-permissao="{{ user.pode_gerenciar_usuarios }}"
+        data-tipo="{{ user.tipo_usuario }}"
+        data-bs-toggle="tooltip"
+        data-bs-placement="top"
+        title="Excluir permanentemente este usuário do sistema">
+  <i data-lucide="trash-2"></i>
+</button>
 
               </div>
             </td>
@@ -245,47 +245,7 @@ document.addEventListener('click', function () {
       });
   });
 
-  // EXCLUIR
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', function() {
-
-          const userId = this.dataset.id;
-          const userName = this.dataset.name;
-          const url = this.dataset.url;
-
-          Swal.fire({
-              title: 'Excluir usuário?',
-              html: `<strong>${userName}</strong><br>Ação irreversível.`,
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Excluir',
-              confirmButtonColor: '#dc3545'
-          }).then(result => {
-
-              if (!result.isConfirmed) return;
-
-              postAction(url).then(data => {
-
-                  if (data.success) {
-
-                      const row = document.getElementById(`userRow${userId}`);
-                      if (row) row.remove();
-
-                      Swal.fire('Excluído!', data.message, 'success');
-
-                  } else {
-                      Swal.fire('Erro', data.error, 'error');
-                  }
-
-              }).catch(() => {
-                  Swal.fire('Erro', 'Erro ao excluir usuário.', 'error');
-              });
-
-          });
-
-      });
-  });
-
+ 
 });
 </script>
 

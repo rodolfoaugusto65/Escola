@@ -278,7 +278,10 @@ class="btn btn-icon btn-warning-soft">
 
 <button
 class="btn btn-icon btn-danger-soft btn-excluir"
-data-url="{% url 'excluir_turma' t.id %}">
+data-url="{% url 'excluir_turma' t.id %}"
+data-permissao="{{ user.pode_gerenciar_usuarios }}"
+data-tipo="{{ user.get_perfil_display }}"
+data-usuario="{{ user.get_full_name|default:user.username }}">
 <i data-lucide="trash-2"></i>
 </button>
 

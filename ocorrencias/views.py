@@ -26,6 +26,11 @@ from core.utils import render_smart
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db import IntegrityError
+from django.db.models import Count
+
+
+
+
 
 def verificar_permissao(user):
     if user.is_superuser:
@@ -42,6 +47,10 @@ def verificar_permissao(user):
 @login_required
 def lista_ocorrencias(request):
 
+# 🔐 BLOQUEIO DE PERMISSÃO
+    if not request.user.pode_gerenciar_usuarios:
+        return HttpResponseForbidden("Você não possui permissão para acessar este módulo.")
+    
     ocorrencias = Ocorrencia.objects.select_related(
         "aluno", "turma"
     ).all()
@@ -143,7 +152,7 @@ def criar_ocorrencia(request):
 
     aluno = None
 
-    # prioridade para matrícula (identificador universal)
+    # prioridade para matrícula
     if matricula:
         aluno = Aluno.objects.filter(matricula=matricula).first()
 
@@ -163,7 +172,29 @@ def criar_ocorrencia(request):
         obj.save()
         return redirect("lista_ocorrencias")
 
-    return render(request, "ocorrencias/form.html", {"form": form})
+    # 🔎 HISTÓRICO DE OCORRÊNCIAS DO ALUNO
+    total_ocorrencias = 0
+    ocorrencias_resumo = []
+
+    if aluno:
+        qs = (
+            Ocorrencia.objects
+            .filter(aluno=aluno)
+            .values("tipo_ocorrencia")
+            .annotate(total=Count("id"))
+        )
+
+        ocorrencias_resumo = list(qs)
+        total_ocorrencias = sum(o["total"] for o in ocorrencias_resumo)
+
+    context = {
+        "form": form,
+        "aluno": aluno,
+        "total_ocorrencias": total_ocorrencias,
+        "ocorrencias_resumo": ocorrencias_resumo,
+    }
+
+    return render(request, "ocorrencias/form.html", context)
 
 
 @login_required
@@ -504,3 +535,40 @@ def excluir_ocorrencia(request, pk):
 
     messages.success(request, f"🗑️ Ocorrência {codigo} excluída com sucesso.")
     return redirect('lista_ocorrencias')
+
+
+def contador_ocorrencias(request, aluno_id):
+
+    aluno = Aluno.objects.get(id=aluno_id)
+
+    qtd = Ocorrencia.objects.filter(aluno=aluno).count()
+
+    return JsonResponse({
+        "nome": aluno.nome,
+        "ocorrencias": qtd
+    })
+
+
+@login_required
+def alerta_ocorrencias(request):
+
+    aluno_id = request.GET.get("aluno")
+
+    if not aluno_id:
+        return JsonResponse({"total":0})
+
+    qs = (
+        Ocorrencia.objects
+        .filter(aluno_id=aluno_id)
+        .values("tipo_ocorrencia")
+        .annotate(total=Count("id"))
+    )
+
+    resumo = list(qs)
+
+    total = sum(o["total"] for o in resumo)
+
+    return JsonResponse({
+        "total": total,
+        "tipos": resumo
+    })

@@ -252,33 +252,95 @@ Limpar
 
 <!-- ================= TABELA ================= -->
 
-<div class="card modern-card shadow-sm">
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-0">
+
+{% if page_obj %}
+
+<!-- CONTROLE DE QUANTIDADE -->
+
+<div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+
+<div class="text-muted small">
+Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }}
+de {{ page_obj.paginator.count }} ocorrências
+</div>
+
+<form method="get" class="d-flex align-items-center gap-2">
+
+<label class="small text-muted">Mostrar:</label>
+
+<select name="mostrar"
+class="form-select form-select-sm"
+onchange="this.form.submit()">
+
+<option value="10" {% if mostrar == 10 %}selected{% endif %}>10</option>
+<option value="25" {% if mostrar == 25 %}selected{% endif %}>25</option>
+<option value="50" {% if mostrar == 50 %}selected{% endif %}>50</option>
+<option value="100" {% if mostrar == 100 %}selected{% endif %}>100</option>
+
+</select>
+
+</form>
+
+</div>
+
 
 <div class="table-responsive">
 
 <table class="table modern-table align-middle mb-0">
 
-<thead class="table-light">
+<thead>
 
 <tr>
 
-<th><a href="?ordenar=codigo">Código</a></th>
-<th><a href="?ordenar=aluno__nome">Aluno</a></th>
-<th><a href="?ordenar=turma__nome">Turma</a></th>
-<th><a href="?ordenar=tipo_ocorrencia">Tipo</a></th>
-<th><a href="?ordenar=status">Status</a></th>
-<th><a href="?ordenar=data">Data</a></th>
-<th class="text-center">Ações</th>
+<th class="sortable">
+<a href="?ordenar=codigo">
+Código
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordenar=aluno__nome">
+Aluno
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>Turma</th>
+
+<th class="sortable">
+<a href="?ordenar=tipo_ocorrencia">
+Tipo
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>Status</th>
+
+<th class="sortable">
+<a href="?ordenar=data">
+Data
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="text-center">
+Ações
+</th>
 
 </tr>
 
 </thead>
 
+
 <tbody>
 
-{% for o in ocorrencias %}
+{% for o in page_obj %}
 
-<tr>
+<tr class="hover-row">
 
 <td class="fw-semibold text-primary">
 {{ o.codigo }}
@@ -290,7 +352,7 @@ Limpar
 
 <td class="text-center">
 
-<span class="tipo-badge 
+<span class="tipo-badge
 {% if o.tipo_ocorrencia == 'DISCIPLINAR' %}tipo-disciplinar
 {% elif o.tipo_ocorrencia == 'ATRASO' %}tipo-atraso
 {% elif o.tipo_ocorrencia == 'UNIFORME' %}tipo-uniforme
@@ -324,8 +386,10 @@ Limpar
 
 {% if o.status == 'ABERTA' %}
 <i data-lucide="alert-circle"></i>
+
 {% elif o.status == 'ANDAMENTO' %}
 <i data-lucide="clock"></i>
+
 {% else %}
 <i data-lucide="check-circle"></i>
 {% endif %}
@@ -336,57 +400,69 @@ Limpar
 
 </td>
 
-<td>{{ o.data|date:"d/m/Y" }}</td>
-
+<td>
+{{ o.data|date:"d/m/Y" }}
+</td>
 <td class="text-center">
 
-<div class="btn-group btn-group-sm">
+<div class="d-flex justify-content-center gap-2">
 
 <a href="{% url 'detalhe_ocorrencia' o.pk %}"
-class="btn btn-outline-info">
+class="btn btn-icon btn-info-soft"
+data-bs-toggle="tooltip"
+title="Visualizar ocorrência">
+
 <i data-lucide="eye"></i>
+
 </a>
 
+
 <a href="{% url 'editar_ocorrencia' o.pk %}"
-class="btn btn-outline-warning">
-<i data-lucide="edit"></i>
+class="btn btn-icon btn-warning-soft"
+data-bs-toggle="tooltip"
+title="Editar ocorrência">
+
+<i data-lucide="edit-3"></i>
+
 </a>
+
 
 <a href="{% url 'imprimir_ocorrencia' o.pk %}"
 target="_blank"
-class="btn btn-outline-dark">
+class="btn btn-icon btn-dark-soft"
+data-bs-toggle="tooltip"
+title="Imprimir ocorrência">
+
 <i data-lucide="printer"></i>
+
 </a>
+
 
 <a href="{% url 'imprimir_por_aluno' o.aluno.id %}"
 target="_blank"
-class="btn btn-outline-secondary">
-<i data-lucide="file"></i>
+class="btn btn-icon btn-secondary-soft"
+data-bs-toggle="tooltip"
+title="Histórico do aluno">
+
+<i data-lucide="file-text"></i>
+
 </a>
 
-<a href="#"
-class="btn btn-outline-danger btn-excluir {% if not user.pode_gerenciar_usuarios %}disabled{% endif %}"
-data-url="{% url 'excluir_ocorrencia' o.pk %}">
+
+<button
+class="btn btn-icon btn-danger-soft btn-excluir"
+data-url="{% url 'excluir_ocorrencia' o.pk %}"
+data-permissao="{{ user.pode_gerenciar_usuarios }}"
+data-tipo="{{ user.get_perfil_display }}"
+data-usuario="{{ user.get_full_name|default:user.username }}"
+data-bs-toggle="tooltip"
+title="Excluir ocorrência">
+
 <i data-lucide="trash-2"></i>
-</a>
+
+</button>
 
 </div>
-
-</td>
-
-</tr>
-
-{% empty %}
-
-<tr>
-
-<td colspan="7" class="text-center py-5">
-
-<i data-lucide="search-x" style="width:40px;height:40px;color:#94a3b8"></i>
-
-<p class="mt-3 text-muted">
-Nenhuma ocorrência encontrada com os filtros aplicados.
-</p>
 
 </td>
 
@@ -400,8 +476,86 @@ Nenhuma ocorrência encontrada com os filtros aplicados.
 
 </div>
 
+
+<!-- PAGINAÇÃO -->
+
+<div class="p-3">
+
+<nav>
+
+<ul class="pagination justify-content-center mb-0">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}">
+Anterior
+</a>
+</li>
+
+{% endif %}
+
+
+{% for num in page_obj.paginator.page_range %}
+
+{% if page_obj.number == num %}
+
+<li class="page-item active">
+<span class="page-link">{{ num }}</span>
+</li>
+
+{% else %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ num }}">
+{{ num }}
+</a>
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}">
+Próximo
+</a>
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+</div>
+
+
+{% else %}
+
+<div class="p-5 text-center text-muted">
+
+<i data-lucide="alert-triangle"
+style="width:50px;height:50px;"></i>
+
+<p class="mt-3 mb-0">
+Nenhuma ocorrência encontrada.
+</p>
+
+</div>
+
+{% endif %}
+
+</div>
 </div>
 
 </div>
+
 
 {% endblock %}
