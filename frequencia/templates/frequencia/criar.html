@@ -1,46 +1,197 @@
 {% extends "core/base.html" %}
+{% block title %}Lançar Frequência{% endblock %}
+
 {% block content %}
 
-<h4>Lançar Frequência</h4>
+<div class="container-fluid mt-4 fade-in">
 
-<form method="get" class="row mb-3">
-    <div class="col">
-        <select name="turma" class="form-select" onchange="this.form.submit()">
-            <option value="">Selecione a turma</option>
-            {% for t in turmas %}
-            <option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>
-                {{ t }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
+<div class="card modern-card shadow-sm">
 
-    <div class="col">
-        <input type="date" name="data" class="form-control" value="{{ data }}" onchange="this.form.submit()">
-    </div>
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0 fw-semibold">
+<i data-lucide="calendar-plus"></i>
+Lançar Frequência
+</h5>
+
+</div>
+
+
+<div class="card-body">
+
+<!-- SELEÇÃO TURMA E DATA -->
+
+<form method="get" class="row g-3 mb-4">
+
+<div class="col-md-6">
+
+<label class="form-label fw-semibold">
+Turma
+</label>
+
+<select name="turma" class="form-select" onchange="this.form.submit()">
+
+<option value="">Selecione a turma</option>
+
+{% for t in turmas %}
+
+<option value="{{ t.id }}"
+{% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>
+
+{{ t }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-6">
+
+<label class="form-label fw-semibold">
+Data
+</label>
+
+<input
+type="date"
+name="data"
+class="form-control"
+value="{{ data }}"
+onchange="this.form.submit()">
+
+</div>
+
 </form>
+
 
 {% if alunos %}
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="turma" value="{{ turma_id }}">
-    <input type="hidden" name="data" value="{{ data }}">
 
-    <table class="table table-bordered">
-        <tr>
-            <th>Aluno</th>
-            <th>Presente</th>
-        </tr>
-        {% for a in alunos %}
-        <tr>
-            <td>{{ a.nome }}</td>
-            <td><input type="checkbox" name="presente_{{ a.id }}" checked></td>
-        </tr>
-        {% endfor %}
-    </table>
+<form method="post" id="formFrequencia">
 
-    <button class="btn btn-success">Salvar Frequência</button>
+{% csrf_token %}
+
+<input type="hidden" name="turma" value="{{ turma_id }}">
+<input type="hidden" name="data" value="{{ data }}">
+
+
+<h6 class="fw-bold mb-3">
+Lista de alunos
+</h6>
+
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle">
+
+<thead>
+
+<tr>
+<th style="width:120px">Matrícula</th>
+<th>Aluno</th>
+<th class="text-center" style="width:160px">Presente</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for a in alunos %}
+
+<tr class="{% cycle 'table-light' 'table-white' %}">
+
+<td>{{ a.matricula }}</td>
+
+<td>{{ a.nome }}</td>
+
+<td class="text-center">
+
+<input
+type="checkbox"
+name="presente_{{ a.id }}"
+checked
+class="form-check-input"
+style="transform:scale(1.4); cursor:pointer;">
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<hr class="my-4">
+
+
+<div class="d-flex gap-2">
+
+<button
+type="button"
+onclick="confirmarSalvar()"
+class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
+
+<i data-lucide="save"></i>
+Salvar Frequência
+
+</button>
+
+
+<a
+href="{% url 'lista_frequencia' %}"
+class="btn btn-secondary btn-modern d-flex align-items-center gap-2 shadow-sm">
+
+<i data-lucide="arrow-left"></i>
+Cancelar
+
+</a>
+
+</div>
+
+
 </form>
+
 {% endif %}
+
+</div>
+</div>
+</div>
+
+
+<script>
+
+function confirmarSalvar(){
+
+Swal.fire({
+
+icon: "warning",
+title: "Tem certeza?",
+text: "Deseja salvar o lançamento da frequência?",
+showCancelButton: true,
+confirmButtonText: "Sim, salvar",
+cancelButtonText: "Cancelar",
+confirmButtonColor: "#22c55e",
+cancelButtonColor: "#6c757d"
+
+}).then((result)=>{
+
+if(result.isConfirmed){
+
+document.getElementById("formFrequencia").submit()
+
+}
+
+})
+
+}
+
+</script>
 
 {% endblock %}

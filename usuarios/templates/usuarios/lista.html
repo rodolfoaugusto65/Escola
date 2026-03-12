@@ -112,141 +112,185 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
 
-  lucide.createIcons();
+function initUsuariosPage(){
 
-  // ATIVAR TOOLTIP BOOTSTRAP
-  // ATIVAR TOOLTIP BOOTSTRAP (CORREÇÃO DEFINITIVA)
-const tooltipList = [];
+    lucide.createIcons();
 
-document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-    const tooltip = new bootstrap.Tooltip(el, {
-        trigger: 'hover',
-        container: 'body'
+    /* TOOLTIP BOOTSTRAP */
+
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el, {
+            trigger: 'hover',
+            container: 'body'
+        });
     });
 
-    tooltipList.push(tooltip);
-});
 
-// Esconder tooltips ao clicar (evita travar)
-document.addEventListener('click', function () {
-    tooltipList.forEach(t => t.hide());
-});
+    /* CSRF */
 
-  function getCSRFToken() {
-    const name = 'csrftoken';
-    let cookieValue = null;
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
 
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+
+            for (let i = 0; i < cookies.length; i++) {
+
+                const cookie = cookies[i].trim();
+
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+
             }
         }
+
+        return cookieValue;
     }
-    return cookieValue;
-  }
 
-  function postAction(url) {
-      return fetch(url, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-              'X-CSRFToken': getCSRFToken(),
-              'X-Requested-With': 'XMLHttpRequest'
-          }
-      })
-      .then(response => {
-          if (!response.ok) {
-              throw new Error('HTTP ' + response.status);
-          }
-          return response.json();
-      });
-  }
 
-  // ALTERAR STATUS
-  document.querySelectorAll('.btn-status').forEach(btn => {
-      btn.addEventListener('click', function() {
+    function postAction(url){
 
-          const userId = this.dataset.id;
-          const userName = this.dataset.name;
-          const url = this.dataset.url;
+        return fetch(url,{
 
-          Swal.fire({
-              title: 'Alterar status?',
-              text: userName,
-              icon: 'question',
-              showCancelButton: true,
-              confirmButtonText: 'Confirmar'
-          }).then(result => {
+            method:'POST',
+            credentials:'same-origin',
 
-              if (!result.isConfirmed) return;
+            headers:{
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With':'XMLHttpRequest'
+            }
 
-              postAction(url).then(data => {
+        }).then(r => {
 
-                  if (data.success) {
+            if(!r.ok){
+                throw new Error('HTTP '+r.status);
+            }
 
-                      const cell = document.getElementById(`statusCell${userId}`);
+            return r.json()
 
-                      cell.innerHTML = data.new_status
-                          ? '<span class="badge bg-success-soft">Ativo</span>'
-                          : '<span class="badge bg-danger-soft">Inativo</span>';
+        })
+    }
 
-                      Swal.fire('Sucesso', data.message, 'success');
 
-                  } else {
-                      Swal.fire('Erro', data.error, 'error');
-                  }
 
-              }).catch(() => {
-                  Swal.fire('Erro', 'Erro ao alterar status.', 'error');
-              });
+    /* ALTERAR STATUS */
 
-          });
+    document.querySelectorAll('.btn-status').forEach(btn => {
 
-      });
-  });
+        btn.onclick = function(){
 
-  // RESETAR SENHA
-  document.querySelectorAll('.btn-reset').forEach(btn => {
-      btn.addEventListener('click', function() {
+            const userId = this.dataset.id
+            const userName = this.dataset.name
+            const url = this.dataset.url
 
-          const userName = this.dataset.name;
-          const url = this.dataset.url;
+            Swal.fire({
 
-          Swal.fire({
-              title: 'Resetar senha?',
-              html: `<strong>${userName}</strong><br>Nova senha será 123456`,
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Confirmar'
-          }).then(result => {
+                title:'Alterar status?',
+                text:userName,
+                icon:'question',
+                showCancelButton:true,
+                confirmButtonText:'Confirmar'
 
-              if (!result.isConfirmed) return;
+            }).then(result => {
 
-              postAction(url).then(data => {
+                if(!result.isConfirmed) return
 
-                  if (data.success) {
-                      Swal.fire('Sucesso', data.message, 'success');
-                  } else {
-                      Swal.fire('Erro', data.error, 'error');
-                  }
+                postAction(url).then(data => {
 
-              }).catch(() => {
-                  Swal.fire('Erro', 'Erro ao resetar senha.', 'error');
-              });
+                    if(data.success){
 
-          });
+                        const cell = document.getElementById(`statusCell${userId}`)
 
-      });
-  });
+                        cell.innerHTML = data.new_status
+                        ? '<span class="badge bg-success-soft">Ativo</span>'
+                        : '<span class="badge bg-danger-soft">Inativo</span>'
 
- 
-});
+                        Swal.fire('Sucesso',data.message,'success')
+
+                    }else{
+
+                        Swal.fire('Erro',data.error,'error')
+
+                    }
+
+                }).catch(()=>{
+
+                    Swal.fire('Erro','Erro ao alterar status.','error')
+
+                })
+
+            })
+
+        }
+
+    })
+
+
+
+    /* RESET SENHA */
+
+    document.querySelectorAll('.btn-reset').forEach(btn => {
+
+        btn.onclick = function(){
+
+            const userName = this.dataset.name
+            const url = this.dataset.url
+
+            Swal.fire({
+
+                title:'Resetar senha?',
+                html:`<strong>${userName}</strong><br>Nova senha será 123456`,
+                icon:'warning',
+                showCancelButton:true,
+                confirmButtonText:'Confirmar'
+
+            }).then(result => {
+
+                if(!result.isConfirmed) return
+
+                postAction(url).then(data => {
+
+                    if(data.success){
+
+                        Swal.fire('Sucesso',data.message,'success')
+
+                    }else{
+
+                        Swal.fire('Erro',data.error,'error')
+
+                    }
+
+                }).catch(()=>{
+
+                    Swal.fire('Erro','Erro ao resetar senha.','error')
+
+                })
+
+            })
+
+        }
+
+    })
+
+}
+
+
+
+/* EXECUTAR EM LOAD NORMAL */
+
+document.addEventListener("DOMContentLoaded", initUsuariosPage)
+
+
+
+/* EXECUTAR EM HTMX */
+
+document.body.addEventListener("htmx:afterSwap", initUsuariosPage)
+
+</script>
 </script>
 
 <style>

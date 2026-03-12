@@ -22,8 +22,6 @@ def home_view(request):
     return render(request, template, contexto)
 
 
-from django.db.models import Q, Count
-
 @login_required
 def buscar_alunos_autocomplete(request):
 

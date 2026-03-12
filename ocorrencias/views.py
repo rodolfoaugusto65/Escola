@@ -27,8 +27,8 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db import IntegrityError
 from django.db.models import Count
-
-
+from django.urls import reverse
+from django.db.models import Max
 
 
 
@@ -144,6 +144,8 @@ def lista_ocorrencias(request):
 
     return render(request, template, context)
 
+
+
 @login_required
 def criar_ocorrencia(request):
 
@@ -152,11 +154,9 @@ def criar_ocorrencia(request):
 
     aluno = None
 
-    # prioridade para matrícula
     if matricula:
         aluno = Aluno.objects.filter(matricula=matricula).first()
 
-    # fallback para id
     elif aluno_id:
         aluno = Aluno.objects.filter(pk=aluno_id).first()
 
@@ -166,13 +166,25 @@ def criar_ocorrencia(request):
         form.initial["aluno"] = aluno
         form.initial["turma"] = aluno.turma
 
-    if form.is_valid():
-        obj = form.save(commit=False)
-        obj.usuario = request.user
-        obj.save()
-        return redirect("lista_ocorrencias")
+    if request.method == "POST":
 
-    # 🔎 HISTÓRICO DE OCORRÊNCIAS DO ALUNO
+        if form.is_valid():
+
+            obj = form.save(commit=False)
+            obj.usuario = request.user
+            obj.save()
+
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+
+                return JsonResponse({
+                    "success": True,
+                    "ocorrencia_id": obj.id,
+                    "url_impressao": reverse("imprimir_ocorrencia", args=[obj.id]),
+                    "redirect": reverse("lista_ocorrencias")
+                })
+
+            return redirect("lista_ocorrencias")
+
     total_ocorrencias = 0
     ocorrencias_resumo = []
 
@@ -549,26 +561,44 @@ def contador_ocorrencias(request, aluno_id):
     })
 
 
+from django.db.models import Count, Max
+from django.urls import reverse
+
 @login_required
 def alerta_ocorrencias(request):
 
     aluno_id = request.GET.get("aluno")
 
     if not aluno_id:
-        return JsonResponse({"total":0})
+        return JsonResponse({"total": 0})
 
-    qs = (
+    aluno = Aluno.objects.get(id=aluno_id)
+
+    tipos = (
         Ocorrencia.objects
         .filter(aluno_id=aluno_id)
         .values("tipo_ocorrencia")
         .annotate(total=Count("id"))
     )
 
-    resumo = list(qs)
+    status = (
+        Ocorrencia.objects
+        .filter(aluno_id=aluno_id)
+        .values("status")
+        .annotate(total=Count("id"))
+    )
 
-    total = sum(o["total"] for o in resumo)
+    ultima = (
+        Ocorrencia.objects
+        .filter(aluno_id=aluno_id)
+        .aggregate(data=Max("data"))
+    )
 
     return JsonResponse({
-        "total": total,
-        "tipos": resumo
+        "nome": aluno.nome,
+        "total": sum(o["total"] for o in tipos),
+        "tipos": list(tipos),
+        "status": list(status),
+        "ultima": ultima["data"],
+        "relatorio": reverse("prontuario_aluno", args=[aluno_id])
     })

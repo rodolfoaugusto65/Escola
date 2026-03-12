@@ -1250,3 +1250,42 @@ border:none;
 .htmx-settling{
 opacity:.6;
 }
+
+
+
+/* ===============================
+   LOADER PADRÃO GEREDU
+================================ */
+
+.geredu-loader{
+width:42px;
+height:42px;
+
+border-radius:50%;
+
+border:4px solid #e2e8f0;
+border-top:4px solid #0ea5e9;
+
+animation:gereduSpin .8s linear infinite;
+}
+
+@keyframes gereduSpin{
+to{
+transform:rotate(360deg);
+}
+}
+
+@media print {
+
+.sidebar,
+.navbar,
+.btn {
+    display:none !important;
+}
+
+.container-fluid{
+    margin:0;
+    padding:0;
+}
+
+}
