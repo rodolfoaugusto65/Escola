@@ -5,96 +5,191 @@
 {% block content %}
 <div class="container-fluid mt-4 fade-in">
 
-  <div class="card modern-card shadow-sm border-0">
-    <div class="card-body p-4">
+<div class="card modern-card shadow-sm border-0">
+<div class="card-body p-4">
 
-      <!-- CABEÇALHO -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
-          <i data-lucide="{% if aluno %}edit-3{% else %}user-plus{% endif %}"></i>
-          {% if aluno %}Editar Aluno{% else %}Novo Aluno{% endif %}
-        </h4>
+<!-- CABEÇALHO -->
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-        <a href="{% url 'lista_alunos' %}"
-           class="btn btn-light btn-modern d-flex align-items-center gap-2">
-          <i data-lucide="arrow-left"></i>
-          Voltar
-        </a>
-      </div>
+<h4 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+<i data-lucide="{% if aluno %}edit-3{% else %}user-plus{% endif %}"></i>
+{% if aluno %}Editar Aluno{% else %}Novo Aluno{% endif %}
+</h4>
 
-      <form method="post" novalidate id="alunoForm">
-        {% csrf_token %}
+<a href="{% url 'lista_alunos' %}" class="btn btn-light btn-modern d-flex align-items-center gap-2">
+<i data-lucide="arrow-left"></i>
+Voltar
+</a>
 
-        <!-- ================= ABAS ================= -->
-        <ul class="nav nav-tabs modern-tabs mb-4" id="wizardTabs">
-          <li class="nav-item">
-            <button type="button" class="nav-link active" data-step="0">
-              🧾 Identificação <span class="tab-status"></span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="nav-link" data-step="1">
-              👨‍👩‍👧 Responsáveis <span class="tab-status"></span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="nav-link" data-step="2">
-              📌 Indicadores <span class="tab-status"></span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="nav-link" data-step="3">
-              🚸 Situação Escolar <span class="tab-status"></span>
-            </button>
-          </li>
-        </ul>
+</div>
 
-        <div class="tab-content">
 
-          <!-- ================= IDENTIFICAÇÃO ================= -->
-          <div class="step-pane active" data-step="0">
-            <div class="section-box">
+<form method="post" enctype="multipart/form-data" novalidate id="alunoForm">
+{% csrf_token %}
 
-              <h6 class="section-title">
-                🧾 Dados de Identificação
-              </h6>
+<ul class="nav nav-tabs modern-tabs mb-4" id="wizardTabs">
 
-              <div class="row g-3">
+  
+<li class="nav-item">
+<button type="button" class="nav-link active" data-step="0">
+🧾 Identificação <span class="tab-status"></span>
+</button>
+</li>
 
-                <div class="col-md-3">
-                  {{ form.matricula.label_tag }}
-                  {{ form.matricula|add_class:"form-control required-field" }}
-                </div>
+<li class="nav-item">
+<button type="button" class="nav-link" data-step="1">
+👨‍👩‍👧 Responsáveis <span class="tab-status"></span>
+</button>
+</li>
 
-                <div class="col-md-5">
-                  {{ form.nome.label_tag }}
-                  {{ form.nome|add_class:"form-control required-field" }}
-                </div>
+<li class="nav-item">
+<button type="button" class="nav-link" data-step="2">
+📌 Indicadores <span class="tab-status"></span>
+</button>
+</li>
 
-                <div class="col-md-4">
-                  {{ form.data_nascimento.label_tag }}
-                  {{ form.data_nascimento|add_class:"form-control required-field" }}
-                </div>
+<li class="nav-item">
+<button type="button" class="nav-link" data-step="3">
+🚸 Situação Escolar <span class="tab-status"></span>
+</button>
+</li>
 
-                <div class="col-md-6">
-                  {{ form.turma.label_tag }}
-                  {{ form.turma|add_class:"form-select required-field" }}
-                </div>
+</ul>
 
-                <div class="col-md-4">
-                  {{ form.data_matricula.label_tag }}
-                  {{ form.data_matricula|add_class:"form-control required-field" }}
-                </div>
 
-                <div class="col-md-6">
-                  {{ form.email.label_tag }}
-                  {{ form.email|add_class:"form-control" }}
-                </div>
 
-              </div>
-            </div>
-          </div>
+<div class="tab-content">
 
+<!-- IDENTIFICAÇÃO -->
+<div class="step-pane active" data-step="0">
+
+<div class="section-box">
+
+<h6 class="section-title">
+🧾 Dados de Identificação
+</h6>
+
+
+<div class="row g-4 align-items-start">
+
+<!-- FOTO (OCUPA 3 LINHAS) -->
+<div class="col-md-3">
+
+<div class="foto-wrapper">
+
+<div class="foto-loading d-none" id="fotoLoading">
+<div class="geredu-loader"></div>
+</div>
+
+{% if aluno and aluno.foto %}
+
+<a href="{{ aluno.foto.url }}" target="_blank" rel="noopener">
+
+<img src="{{ aluno.foto_thumb_url }}"
+id="fotoPreview"
+class="foto-preview"
+loading="lazy"
+alt="Foto do aluno"
+title="Clique para abrir a foto original">
+
+</a>
+
+{% else %}
+
+<img src="/static/img/aluno_sem_foto.png"
+id="fotoPreview"
+class="foto-preview"
+loading="lazy"
+alt="Aluno sem foto">
+
+{% endif %}
+
+</div>
+
+<div class="mt-2">
+
+{{ form.foto|add_class:"form-control form-control-sm" }}
+
+</div>
+
+{% if aluno and aluno.foto %}
+
+<button type="button"
+id="btnRemoverFoto"
+class="btn btn-outline-danger btn-sm w-100 mt-2">
+
+Remover foto
+
+</button>
+
+<input type="checkbox"
+name="foto-clear"
+id="clearFoto"
+style="display:none">
+
+{% endif %}
+
+</div>
+
+
+
+<!-- CAMPOS -->
+<div class="col-md-9">
+
+<div class="row g-3">
+
+<!-- LINHA 1 -->
+<div class="col-md-3">
+
+{{ form.matricula.label_tag }}
+{{ form.matricula|add_class:"form-control required-field" }}
+
+</div>
+
+<div class="col-md-9">
+
+{{ form.nome.label_tag }}
+{{ form.nome|add_class:"form-control required-field" }}
+
+</div>
+
+<!-- LINHA 2 -->
+<div class="col-md-6">
+
+{{ form.data_nascimento.label_tag }}
+{{ form.data_nascimento|add_class:"form-control required-field" }}
+
+</div>
+
+<div class="col-md-6">
+
+{{ form.turma.label_tag }}
+{{ form.turma|add_class:"form-select required-field" }}
+
+</div>
+
+<!-- LINHA 3 -->
+<div class="col-md-4">
+
+{{ form.data_matricula.label_tag }}
+{{ form.data_matricula|add_class:"form-control required-field" }}
+
+</div>
+
+<div class="col-md-8">
+
+{{ form.email.label_tag }}
+{{ form.email|add_class:"form-control" }}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+</div>
           <!-- ================= RESPONSÁVEIS ================= -->
           <div class="step-pane" data-step="1">
             <div class="section-box">
@@ -198,6 +293,9 @@
 
       <!-- PAED -->
       <div class="col-md-6">
+        <div class="alert alert-warning mt-2 d-none" id="alertPaed">
+            ⚠ Este aluno terá registro de laudos médicos no sistema.
+        </div>
         <div class="indicator-box box-disabled">
           <div class="form-check form-switch mb-2">
             {{ form.aluno_paed|add_class:"form-check-input" }}
@@ -205,6 +303,23 @@
               {{ form.aluno_paed.label }}
             </label>
           </div>
+      <div class="mt-3" id="btnDocumentosPaed">
+
+<a id="linkDocumentosPaed"
+   href="#"
+   class="btn btn-warning btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+
+<i data-lucide="file-text"></i>
+
+{% if total_laudos > 0 %}
+Inserir / Gerenciar Laudos ({{ total_laudos }})
+{% else %}
+Inserir / Gerenciar Laudos (Nenhum)
+{% endif %}
+
+</a>
+
+</div>
 
           {{ form.observacao_paed.label_tag }}
           {{ form.observacao_paed|add_class:"form-control paed-field" }}
@@ -272,176 +387,425 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
 
-  lucide.createIcons();
+document.addEventListener("DOMContentLoaded", function(){
 
-  const tabs = document.querySelectorAll("#wizardTabs .nav-link");
-  const panes = document.querySelectorAll(".step-pane");
-  const form = document.getElementById("alunoForm");
-  const btnSalvar = document.getElementById("btnSalvarAluno");
+lucide.createIcons();
 
-  /* =========================
-     CONTROLE DE ABAS
-  ==========================*/
-  function showStep(step) {
-    tabs.forEach(tab => tab.classList.remove("active"));
-    panes.forEach(pane => pane.classList.remove("active"));
-    tabs[step].classList.add("active");
-    panes[step].classList.add("active");
-  }
+const tabs = document.querySelectorAll("#wizardTabs .nav-link");
+const panes = document.querySelectorAll(".step-pane");
+const form = document.getElementById("alunoForm");
+const btnSalvar = document.getElementById("btnSalvarAluno");
 
-  tabs.forEach(tab => {
-    tab.addEventListener("click", function() {
-      showStep(parseInt(this.dataset.step));
-    });
-  });
+const fotoInput = document.querySelector('input[name="foto"]');
+const fotoPreview = document.getElementById("fotoPreview");
+const fotoLoading = document.getElementById("fotoLoading");
 
-  /* =========================
-     INDICADOR VISUAL NAS ABAS
-  ==========================*/
-  function validateTabs() {
-    panes.forEach((pane, index) => {
+const btnRemoverFoto = document.getElementById("btnRemoverFoto");
+const clearFoto = document.getElementById("clearFoto");
 
-      const required = pane.querySelectorAll(".required-field");
-      let filled = 0;
-
-      required.forEach(field => {
-        if (field.value && field.value.trim() !== "") {
-          filled++;
-        }
-      });
-
-      const status = tabs[index].querySelector(".tab-status");
-
-      if (required.length === 0) {
-        status.innerHTML = "";
-        return;
-      }
-
-      if (filled === required.length) {
-        status.innerHTML = "<span class='text-success fw-bold'>●</span>";
-      } else if (filled > 0) {
-        status.innerHTML = "<span class='text-warning fw-bold'>●</span>";
-      } else {
-        status.innerHTML = "<span class='text-danger fw-bold'>●</span>";
-      }
-
-    });
-  }
-
-  document.querySelectorAll("input, select, textarea").forEach(el => {
-    el.addEventListener("input", validateTabs);
-  });
-
-  validateTabs();
-
-  /* =========================
-     SALVAR COM VALIDAÇÃO
-  ==========================*/
-  btnSalvar.addEventListener("click", function() {
-
-    const missingFields = [];
-
-    document.querySelectorAll(".required-field").forEach(field => {
-      if (!field.value || field.value.trim() === "") {
-        missingFields.push(field);
-        field.classList.add("is-invalid");
-      } else {
-        field.classList.remove("is-invalid");
-      }
-    });
-
-    if (missingFields.length > 0) {
-
-      Swal.fire({
-        icon: "error",
-        title: "Campos obrigatórios não preenchidos",
-        text: "Preencha todos os campos obrigatórios antes de salvar.",
-        confirmButtonColor: "#dc3545"
-      });
-
-      return;
-    }
-
-    Swal.fire({
-      title: "Salvar aluno?",
-      text: "Confirme para registrar as informações.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Salvar",
-      confirmButtonColor: "#198754"
-    }).then(result => {
-
-      if (result.isConfirmed) {
-
-        btnSalvar.innerHTML = `
-          <span class="spinner-border spinner-border-sm"></span>
-          Salvando...
-        `;
-        btnSalvar.disabled = true;
-
-        form.submit();
-      }
-
-    });
-
-  });
-
+tabs.forEach(tab=>{
+tab.addEventListener("click",function(){
+showStep(parseInt(this.dataset.step));
 });
-/* =========================
-   CONTROLE DOS INDICADORES
-=========================*/
+});
 
-function toggleDependentField(checkboxSelector, fieldSelector) {
+showStep(0);
 
-  const checkbox = document.querySelector(checkboxSelector);
-  const field = document.querySelector(fieldSelector);
 
-  if (!checkbox || !field) return;
+// detectar hash da URL
+const hash = window.location.hash;
 
-  const container = field.closest(".indicator-box");
-
-  function updateState() {
-
-    if (checkbox.checked) {
-
-      field.disabled = false;
-
-      if (container) {
-        container.classList.remove("box-disabled");
-      }
-
-    } else {
-
-      field.disabled = true;
-      field.value = "";
-
-      if (container) {
-        container.classList.add("box-disabled");
-      }
-
-    }
-  }
-
-  checkbox.addEventListener("change", updateState);
-
-  updateState();
+if(hash === "#indicadores"){
+    showStep(2); // índice da aba Indicadores
 }
 
-/* PAED */
-toggleDependentField(
-  'input[name="aluno_paed"]',
-  '.paed-field'
-);
+/* =========================
+   TROCA DE ABAS
+========================= */
 
-/* FICAI */
-toggleDependentField(
-  'input[name="aluno_busca_ativa"]',
-  '.ficai-field'
-);
+function showStep(step){
+
+tabs.forEach(tab=>{
+tab.classList.remove("active");
+});
+
+panes.forEach(pane=>{
+pane.style.display="none";
+});
+
+tabs[step].classList.add("active");
+panes[step].style.display="block";
+
+}
+
+/* =========================
+   REMOVER FOTO
+========================= */
+
+if(btnRemoverFoto){
+
+btnRemoverFoto.addEventListener("click",function(){
+
+Swal.fire({
+title:"Remover foto?",
+text:"A foto do aluno será removida.",
+icon:"warning",
+showCancelButton:true,
+confirmButtonColor:"#dc3545",
+confirmButtonText:"Remover",
+cancelButtonText:"Cancelar"
+
+}).then(result=>{
+
+if(result.isConfirmed){
+
+clearFoto.checked=true;
+
+fotoPreview.classList.add("foto-explode");
+
+setTimeout(()=>{
+
+fotoPreview.src="/static/img/aluno_sem_foto.png";
+fotoPreview.classList.remove("foto-explode");
+
+},600);
+
+}
+
+});
+
+});
+
+}
+
+
+/* =========================
+   PREVIEW + CORTE FOTO
+========================= */
+
+if(fotoInput){
+
+fotoInput.addEventListener("change",function(){
+
+const file=this.files[0];
+if(!file)return;
+
+if(file.size>5*1024*1024){
+
+Swal.fire({
+icon:"error",
+title:"Imagem muito grande",
+text:"A foto deve ter no máximo 5MB."
+});
+
+this.value="";
+return;
+
+}
+
+fotoLoading.classList.remove("d-none");
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+fotoPreview.src=e.target.result;
+
+setTimeout(()=>{
+fotoLoading.classList.add("d-none");
+},400);
+
+};
+
+reader.readAsDataURL(file);
+
+});
+
+}
+
+/* =========================
+   VALIDAÇÃO DAS ABAS
+========================= */
+
+function validateTabs(){
+
+panes.forEach((pane,index)=>{
+
+const required=pane.querySelectorAll(".required-field");
+
+let filled=0;
+
+required.forEach(field=>{
+if(field.value && field.value.trim()!==""){
+filled++;
+}
+});
+
+const status=tabs[index].querySelector(".tab-status");
+
+if(required.length===0){
+status.innerHTML="";
+return;
+}
+
+if(filled===required.length){
+status.innerHTML="<span class='text-success fw-bold'>●</span>";
+}
+else if(filled>0){
+status.innerHTML="<span class='text-warning fw-bold'>●</span>";
+}
+else{
+status.innerHTML="<span class='text-danger fw-bold'>●</span>";
+}
+
+});
+
+}
+
+document.querySelectorAll("input,select,textarea").forEach(el=>{
+el.addEventListener("input",validateTabs);
+});
+
+validateTabs();
+
+
+/* =========================
+   SALVAR
+========================= */
+
+btnSalvar.addEventListener("click",function(){
+
+const missingFields=[];
+
+document.querySelectorAll(".required-field").forEach(field=>{
+
+if(!field.value || field.value.trim()===""){
+
+missingFields.push(field);
+field.classList.add("is-invalid");
+
+}else{
+
+field.classList.remove("is-invalid");
+
+}
+
+});
+
+if(missingFields.length>0){
+
+Swal.fire({
+icon:"error",
+title:"Campos obrigatórios não preenchidos",
+text:"Preencha todos os campos obrigatórios antes de salvar.",
+confirmButtonColor:"#dc3545"
+});
+
+return;
+
+}
+
+Swal.fire({
+title:"Salvar aluno?",
+text:"Confirme para registrar as informações.",
+icon:"question",
+showCancelButton:true,
+confirmButtonText:"Salvar",
+confirmButtonColor:"#198754"
+
+}).then(result=>{
+
+if(result.isConfirmed){
+
+btnSalvar.innerHTML=`<span class="spinner-border spinner-border-sm"></span> Salvando...`;
+
+btnSalvar.disabled=true;
+sessionStorage.removeItem("alunoFormTemp");
+form.submit();
+
+}
+
+});
+
+});
+
+});
+
+/* =========================
+   ALERTA + BOTÃO PAED
+========================= */
+
+const paedSwitch = document.querySelector('input[name="aluno_paed"]');
+const alertPaed = document.getElementById("alertPaed");
+const linkDocs = document.getElementById("linkDocumentosPaed");
+
+const alunoId = "{{ aluno.id|default:'' }}";
+
+function updatePaedAlert(){
+
+    if(!paedSwitch) return;
+
+    if(paedSwitch.checked){
+        alertPaed.classList.remove("d-none");
+    }else{
+        alertPaed.classList.add("d-none");
+    }
+
+}
+
+if(paedSwitch){
+
+    updatePaedAlert();
+
+    paedSwitch.addEventListener("change", function(){
+
+        /* =========================
+           ALUNO AINDA NÃO SALVO
+        ========================= */
+
+        if(!alunoId){
+
+            Swal.fire({
+                icon:"info",
+                title:"Salve o aluno primeiro",
+                text:"É necessário salvar o cadastro antes de ativar PAED.",
+                confirmButtonColor:"#0d6efd"
+            });
+
+            paedSwitch.checked = false;
+            return;
+
+        }
+
+        updatePaedAlert();
+
+        /* =========================
+           SALVAR AUTOMATICAMENTE
+        ========================= */
+
+        fetch(`/alunos/aluno/${alunoId}/paed/`,{
+
+            method:"POST",
+
+            headers:{
+                "X-CSRFToken":document.querySelector('[name=csrfmiddlewaretoken]').value,
+                "Content-Type":"application/x-www-form-urlencoded"
+            },
+
+            body:`paed=${paedSwitch.checked}`
+
+        });
+
+    });
+
+}
+
+
+/* =========================
+   BOTÃO GERENCIAR LAUDOS
+========================= */
+
+if(linkDocs){
+
+linkDocs.addEventListener("click", function(e){
+
+e.preventDefault();
+
+/* ALUNO AINDA NÃO SALVO */
+
+if(!alunoId){
+
+Swal.fire({
+icon:"info",
+title:"Salve o aluno primeiro",
+text:"É necessário salvar o cadastro antes de inserir laudos.",
+confirmButtonColor:"#0d6efd"
+});
+
+return;
+
+}
+
+/* ALUNO NÃO MARCADO COMO PAED */
+
+if(!paedSwitch.checked){
+
+Swal.fire({
+icon:"warning",
+title:"Aluno não é PAED",
+text:"Marque o aluno como PAED para registrar laudos.",
+confirmButtonColor:"#f59e0b"
+});
+
+return;
+
+}
+
+/* ABRIR LAUDOS */
+
+window.location.href = "{% url 'documentos_aluno' 0 %}".replace("0", alunoId);
+
+});
+
+}
+
+
+/* =========================
+   SALVAR FORMULÁRIO TEMPORÁRIO
+========================= */
+
+const alunoForm = document.getElementById("alunoForm");
+
+if(alunoForm){
+
+alunoForm.addEventListener("input", function(){
+
+const data = {};
+
+new FormData(alunoForm).forEach((value,key)=>{
+data[key] = value;
+});
+
+sessionStorage.setItem("alunoFormTemp", JSON.stringify(data));
+
+});
+
+}
+
+/* =========================
+   RESTAURAR FORMULÁRIO
+========================= */
+
+const savedData = sessionStorage.getItem("alunoFormTemp");
+
+if(savedData){
+
+const data = JSON.parse(savedData);
+
+Object.keys(data).forEach(function(key){
+
+const field = document.querySelector(`[name="${key}"]`);
+
+if(field){
+
+if(field.type === "checkbox"){
+field.checked = data[key] === "on";
+}
+else{
+field.value = data[key];
+}
+
+}
+
+});
+
+}
 
 </script>
+
+
+
 {% if messages %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -496,6 +860,41 @@ document.addEventListener("DOMContentLoaded", function() {
 .btn-modern:hover {
   transform:translateY(-2px);
   box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+
+/* =========================
+   ANIMAÇÃO EXPLOSÃO FOTO
+========================= */
+
+.foto-explode{
+animation:fotoExplode 0.6s ease forwards;
+}
+
+@keyframes fotoExplode{
+
+0%{
+transform:scale(1);
+opacity:1;
+filter:blur(0px);
+}
+
+40%{
+transform:scale(1.3) rotate(10deg);
+filter:blur(1px);
+}
+
+70%{
+transform:scale(1.6) rotate(-15deg);
+opacity:0.7;
+}
+
+100%{
+transform:scale(0);
+opacity:0;
+filter:blur(4px);
+}
+
 }
 </style>
 

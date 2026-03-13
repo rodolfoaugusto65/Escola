@@ -11,19 +11,42 @@ from alunos.models import Aluno
 from turmas.models import Turma
 
 
-# =====================================================
-# FREQUENCIA POR ALUNO
-# =====================================================
+from django.http import Http404
 
 @login_required
 def frequencia_aluno(request, aluno_id):
 
-    aluno = get_object_or_404(Aluno, id=aluno_id)
+    # =====================================================
+    # BUSCAR ALUNO (ID OU MATRÍCULA)
+    # =====================================================
+
+    aluno = Aluno.objects.select_related("turma").filter(id=aluno_id).first()
+
+    if not aluno:
+        aluno = Aluno.objects.select_related("turma").filter(
+            matricula=aluno_id
+        ).first()
+
+    if not aluno:
+        raise Http404("Aluno não encontrado")
+
+    # =====================================================
+    # FILTROS
+    # =====================================================
 
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
-    registros = FrequenciaAluno.objects.filter(aluno=aluno)
+    # =====================================================
+    # REGISTROS
+    # =====================================================
+
+    registros = (
+        FrequenciaAluno.objects
+        .select_related("frequencia", "frequencia__turma", "aluno")
+        .filter(aluno=aluno)
+        .order_by("-frequencia__data")
+    )
 
     if data_inicio:
         registros = registros.filter(frequencia__data__gte=data_inicio)
@@ -31,21 +54,47 @@ def frequencia_aluno(request, aluno_id):
     if data_fim:
         registros = registros.filter(frequencia__data__lte=data_fim)
 
-    total = registros.count()
-    presencas = registros.filter(presente=True).count()
-    faltas = total - presencas
+    # =====================================================
+    # RESUMO (FORMA OTIMIZADA)
+    # =====================================================
+
+    resumo = registros.aggregate(
+        total=Count("id"),
+        presencas=Count("id", filter=Q(presente=True)),
+        faltas=Count("id", filter=Q(presente=False))
+    )
+
+    total = resumo["total"] or 0
+    presencas = resumo["presencas"] or 0
+    faltas = resumo["faltas"] or 0
+
+    percentual = round((presencas / total * 100), 1) if total else 0
+
+    # =====================================================
+    # CONTEXTO
+    # =====================================================
 
     contexto = {
         "aluno": aluno,
-        "registros": registros.select_related("frequencia", "frequencia__turma"),
+        "registros": registros,
         "total": total,
         "presencas": presencas,
         "faltas": faltas,
-        "percentual": (presencas / total * 100) if total else 0,
+        "percentual": percentual,
         "filtros": request.GET
     }
 
-    return render(request, "frequencia/aluno.html", contexto)
+    # =====================================================
+    # PADRÃO DO SISTEMA
+    # =====================================================
+
+    template, contexto = render_smart(
+        request,
+        "frequencia/aluno.html",
+        contexto
+    )
+
+    return render(request, template, contexto)
 
 
 # =====================================================
@@ -497,60 +546,6 @@ def frequencia_por_aluno(request):
 
     return render(request, template, contexto)
 
-
-@login_required
-def frequencia_aluno(request, aluno_id):
-
-    aluno = get_object_or_404(Aluno, id=aluno_id)
-
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
-
-    registros = (
-        FrequenciaAluno.objects
-        .select_related("frequencia", "frequencia__turma")
-        .filter(aluno=aluno)
-        .order_by("-frequencia__data")
-    )
-
-    # FILTROS
-    if data_inicio:
-        registros = registros.filter(frequencia__data__gte=data_inicio)
-
-    if data_fim:
-        registros = registros.filter(frequencia__data__lte=data_fim)
-
-    # RESUMO
-    resumo = registros.aggregate(
-        total=Count("id"),
-        presencas=Count("id", filter=Q(presente=True)),
-        faltas=Count("id", filter=Q(presente=False)),
-    )
-
-    total = resumo["total"] or 0
-    presencas = resumo["presencas"] or 0
-    faltas = resumo["faltas"] or 0
-
-    percentual = (presencas / total * 100) if total else 0
-
-    contexto = {
-        "aluno": aluno,
-        "registros": registros,
-        "total": total,
-        "presencas": presencas,
-        "faltas": faltas,
-        "percentual": percentual,
-        "filtros": request.GET
-    }
-
-    # PADRÃO DO SISTEMA
-    template, contexto = render_smart(
-        request,
-        "frequencia/aluno.html",
-        contexto
-    )
-
-    return render(request, template, contexto)
 
 
 @login_required

@@ -414,208 +414,69 @@ Nenhum lançamento encontrado
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+window.grafico_dia = {{ grafico_dia|safe }};
+window.grafico_turno = {{ grafico_turno|safe }};
+window.grafico_semana = {{ grafico_semana|safe }};
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
-const graficoDia = {{ grafico_dia|safe }};
-const graficoTurno = {{ grafico_turno|safe }};
-const graficoSemana = {{ grafico_semana|safe }};
+window.grafico_dia = {{ grafico_dia|safe }};
+window.grafico_turno = {{ grafico_turno|safe }};
+window.grafico_semana = {{ grafico_semana|safe }};
 
+document.addEventListener("DOMContentLoaded", function () {
 
-/* =========================
-GRAFICO DIA
-========================= */
+    // GRAFICO DIA
+    const ctxDia = document.getElementById("graficoDia");
 
-new Chart(document.getElementById("graficoDia"),{
+    if (ctxDia && window.grafico_dia) {
+        new Chart(ctxDia, {
+            type: "doughnut",
+            data: window.grafico_dia,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "bottom" }
+                }
+            }
+        });
+    }
 
-type:"bar",
+    // GRAFICO TURNO
+    const ctxTurno = document.getElementById("graficoTurno");
 
-data:{
-labels:graficoDia.labels,
+    if (ctxTurno && window.grafico_turno) {
+        new Chart(ctxTurno, {
+            type: "bar",
+            data: window.grafico_turno,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 
-datasets:[
+    // GRAFICO SEMANA
+    const ctxSemana = document.getElementById("graficoSemana");
 
-{
-label:"Presenças",
-data:graficoDia.presencas,
-backgroundColor:"#22c55e",
-borderRadius:6
-},
-
-{
-label:"Faltas",
-data:graficoDia.faltas,
-backgroundColor:"#ef4444",
-borderRadius:6
-},
-
-{
-label:"% Frequência",
-data:graficoDia.percentual,
-type:"line",
-borderColor:"#3b82f6",
-backgroundColor:"#3b82f6",
-pointBackgroundColor:"#3b82f6",
-pointRadius:5,
-borderWidth:3,
-yAxisID:"y1",
-tension:.35
-}
-
-]
-
-},
-
-options:{
-responsive:true,
-
-interaction:{
-mode:"index",
-intersect:false
-},
-
-plugins:{
-legend:{position:"top"}
-},
-
-scales:{
-
-y:{
-beginAtZero:true,
-title:{display:true,text:"Alunos"}
-},
-
-y1:{
-position:"right",
-min:0,
-max:100,
-ticks:{
-callback:(v)=>v+"%"
-},
-grid:{drawOnChartArea:false},
-title:{display:true,text:"Frequência (%)"}
-}
-
-}
-
-}
+    if (ctxSemana && window.grafico_semana) {
+        new Chart(ctxSemana, {
+            type: "line",
+            data: window.grafico_semana,
+            options: {
+                responsive: true,
+                tension: 0.4
+            }
+        });
+    }
 
 });
-
-
-/* =========================
-GRAFICO TURNO
-========================= */
-
-new Chart(document.getElementById("graficoTurno"),{
-
-type:"bar",
-
-data:{
-labels:graficoTurno.labels,
-
-datasets:[
-{
-label:"Presenças",
-data:graficoTurno.presencas,
-backgroundColor:"#22c55e",
-borderRadius:6
-},
-{
-label:"Faltas",
-data:graficoTurno.faltas,
-backgroundColor:"#ef4444",
-borderRadius:6
-}
-]
-
-},
-
-options:{
-responsive:true,
-plugins:{legend:{position:"top"}},
-
-scales:{
-y:{beginAtZero:true}
-}
-
-}
-
-});
-
-
-/* =========================
-GRAFICO SEMANA
-========================= */
-
-new Chart(document.getElementById("graficoSemana"),{
-
-type:"bar",
-
-data:{
-labels:graficoSemana.labels,
-
-datasets:[
-
-{
-label:"Alunos presentes",
-data:graficoSemana.presentes,
-backgroundColor:"#22c55e",
-borderRadius:6
-},
-
-{
-label:"% Frequência",
-data:graficoSemana.percentual,
-type:"line",
-borderColor:"#3b82f6",
-backgroundColor:"#3b82f6",
-pointRadius:5,
-borderWidth:3,
-yAxisID:"y1",
-tension:.35
-}
-
-]
-
-},
-
-options:{
-responsive:true,
-
-plugins:{
-legend:{position:"top"}
-},
-
-interaction:{
-mode:"index",
-intersect:false
-},
-
-scales:{
-
-y:{
-beginAtZero:true,
-title:{display:true,text:"Alunos"}
-},
-
-y1:{
-position:"right",
-min:0,
-max:100,
-ticks:{
-callback:(v)=>v+"%"
-},
-grid:{drawOnChartArea:false},
-title:{display:true,text:"Frequência (%)"}
-}
-
-}
-
-}
-
-});
-
 </script>
-
 {% endblock %}

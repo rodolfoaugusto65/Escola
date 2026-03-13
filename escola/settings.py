@@ -7,6 +7,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # ==================================================
 # SEGURANÇA
 # ==================================================
@@ -22,7 +23,6 @@ ALLOWED_HOSTS = [
     "localhost",
 ]
 
-# Remove valores vazios
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 
 CSRF_TRUSTED_ORIGINS = []
@@ -51,11 +51,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # terceiros
+    "storages",
     "widget_tweaks",
     "django_htmx",
-    # seus apps
     "core",
     "usuarios",
     "alunos",
@@ -73,7 +71,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-     # 👇 ADICIONE AQUI
     "django_htmx.middleware.HtmxMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -105,7 +102,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # 👇 ADICIONE ESTA LINHA
                 "core.context_processors.estatisticas_alunos",
             ],
         },
@@ -120,7 +116,6 @@ TEMPLATES = [
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
-    # PRODUÇÃO (Railway PostgreSQL)
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -129,7 +124,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # DESENVOLVIMENTO LOCAL - PostgreSQL
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -191,7 +185,13 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+# ==================================================
+# FOTO PADRÃO DO ALUNO
+# ==================================================
+
+FOTO_PADRAO_ALUNO = "img/aluno_sem_foto.png"
 
 
 # ==================================================
@@ -207,6 +207,50 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# ==================================================
+# CLOUDFARE R2 STORAGE
+# ==================================================
+
+AWS_ACCESS_KEY_ID = os.environ.get("R2_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
+
+AWS_STORAGE_BUCKET_NAME = os.environ.get("R2_BUCKET", "geredu-arquivos")
+
+AWS_S3_ENDPOINT_URL = os.environ.get(
+    "R2_ENDPOINT",
+    "https://f10157951b1e36f163670f6a6cb03de6.r2.cloudflarestorage.com"
+)
+
+AWS_S3_REGION_NAME = "auto"
+AWS_S3_ADDRESSING_STYLE = "path"
+
+AWS_DEFAULT_ACL = None
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+# arquivos privados (LGPD)
+AWS_QUERYSTRING_AUTH = True
+AWS_QUERYSTRING_EXPIRE = 3600
+
+AWS_S3_FILE_OVERWRITE = True
+AWS_S3_VERIFY = True
+
+AWS_S3_CUSTOM_DOMAIN = None
+
+
+# ==================================================
+# DJANGO 5+ STORAGE CONFIG
+# ==================================================
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 
 # ==================================================

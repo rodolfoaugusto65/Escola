@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from core import views as core_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
 
@@ -21,3 +23,4 @@ urlpatterns = [
     path('ocorrencias/', include('ocorrencias.urls')),
     path('frequencia/', include('frequencia.urls')),
 ]
+

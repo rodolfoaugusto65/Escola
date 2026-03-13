@@ -1,0 +1,109 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+<div class="card shadow-sm">
+
+<div class="card-body">
+
+<h4 class="fw-bold text-primary d-flex align-items-center gap-2">
+
+<i data-lucide="file-text"></i>
+Detalhes do laudo
+
+</h4>
+
+<hr>
+
+<p>
+<strong>Aluno:</strong>
+{{ aluno.nome }}
+</p>
+
+<p>
+<strong>Matrícula:</strong>
+{{ aluno.matricula }}
+</p>
+
+<p>
+<strong>Tipo de laudo:</strong>
+{{ documento.tipo_laudo }}
+</p>
+
+<p>
+<strong>Data:</strong>
+{{ documento.data_laudo|date:"d/m/Y" }}
+</p>
+
+<p>
+<strong>Observações:</strong>
+</p>
+
+<div class="alert alert-light">
+{{ documento.descricao|linebreaks }}
+</div>
+
+
+<!-- VISUALIZADOR DE PDF -->
+
+<div class="mt-4">
+
+<h6 class="fw-bold text-secondary mb-3">
+Visualização do PDF
+</h6>
+
+<div class="pdf-viewer border rounded">
+
+<iframe
+    src="{{ documento.arquivo.url }}"
+    width="100%"
+    height="600px"
+    style="border:none;"
+>
+</iframe>
+
+</div>
+
+</div>
+
+
+<!-- BOTÕES -->
+
+<div class="mt-4 d-flex gap-2">
+
+<a href="{{ documento.arquivo.url }}"
+   target="_blank"
+   class="btn btn-primary d-flex align-items-center gap-2">
+
+<i data-lucide="download"></i>
+Baixar arquivo
+
+</a>
+
+<a href="{% url 'documentos_aluno' aluno.id %}"
+   class="btn btn-light">
+
+Voltar
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<style>
+
+.pdf-viewer{
+background:#f8f9fa;
+padding:10px;
+}
+
+</style>
+
+{% endblock %}

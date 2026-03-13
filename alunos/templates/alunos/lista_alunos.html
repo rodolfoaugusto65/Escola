@@ -170,6 +170,43 @@ Limpar
 
 {% if page_obj %}
 
+<div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+
+<div class="text-muted small">
+Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }}
+de {{ page_obj.paginator.count }} alunos
+</div>
+
+<form method="get" class="d-flex align-items-center gap-2">
+
+<input type="hidden" name="ordem" value="{{ request.GET.ordem }}">
+<input type="hidden" name="busca" value="{{ request.GET.busca }}">
+<input type="hidden" name="turno" value="{{ request.GET.turno }}">
+<input type="hidden" name="ano" value="{{ request.GET.ano }}">
+<input type="hidden" name="turma" value="{{ request.GET.turma }}">
+
+<label class="small text-muted">Exibir</label>
+
+<select name="limite"
+        class="form-select form-select-sm"
+        style="width:80px"
+        onchange="this.form.submit()">
+
+<option value="10" {% if limite == 10 %}selected{% endif %}>10</option>
+<option value="20" {% if limite == 20 %}selected{% endif %}>20</option>
+<option value="30" {% if limite == 30 %}selected{% endif %}>30</option>
+<option value="40" {% if limite == 40 %}selected{% endif %}>40</option>
+<option value="50" {% if limite == 50 %}selected{% endif %}>50</option>
+
+</select>
+
+<span class="small text-muted">por página</span>
+
+</form>
+
+</div>
+
+
 <div class="table-responsive">
 
 <table class="table modern-table align-middle mb-0">
@@ -179,21 +216,36 @@ Limpar
 <tr>
 
 <th class="sortable">
-<a href="?ordem=nome&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+<a href="?ordem=nome
+&limite={{ limite }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
 Aluno
 <i data-lucide="arrow-up-down"></i>
 </a>
 </th>
 
 <th class="sortable">
-<a href="?ordem=matricula&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+<a href="?ordem=matricula
+&limite={{ limite }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
 Matrícula
 <i data-lucide="arrow-up-down"></i>
 </a>
 </th>
 
 <th class="sortable">
-<a href="?ordem=data_nascimento&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+<a href="?ordem=data_nascimento
+&limite={{ limite }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
 Nascimento
 <i data-lucide="arrow-up-down"></i>
 </a>
@@ -219,24 +271,18 @@ Ações
 <tr class="hover-row">
 
 <td>
-
 <div class="aluno-cell">
-
 <span class="aluno-nome">
 {{ aluno.nome }}
 </span>
-
 </div>
-
 </td>
 
 
 <td>
-
 <span class="badge bg-primary-soft">
 {{ aluno.matricula }}
 </span>
-
 </td>
 
 
@@ -299,57 +345,98 @@ data-usuario="{{ user.get_full_name|default:user.username }}">
 
 
 
-<!-- PAGINAÇÃO -->
+<!-- PAGINAÇÃO GOOGLE -->
 
 <div class="p-3">
 
 <nav>
 
-<ul class="pagination justify-content-center mb-0">
+<ul class="pagination justify-content-center mb-0 flex-wrap">
 
 {% if page_obj.has_previous %}
-
 <li class="page-item">
 <a class="page-link"
-href="?page={{ page_obj.previous_page_number }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+href="?page={{ page_obj.previous_page_number }}
+&limite={{ limite }}
+&ordem={{ request.GET.ordem }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
 Anterior
 </a>
 </li>
+{% endif %}
 
+
+{% if page_obj.number > 3 %}
+<li class="page-item">
+<a class="page-link" href="?page=1&limite={{ limite }}">1</a>
+</li>
+
+<li class="page-item disabled">
+<span class="page-link">…</span>
+</li>
 {% endif %}
 
 
 {% for num in page_obj.paginator.page_range %}
+{% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
 
 {% if page_obj.number == num %}
-
 <li class="page-item active">
 <span class="page-link">{{ num }}</span>
 </li>
 
 {% else %}
+<li class="page-item">
+<a class="page-link"
+href="?page={{ num }}
+&limite={{ limite }}
+&ordem={{ request.GET.ordem }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
+{{ num }}
+</a>
+</li>
+{% endif %}
+
+{% endif %}
+{% endfor %}
+
+
+{% if page_obj.number < page_obj.paginator.num_pages|add:-2 %}
+
+<li class="page-item disabled">
+<span class="page-link">…</span>
+</li>
 
 <li class="page-item">
 <a class="page-link"
-href="?page={{ num }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
-{{ num }}
+href="?page={{ page_obj.paginator.num_pages }}
+&limite={{ limite }}">
+{{ page_obj.paginator.num_pages }}
 </a>
 </li>
 
 {% endif %}
 
-{% endfor %}
-
 
 {% if page_obj.has_next %}
-
 <li class="page-item">
 <a class="page-link"
-href="?page={{ page_obj.next_page_number }}&busca={{request.GET.busca}}&turno={{request.GET.turno}}&ano={{request.GET.ano}}&turma={{request.GET.turma}}">
+href="?page={{ page_obj.next_page_number }}
+&limite={{ limite }}
+&ordem={{ request.GET.ordem }}
+&busca={{request.GET.busca}}
+&turno={{request.GET.turno}}
+&ano={{request.GET.ano}}
+&turma={{request.GET.turma}}">
 Próximo
 </a>
 </li>
-
 {% endif %}
 
 </ul>
@@ -376,6 +463,7 @@ Nenhum aluno cadastrado.
 </div>
 </div>
 </div>
+
 
 <style>
 
@@ -464,6 +552,7 @@ border:none;
 background:#fde2e2;
 border:none;
 }
+
 </style>
 
 {% endblock %}

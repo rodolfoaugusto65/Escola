@@ -1,26 +1,46 @@
 from django.db import models
 from django.conf import settings
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
+import os
+import uuid
+# =========================
+# FUNÇÕES DE UPLOAD
+# =========================
+
+def foto_aluno_path(instance, filename):
+    ext = filename.split('.')[-1].lower()
+    return f"alunos/fotos/{instance.matricula}.{ext}"
+
+
+def caminho_laudo(instance, filename):
+
+    extensao = os.path.splitext(filename)[1]
+
+    aluno = instance.aluno.matricula if instance.aluno else "aluno"
+
+    nome_unico = f"Laudo-{aluno}-{uuid.uuid4().hex}{extensao}"
+
+    return f"alunos/laudos/{nome_unico}"
+
+
+# =========================
+# MODELO ALUNO
+# =========================
 
 class Aluno(models.Model):
 
     # =========================
     # IDENTIFICAÇÃO ACADÊMICA
     # =========================
-    matricula = models.CharField(
-        max_length=20,
-        unique=True,
-        verbose_name="Matrícula"
-    )
+    matricula = models.CharField(max_length=20, unique=True, verbose_name="Matrícula")
 
-    nome = models.CharField(
-        max_length=150,
-        verbose_name="Nome do aluno"
-    )
+    nome = models.CharField(max_length=150, verbose_name="Nome do aluno")
 
-    data_nascimento = models.DateField(
-        verbose_name="Data de nascimento"
-    )
+    data_nascimento = models.DateField(verbose_name="Data de nascimento")
 
     # =========================
     # MATRÍCULA
@@ -42,128 +62,60 @@ class Aluno(models.Model):
         verbose_name="Turma atual"
     )
 
-    # =========================
-    # IDENTIDADE CONGELADA DA TURMA
-    # (NO ATO DA MATRÍCULA)
-    # =========================
-    turma_ano_letivo = models.IntegerField(
-        null=True,
-        blank=True,
-        verbose_name="Ano letivo da matrícula"
-    )
-
-    turma_etapa = models.CharField(
-        max_length=30,
-        null=True,
-        blank=True,
-        verbose_name="Etapa"
-    )
-
-    turma_ano_escolar = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        verbose_name="Ano/Série"
-    )
-
-    turma_nome = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        verbose_name="Nome da turma"
-    )
+    turma_ano_letivo = models.IntegerField(null=True, blank=True)
+    turma_etapa = models.CharField(max_length=30, null=True, blank=True)
+    turma_ano_escolar = models.CharField(max_length=20, null=True, blank=True)
+    turma_nome = models.CharField(max_length=20, null=True, blank=True)
 
     # =========================
     # CONTATO
     # =========================
-    email = models.EmailField(
-        blank=True,
-        null=True
-    )
+    email = models.EmailField(blank=True, null=True)
 
-    nome_pai = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True
-    )
+    nome_pai = models.CharField(max_length=150, blank=True, null=True)
+    nome_mae = models.CharField(max_length=150)
 
-    nome_mae = models.CharField(
-        max_length=150
-    )
+    telefone_responsavel = models.CharField(max_length=20, blank=True, null=True)
+    nome_telefone_responsavel = models.CharField(max_length=100, blank=True, null=True)
 
-    telefone_responsavel = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True
-    )
-
-    nome_telefone_responsavel = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
-
-    telefone_responsavel2 = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True
-    )
-
-    nome_telefone_responsavel2 = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
+    telefone_responsavel2 = models.CharField(max_length=20, blank=True, null=True)
+    nome_telefone_responsavel2 = models.CharField(max_length=100, blank=True, null=True)
 
     # =========================
-    # INDICADORES ADMINISTRATIVOS
+    # INDICADORES
     # =========================
-    possui_dependencia = models.BooleanField(
-        default=False,
-        verbose_name="Aluno com dependência"
-    )
+    possui_dependencia = models.BooleanField(default=False)
+    aluno_trabalhador = models.BooleanField(default=False)
 
-    aluno_trabalhador = models.BooleanField(
-        default=False,
-        verbose_name="Aluno trabalhador / estagiário / menor aprendiz"
-    )
+    aluno_paed = models.BooleanField(default=False)
+    observacao_paed = models.TextField(blank=True, null=True)
 
-    # =========================
-    # PROGRAMAS / ACOMPANHAMENTO
-    # =========================
-    aluno_paed = models.BooleanField(
-        default=False
-    )
+    aluno_busca_ativa = models.BooleanField(default=False)
+    numero_ficai = models.CharField(max_length=50, blank=True, null=True)
 
-    observacao_paed = models.TextField(
-        blank=True,
-        null=True
-    )
-
-    aluno_busca_ativa = models.BooleanField(
-        default=False
-    )
-
-    numero_ficai = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True
-    )
-
-    recomposicao = models.BooleanField(
-        default=False
-    )
+    recomposicao = models.BooleanField(default=False)
 
     # =========================
     # SITUAÇÃO ESCOLAR
     # =========================
-    transferido = models.BooleanField(
-        default=False
+    transferido = models.BooleanField(default=False)
+    data_transferencia = models.DateField(blank=True, null=True)
+
+    # =========================
+    # FOTO
+    # =========================
+    foto = models.ImageField(
+        upload_to=foto_aluno_path,
+        blank=True,
+        null=True,
+        verbose_name="Foto do aluno"
     )
 
-    data_transferencia = models.DateField(
+    foto_thumb = models.ImageField(
+        upload_to="alunos/thumbs/",
         blank=True,
-        null=True
+        null=True,
+        editable=False
     )
 
     # =========================
@@ -185,13 +137,8 @@ class Aluno(models.Model):
         related_name='alunos_atualizados'
     )
 
-    criado_em = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    atualizado_em = models.DateTimeField(
-        auto_now=True
-    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
 
     # =========================
     # META
@@ -203,3 +150,145 @@ class Aluno(models.Model):
 
     def __str__(self):
         return f"{self.matricula} - {self.nome}"
+
+    # =========================
+    # FOTO ORIGINAL
+    # =========================
+    @property
+    def foto_url(self):
+
+        if self.foto:
+            return self.foto.url
+
+        return f"{settings.STATIC_URL}{settings.FOTO_PADRAO_ALUNO}"
+
+    # =========================
+    # FOTO MINIATURA
+    # =========================
+    @property
+    def foto_thumb_url(self):
+
+        if self.foto_thumb:
+            return self.foto_thumb.url
+
+        if self.foto:
+            return self.foto.url
+
+        return f"{settings.STATIC_URL}{settings.FOTO_PADRAO_ALUNO}"
+
+    # =========================
+    # LÍDER DE TURMA
+    # =========================
+    @property
+    def eh_lider_de_turma(self):
+
+        if not self.turma:
+            return False
+
+        return getattr(self.turma, "aluno_lider_id", None) == self.id
+
+    # =========================
+    # SAVE
+    # =========================
+    def save(self, *args, **kwargs):
+
+        # verificar troca de foto
+        if self.pk:
+            try:
+                antigo = Aluno.objects.get(pk=self.pk)
+
+                if antigo.foto and antigo.foto != self.foto:
+                    default_storage.delete(antigo.foto.name)
+
+                if antigo.foto_thumb and antigo.foto_thumb != self.foto_thumb:
+                    default_storage.delete(antigo.foto_thumb.name)
+
+            except Aluno.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+        # gerar thumbnail
+        if self.foto and not self.foto_thumb:
+
+            try:
+
+                img = Image.open(self.foto)
+                img = img.convert("RGB")
+                img.thumbnail((128, 128))
+
+                thumb_io = BytesIO()
+
+                img.save(
+                    thumb_io,
+                    format="JPEG",
+                    quality=70,
+                    optimize=True
+                )
+
+                nome_thumb = self.foto.name.split("/")[-1]
+
+                self.foto_thumb.save(
+                    nome_thumb,
+                    ContentFile(thumb_io.getvalue()),
+                    save=False
+                )
+
+                super().save(update_fields=["foto_thumb"])
+
+            except Exception:
+                pass
+
+    # =========================
+    # DELETE
+    # =========================
+    def delete(self, *args, **kwargs):
+
+        if self.foto:
+           default_storage.delete(self.foto.name)
+
+        if self.foto_thumb:
+            default_storage.delete(self.foto_thumb.name)
+
+        super().delete(*args, **kwargs)
+
+
+# =========================
+# DOCUMENTOS / LAUDOS
+# =========================
+
+class DocumentoAluno(models.Model):
+
+    aluno = models.ForeignKey(
+        Aluno,
+        on_delete=models.CASCADE,
+        related_name="documentos"
+    )
+
+    arquivo = models.FileField(
+    upload_to=caminho_laudo,
+    verbose_name="Arquivo do laudo"
+)
+
+    tipo_laudo = models.CharField(
+        max_length=150,
+        verbose_name="Tipo de laudo"
+    )
+
+    data_laudo = models.DateField(
+    verbose_name="Data do laudo",
+    null=True,
+    blank=True
+)
+    descricao = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Observação do laudo"
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Documento do aluno"
+        verbose_name_plural = "Documentos dos alunos"
+        ordering = ['-data_laudo']

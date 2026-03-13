@@ -1,202 +1,465 @@
 {% extends "core/base.html" %}
-{% block title %}Relatório Completo - {{ aluno.nome }}{% endblock %}
-{% block page_title %}Relatório Completo do Aluno{% endblock %}
+{% load static %}
+{% block title %}Relatório - {{ aluno.nome }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4 fade-in" id="relatorioConteudo">
 
-  <!-- TOPO -->
-  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-      <h4 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
-          <i data-lucide="file-text"></i>
-          Relatório Completo
-      </h4>
-      <div class="d-flex gap-2">
-          <button class="btn btn-success btn-modern" onclick="window.print();">
-              <i data-lucide="printer"></i> Imprimir / PDF
-          </button>
-          <a href="{% url 'relatorio_alunos' %}" class="btn btn-secondary btn-modern">
-              <i data-lucide="arrow-left"></i> Voltar
-          </a>
-      </div>
-  </div>
+<!-- HEADER -->
+<div class="card modern-card shadow-sm border-0 mb-4">
 
-  <div class="card modern-card shadow-sm border-0">
+<div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-    <!-- CABEÇALHO -->
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0 d-flex align-items-center gap-2">
-            <i data-lucide="user"></i>
-            {{ aluno.nome }}
-        </h5>
-    </div>
+<div class="d-flex align-items-center gap-3">
 
-    <div class="card-body bg-light">
+<div class="student-photo">
 
-      <!-- IDENTIFICAÇÃO -->
-      <div class="report-section">
-        <h6 class="section-title">🧾 Identificação</h6>
-        <div class="row g-3">
-            <div class="col-md-3"><strong>Matrícula:</strong> {{ aluno.matricula }}</div>
-            <div class="col-md-5"><strong>Nome:</strong> {{ aluno.nome }}</div>
-            <div class="col-md-2"><strong>Nascimento:</strong> {{ aluno.data_nascimento|date:"d/m/Y" }}</div>
-            <div class="col-md-2"><strong>E-mail:</strong> {{ aluno.email|default:"—" }}</div>
-            <div class="col-md-3"><strong>Data da Matrícula:</strong> {{ aluno.data_matricula|date:"d/m/Y" }}</div>
-        </div>
-      </div>
+{% if aluno.foto %}
 
-      <!-- MATRÍCULA ESCOLAR -->
-      <div class="report-section">
-        <h6 class="section-title">🏫 Matrícula Escolar</h6>
-        <div class="row g-3">
-            <div class="col-md-3"><strong>Etapa:</strong> {{ aluno.turma_etapa|default:"—" }}</div>
-            <div class="col-md-3"><strong>Ano/Série:</strong> {{ aluno.turma_ano_escolar|default:"—" }}</div>
-            <div class="col-md-3"><strong>Turma:</strong> {{ aluno.turma_nome|default:"—" }}</div>
-            <div class="col-md-3"><strong>Ano Letivo:</strong> {{ aluno.turma_ano_letivo|default:"—" }}</div>
-        </div>
-      </div>
+<a href="{{ aluno.foto.url }}" target="_blank">
+<img src="{{ aluno.foto.url }}"
+     class="student-img"
+     loading="lazy"
+     alt="Foto do aluno">
+</a>
 
-      <!-- RESPONSÁVEIS -->
-      <div class="report-section">
-        <h6 class="section-title">👨‍👩‍👧 Responsáveis</h6>
-        <div class="row g-3">
-            <div class="col-md-6"><strong>Mãe:</strong> {{ aluno.nome_mae|default:"—" }}</div>
-            <div class="col-md-6"><strong>Pai:</strong> {{ aluno.nome_pai|default:"—" }}</div>
-            <div class="col-md-3"><strong>Telefone 1:</strong> {{ aluno.telefone_responsavel|default:"—" }}</div>
-            <div class="col-md-3"><strong>Contato 1:</strong> {{ aluno.nome_telefone_responsavel|default:"—" }}</div>
-            <div class="col-md-3"><strong>Telefone 2:</strong> {{ aluno.telefone_responsavel2|default:"—" }}</div>
-            <div class="col-md-3"><strong>Contato 2:</strong> {{ aluno.nome_telefone_responsavel2|default:"—" }}</div>
-        </div>
-      </div>
+{% else %}
 
-      <!-- INDICADORES -->
-      <div class="report-section">
-        <h6 class="section-title">📌 Indicadores Acadêmicos</h6>
-        <div class="row g-3">
-            <div class="col-md-3"><strong>Recomposição:</strong> 
-                <span class="badge {{ aluno.recomposicao|yesno:'bg-success,bg-secondary' }}">
-                    {{ aluno.recomposicao|yesno:"Sim,Não" }}
-                </span>
-            </div>
+<img src="{% static 'img/aluno_sem_foto.png' %}"
+     class="student-img"
+     loading="lazy"
+     alt="Aluno sem foto">
 
-            <div class="col-md-3"><strong>Dependência:</strong> 
-                <span class="badge {{ aluno.possui_dependencia|yesno:'bg-danger,bg-secondary' }}">
-                    {{ aluno.possui_dependencia|yesno:"Sim,Não" }}
-                </span>
-            </div>
+{% endif %}
 
-            <div class="col-md-3"><strong>Estudante Trabalhador:</strong> 
-                <span class="badge {{ aluno.aluno_trabalhador|yesno:'bg-warning text-dark,bg-secondary' }}">
-                    {{ aluno.aluno_trabalhador|yesno:"Sim,Não" }}
-                </span>
-            </div>
-
-            <div class="col-md-3"><strong>Busca Ativa:</strong> 
-                <span class="badge {{ aluno.aluno_busca_ativa|yesno:'bg-info text-dark,bg-secondary' }}">
-                    {{ aluno.aluno_busca_ativa|yesno:"Sim,Não" }}
-                </span>
-            </div>
-
-            <div class="col-md-3"><strong>PAED:</strong> 
-                <span class="badge {{ aluno.aluno_paed|yesno:'bg-primary,bg-secondary' }}">
-                    {{ aluno.aluno_paed|yesno:"Sim,Não" }}
-                </span>
-            </div>
-
-            <div class="col-md-3"><strong>FICAI:</strong> {{ aluno.numero_ficai|default:"—" }}</div>
-        </div>
-
-        {% if aluno.observacao_paed %}
-        <div class="mt-3">
-            <strong>Observações PAED:</strong>
-            <div class="p-2 bg-white border rounded">
-                {{ aluno.observacao_paed }}
-            </div>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- TRANSFERÊNCIA -->
-      <div class="report-section">
-        <h6 class="section-title">🚸 Situação Escolar</h6>
-        <div class="row g-3">
-            <div class="col-md-3"><strong>Transferido:</strong> 
-                <span class="badge {{ aluno.transferido|yesno:'bg-dark,bg-secondary' }}">
-                    {{ aluno.transferido|yesno:"Sim,Não" }}
-                </span>
-            </div>
-            <div class="col-md-3"><strong>Data:</strong> {{ aluno.data_transferencia|date:"d/m/Y"|default:"—" }}</div>
-        </div>
-      </div>
-
-      <!-- CONTROLE INTERNO -->
-      <div class="report-section no-print">
-        <h6 class="section-title">⚙️ Controle Interno</h6>
-        <div class="row g-3">
-            <div class="col-md-6"><strong>Cadastrado por:</strong> {{ aluno.criado_por|default:"—" }}</div>
-            <div class="col-md-6"><strong>Data:</strong> {{ aluno.criado_em|date:"d/m/Y H:i" }}</div>
-            <div class="col-md-6"><strong>Atualizado por:</strong> {{ aluno.atualizado_por|default:"—" }}</div>
-            <div class="col-md-6"><strong>Última atualização:</strong> {{ aluno.atualizado_em|date:"d/m/Y H:i" }}</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-    }
-});
-</script>
+<div>
 
-<style>
-.modern-card { border-radius:14px; }
-.report-section {
-  background:#ffffff;
-  padding:20px;
-  border-radius:14px;
-  margin-bottom:20px;
-  box-shadow:0 4px 18px rgba(0,0,0,0.04);
-}
+<h4 class="fw-bold text-primary mb-1">
+{{ aluno.nome }}
+</h4>
 
-.section-title {
-  font-weight:600;
-  margin-bottom:18px;
-  color:#0d6efd;
-  border-bottom:1px solid #e3e6ea;
-  padding-bottom:8px;
-}
+<div class="text-muted small">
 
-.btn-modern {
-  border-radius:10px;
-  padding:8px 16px;
-  font-weight:500;
-  transition:.2s;
-}
+Matrícula: {{ aluno.matricula }} •
+{{ aluno.turma_ano_escolar|default:"—" }} {{ aluno.turma_nome|default:"" }}
 
-.btn-modern:hover {
-  transform:translateY(-2px);
-  box-shadow:0 8px 20px rgba(0,0,0,0.08);
-}
+{% if aluno.aluno_lider %}
+• <span class="text-warning fw-semibold">
+⭐ Líder de Sala
+</span>
+{% endif %}
 
-@media print {
-  .sidebar, .topbar, footer, .no-print, .btn {
-    display:none !important;
-  }
+</div>
 
-  body {
-    background:white !important;
-    font-size:12px;
-  }
+</div>
 
-  .report-section {
-    box-shadow:none !important;
-    border:1px solid #ccc;
-  }
-}
-</style>
+</div>
 
+<div class="d-flex gap-2">
+
+<a href="{% url 'editar_aluno' aluno.id %}" class="btn btn-warning btn-modern">
+<i data-lucide="edit"></i> Editar
+</a>
+
+<button class="btn btn-success btn-modern" onclick="window.print();">
+<i data-lucide="printer"></i> Imprimir
+</button>
+
+<a href="{% url 'relatorio_alunos' %}" class="btn btn-secondary btn-modern">
+<i data-lucide="arrow-left"></i> Voltar
+</a>
+
+</div>
+
+</div>
+</div>
+
+
+
+<!-- INDICADORES PRINCIPAIS -->
+<div class="row g-3 mb-4">
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+
+<i data-lucide="alert-triangle"></i>
+
+<a href="{% url 'lista_ocorrencias' %}?matricula={{ aluno.matricula }}"
+class="text-decoration-none">
+
+<div class="indicator-number text-danger">
+{{ total_ocorrencias|default:0 }}
+</div>
+
+<div class="indicator-label">
+Ocorrências
+</div>
+
+</a>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+
+<i data-lucide="calendar-check"></i>
+
+<a href="/frequencia/aluno/{{ aluno.matricula }}/"
+class="text-decoration-none">
+
+<div class="indicator-number text-success">
+{{ percentual_frequencia|default:"0" }}%
+</div>
+
+<div class="indicator-label">
+Frequência
+</div>
+
+</a>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+
+<i data-lucide="clock"></i>
+
+<div class="indicator-number">
+{{ ultimo_dia_presente|date:"d/m/Y"|default:"—" }}
+</div>
+
+<div class="indicator-label">
+Última presença
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+
+<i data-lucide="layers"></i>
+
+<div class="indicator-number">
+{{ aluno.turma_ano_escolar|default:"—" }}
+</div>
+
+<div class="indicator-label">
+Ano escolar
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+
+<i data-lucide="school"></i>
+
+<div class="indicator-number">
+{{ aluno.turma_nome|default:"—" }}
+</div>
+
+<div class="indicator-label">
+Turma
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+<!-- INDICADORES PEDAGÓGICOS (NOVO PADRÃO HORIZONTAL) -->
+<div class="row g-3 mb-4">
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="refresh-ccw"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.recomposicao|yesno:'bg-success,bg-secondary' }}">
+{{ aluno.recomposicao|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+Recomposição
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="alert-circle"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.possui_dependencia|yesno:'bg-danger,bg-secondary' }}">
+{{ aluno.possui_dependencia|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+Dependência
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="briefcase"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.aluno_trabalhador|yesno:'bg-warning,bg-secondary' }}">
+{{ aluno.aluno_trabalhador|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+Trabalhador
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="search"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.aluno_busca_ativa|yesno:'bg-info,bg-secondary' }}">
+{{ aluno.aluno_busca_ativa|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+Busca ativa
+</div>
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="log-out"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.transferido|yesno:'bg-dark,bg-secondary' }}">
+{{ aluno.transferido|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+Transferido
+</div>
+
+{% if aluno.data_transferencia %}
+<div class="small text-muted">
+{{ aluno.data_transferencia|date:"d/m/Y" }}
+</div>
+{% endif %}
+
+</div>
+</div>
+</div>
+
+
+<div class="col-md">
+<div class="card modern-card indicator-card text-center">
+<div class="card-body">
+<i data-lucide="shield"></i>
+
+<div class="indicator-number">
+<span class="badge {{ aluno.aluno_paed|yesno:'bg-primary,bg-secondary' }}">
+{{ aluno.aluno_paed|yesno:"Sim,Não" }}
+</span>
+</div>
+
+<div class="indicator-label">
+PAED
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+<!-- IDENTIFICAÇÃO -->
+<div class="card modern-card shadow-sm mb-4">
+
+<div class="card-header section-title">
+<i data-lucide="id-card"></i>
+Identificação
+</div>
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-3"><strong>Matrícula:</strong> {{ aluno.matricula }}</div>
+<div class="col-md-3"><strong>Nascimento:</strong> {{ aluno.data_nascimento|date:"d/m/Y" }}</div>
+<div class="col-md-3"><strong>Email:</strong> {{ aluno.email|default:"—" }}</div>
+<div class="col-md-3"><strong>Matrícula escolar:</strong> {{ aluno.data_matricula|date:"d/m/Y" }}</div>
+
+</div>
+
+</div>
+</div>
+
+
+
+<!-- RESPONSÁVEIS -->
+<div class="card modern-card shadow-sm mb-4">
+
+<div class="card-header section-title">
+<i data-lucide="users"></i>
+Responsáveis
+</div>
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-6"><strong>Mãe:</strong> {{ aluno.nome_mae|default:"—" }}</div>
+<div class="col-md-6"><strong>Pai:</strong> {{ aluno.nome_pai|default:"—" }}</div>
+
+<div class="col-md-3"><strong>Telefone:</strong> {{ aluno.telefone_responsavel|default:"—" }}</div>
+<div class="col-md-3"><strong>Contato:</strong> {{ aluno.nome_telefone_responsavel|default:"—" }}</div>
+
+<div class="col-md-3"><strong>Telefone 2:</strong> {{ aluno.telefone_responsavel2|default:"—" }}</div>
+<div class="col-md-3"><strong>Contato 2:</strong> {{ aluno.nome_telefone_responsavel2|default:"—" }}</div>
+
+</div>
+
+</div>
+</div>
+
+
+
+<!-- PAED DETALHADO -->
+{% if aluno.aluno_paed %}
+<div class="card modern-card shadow-sm mb-4">
+
+<div class="card-header section-title">
+<i data-lucide="shield"></i>
+Detalhes PAED
+</div>
+
+<div class="card-body">
+
+<div class="mb-3">
+
+<strong>Observação:</strong>
+
+<div class="p-2 bg-light border rounded mt-1">
+{{ aluno.observacao_paed|default:"Sem observações registradas." }}
+</div>
+
+</div>
+
+
+{% if documentos_paed %}
+
+<strong>Documentos PAED:</strong>
+
+<ul class="list-group mt-2">
+
+{% for doc in documentos_paed %}
+
+<li class="list-group-item d-flex justify-content-between">
+
+<span>
+{{ doc.tipo_laudo }} — {{ doc.data_laudo|date:"d/m/Y" }}
+</span>
+
+<a href="{{ doc.arquivo.url }}" target="_blank" class="btn btn-sm btn-primary">
+<i data-lucide="eye"></i>
+Visualizar
+</a>
+
+</li>
+
+{% endfor %}
+
+</ul>
+
+{% endif %}
+
+</div>
+</div>
+{% endif %}
+
+
+
+<!-- CONTROLE INTERNO -->
+<div class="card modern-card shadow-sm no-print">
+
+<div class="card-header section-title">
+<i data-lucide="settings"></i>
+Controle interno
+</div>
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-6">
+<strong>Cadastrado por:</strong> {{ aluno.criado_por }}
+</div>
+
+<div class="col-md-6">
+<strong>Data:</strong> {{ aluno.criado_em|date:"d/m/Y H:i" }}
+</div>
+
+<div class="col-md-6">
+<strong>Atualizado por:</strong> {{ aluno.atualizado_por }}
+</div>
+
+<div class="col-md-6">
+<strong>Última atualização:</strong> {{ aluno.atualizado_em|date:"d/m/Y H:i" }}
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
 {% endblock %}
