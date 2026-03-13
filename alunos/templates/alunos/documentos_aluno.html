@@ -54,9 +54,62 @@ Matrícula {{ aluno.matricula }}
 </h6>
 
 <form method="POST" enctype="multipart/form-data">
+    
 {% csrf_token %}
 <input type="hidden" name="next" value="{{ next }}">
 
+
+<div id="uploadLoader" class="upload-loader d-none">
+
+<div class="upload-card">
+
+<div class="upload-header">
+<i data-lucide="upload-cloud"></i>
+<span>Enviando arquivo...</span>
+</div>
+
+<div class="progress mt-3">
+<div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated"
+style="width:0%"></div>
+</div>
+
+<div class="upload-info mt-3">
+
+<div class="upload-row">
+<span><strong id="uploadPercent">0%</strong></span>
+</div>
+
+<div class="upload-row">
+<span id="uploadTransferred">0 MB</span>
+<span>/</span>
+<span id="uploadTotal">0 MB</span>
+</div>
+
+<div class="upload-row">
+<span id="uploadRemaining">Restante: 0 MB</span>
+</div>
+
+<div class="upload-row">
+<span id="uploadSpeed">Velocidade: 0 KB/s</span>
+</div>
+
+<div class="upload-row">
+<span id="uploadTime">Calculando tempo...</span>
+</div>
+
+</div>
+
+<div class="text-end mt-3">
+
+<button id="cancelUpload" class="btn btn-danger btn-sm">
+Cancelar envio
+</button>
+
+</div>
+
+</div>
+
+</div>
 <div class="row g-3">
 
 <div class="col-md-4">
@@ -90,6 +143,8 @@ Anexar Laudo
 
 </div>
 </form>
+
+
 
 </div>
 
@@ -283,7 +338,162 @@ window.location.href="/alunos/laudos/"+id+"/excluir/?next={{ request.path }}";
 
 });
 
+document.addEventListener("DOMContentLoaded",function(){
 
+const form=document.querySelector("form");
+const loader=document.getElementById("uploadLoader");
+
+const progress=document.getElementById("uploadProgress");
+
+const percent=document.getElementById("uploadPercent");
+const transferred=document.getElementById("uploadTransferred");
+const totalEl=document.getElementById("uploadTotal");
+const remainingEl=document.getElementById("uploadRemaining");
+
+const speedEl=document.getElementById("uploadSpeed");
+const timeEl=document.getElementById("uploadTime");
+
+const cancelBtn=document.getElementById("cancelUpload");
+
+let xhr=null;
+let lastLoaded=0;
+let lastTime=Date.now();
+
+function formatBytes(bytes){
+
+if(bytes===0) return "0 B";
+
+const k=1024;
+const sizes=["B","KB","MB","GB"];
+
+const i=Math.floor(Math.log(bytes)/Math.log(k));
+
+return (bytes/Math.pow(k,i)).toFixed(2)+" "+sizes[i];
+
+}
+
+form.addEventListener("submit",function(e){
+
+e.preventDefault();
+
+const fileInput=form.querySelector('input[type="file"]');
+
+if(!fileInput.files.length){
+
+form.submit();
+return;
+
+}
+
+const formData=new FormData(form);
+
+xhr=new XMLHttpRequest();
+
+xhr.open("POST",form.action,true);
+
+loader.classList.remove("d-none");
+
+lastLoaded=0;
+lastTime=Date.now();
+
+xhr.upload.onprogress=function(e){
+
+if(!e.lengthComputable) return;
+
+const now=Date.now();
+const timeDiff=(now-lastTime)/1000;
+
+if(timeDiff < 0.2) return; // evita cálculo precoce
+
+const loadedDiff=e.loaded-lastLoaded;
+
+const speed=loadedDiff/timeDiff;
+
+const percentComplete=(e.loaded/e.total)*100;
+
+progress.style.width=percentComplete.toFixed(1)+"%";
+
+percent.textContent=percentComplete.toFixed(1)+"%";
+
+transferred.textContent=formatBytes(e.loaded);
+totalEl.textContent=formatBytes(e.total);
+
+remainingEl.textContent="Restante: "+formatBytes(e.total-e.loaded);
+
+speedEl.textContent="Velocidade: "+formatBytes(speed)+"/s";
+
+const remainingTime=(e.total-e.loaded)/speed;
+
+if(isFinite(remainingTime) && remainingTime>0){
+
+timeEl.textContent=Math.round(remainingTime)+" s restantes";
+
+}
+
+lastLoaded=e.loaded;
+lastTime=now;
+
+};
+
+xhr.onload=function(){
+
+if(xhr.status===200){
+
+
+percent.textContent="100%";
+progress.style.width="100%";
+speedEl.textContent="Finalizando...";
+timeEl.textContent="Processando arquivo...";
+
+location.reload();
+
+}else{
+
+Swal.fire({
+icon:"error",
+title:"Erro no upload",
+text:"Falha ao enviar arquivo."
+});
+
+loader.classList.add("d-none");
+
+}
+
+};
+
+xhr.onerror=function(){
+
+Swal.fire({
+icon:"error",
+title:"Erro de conexão"
+});
+
+loader.classList.add("d-none");
+
+};
+
+xhr.send(formData);
+
+});
+
+cancelBtn.addEventListener("click",function(){
+
+if(xhr){
+
+xhr.abort();
+
+loader.classList.add("d-none");
+
+Swal.fire({
+icon:"info",
+title:"Upload cancelado"
+});
+
+}
+
+});
+
+});
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
