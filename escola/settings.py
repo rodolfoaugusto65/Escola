@@ -213,15 +213,12 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # CLOUDFARE R2 STORAGE
 # ==================================================
 
-AWS_ACCESS_KEY_ID = os.environ.get("R2_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 
-AWS_STORAGE_BUCKET_NAME = os.environ.get("R2_BUCKET", "geredu-arquivos")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
 
-AWS_S3_ENDPOINT_URL = os.environ.get(
-    "R2_ENDPOINT",
-    "https://f10157951b1e36f163670f6a6cb03de6.r2.cloudflarestorage.com"
-)
+AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
 
 AWS_S3_REGION_NAME = "auto"
 AWS_S3_ADDRESSING_STYLE = "path"
