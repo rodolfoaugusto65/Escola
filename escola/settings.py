@@ -255,3 +255,10 @@ STORAGES = {
 # ==================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ==================================================
+# UPLOAD DE ARQUIVOS
+# ==================================================
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800
