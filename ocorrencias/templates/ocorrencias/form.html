@@ -593,13 +593,15 @@ confirmButtonColor:"#0ea5e9"
 })
 .then((result) => {
 
-if(result.dismiss === Swal.DismissReason.cancel){
+if(result.isConfirmed){
 
-const alunoId = document.getElementById("id_aluno").value;
-
-window.open("{% url 'imprimir_por_aluno' 0 %}".replace("0", alunoId), "_blank")
+    window.open(data.url_impressao, "_blank");
 
 }
+
+setTimeout(()=>{
+    window.location.href = data.redirect;
+},400);
 
 });
 
