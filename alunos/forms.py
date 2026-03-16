@@ -168,11 +168,17 @@ class AlunoForm(forms.ModelForm):
 
         return aluno
 
+        
+
+
+
 # ==================================================
 # FORMULÁRIO DE LAUDOS (PAED)
 # ==================================================
 
 class DocumentoAlunoForm(forms.ModelForm):
+
+    arquivo = forms.FileField(required=False, allow_empty_file=True)
 
     class Meta:
 
@@ -214,25 +220,22 @@ class DocumentoAlunoForm(forms.ModelForm):
         }
 
     # =========================
-    # VALIDAR PDF + GERAR NOME ÚNICO
+    # VALIDAR PDF
     # =========================
+
     def clean_arquivo(self):
 
         arquivo = self.cleaned_data.get("arquivo")
 
-        if arquivo:
-
-            if not arquivo.name.lower().endswith(".pdf"):
-                raise forms.ValidationError(
-                    "Somente arquivos PDF são permitidos."
-                )
-
-            # gerar nome único para evitar sobrescrita no R2/S3
-            extensao = os.path.splitext(arquivo.name)[1]
-
-            nome_unico = f"laudo_{uuid.uuid4().hex}{extensao}"
-
-            arquivo.name = nome_unico
+        if arquivo and arquivo.name and not arquivo.name.lower().endswith(".pdf"):
+            raise forms.ValidationError(
+                "Somente arquivos PDF são permitidos."
+            )
 
         return arquivo
-        
+    
+    def delete(self, *args, **kwargs):
+        if self.arquivo:
+            self.arquivo.delete(save=False)
+    
+        super().delete(*args, **kwargs)

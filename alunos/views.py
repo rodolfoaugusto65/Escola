@@ -14,6 +14,10 @@ from core.utils import render_smart
 from django.core.files.storage import default_storage
 from ocorrencias.models import Ocorrencia
 from frequencia.models import FrequenciaAluno
+import boto3
+import uuid
+from django.conf import settings
+import os
 
 # ==================================================
 # LISTA DE ALUNOS
@@ -461,14 +465,13 @@ def relatorio_alunos(request):
 
 from django.urls import reverse
 
+
+
 @login_required
 def documentos_aluno(request, aluno_id):
 
     aluno = get_object_or_404(Aluno, id=aluno_id)
 
-    # =========================
-    # ORIGEM DA NAVEGAÇÃO
-    # =========================
     next_url = request.GET.get("next")
 
     if not next_url:
@@ -477,41 +480,43 @@ def documentos_aluno(request, aluno_id):
     if not next_url or "/editar/" not in next_url:
         next_url = reverse("editar_aluno", args=[aluno.id])
 
-    # destino do botão voltar
     voltar_aluno = reverse("editar_aluno", args=[aluno.id])
 
-    # =========================
-    # VERIFICA PAED
-    # =========================
     if not aluno.aluno_paed:
         messages.warning(request, "Este aluno não pertence ao programa PAED.")
         return redirect("relatorio_aluno_completo", aluno.id)
 
-    documentos = aluno.documentos.all().order_by("-data_laudo")
+    documentos = aluno.documentos.select_related("aluno").order_by("-data_laudo")
 
     # =========================
     # SALVAR DOCUMENTO
     # =========================
     if request.method == "POST":
 
-        form = DocumentoAlunoForm(request.POST, request.FILES)
+        arquivo_path = request.POST.get("arquivo_path")
+
+        form = DocumentoAlunoForm(request.POST)
 
         if form.is_valid():
 
             documento = form.save(commit=False)
             documento.aluno = aluno
+
+            if arquivo_path:
+                documento.arquivo.name = arquivo_path
+
             documento.save()
 
             messages.success(request, "Laudo anexado com sucesso.")
 
-            return redirect(f"{request.path}?next={next_url}")
+            return redirect(request.path)
+
+        else:
+            messages.error(request, "Erro ao salvar o laudo.")
 
     else:
         form = DocumentoAlunoForm()
 
-    # =========================
-    # RENDER
-    # =========================
     return render(request, "alunos/documentos_aluno.html", {
         "aluno": aluno,
         "documentos": documentos,
@@ -519,6 +524,9 @@ def documentos_aluno(request, aluno_id):
         "next": next_url,
         "voltar_aluno": voltar_aluno
     })
+
+from django.core.files.storage import default_storage
+
 @login_required
 def editar_documento(request, doc_id):
 
@@ -529,14 +537,55 @@ def editar_documento(request, doc_id):
 
     if request.method == "POST":
 
-        form = DocumentoAlunoForm(
-            request.POST,
-            request.FILES,
-            instance=documento
-        )
+        form = DocumentoAlunoForm(request.POST, instance=documento)
 
         if form.is_valid():
-            form.save()
+
+            documento_editado = form.save(commit=False)
+
+            arquivo_antigo = None
+            if documento.arquivo:
+                arquivo_antigo = documento.arquivo.name
+
+            # arquivo enviado via R2
+            arquivo_path = request.POST.get("arquivo_path")
+
+            remover = request.POST.get("remover_arquivo") == "1"
+
+            # =========================
+            # NOVO ARQUIVO VIA R2
+            # =========================
+
+            if arquivo_path:
+
+                documento_editado.arquivo.name = arquivo_path
+
+                # apagar antigo
+                if arquivo_antigo:
+                    try:
+                        default_storage.delete(arquivo_antigo)
+                    except Exception:
+                        pass
+
+            # =========================
+            # REMOÇÃO MANUAL
+            # =========================
+
+            if remover and not arquivo_path:
+
+                messages.error(
+                    request,
+                    "Após remover o laudo é obrigatório enviar um novo arquivo."
+                )
+
+                return render(request, "alunos/editar_documento.html", {
+                    "form": form,
+                    "documento": documento,
+                    "aluno": aluno,
+                    "next": next_url
+                })
+
+            documento_editado.save()
 
             messages.success(request, "Laudo atualizado com sucesso.")
 
@@ -554,7 +603,6 @@ def editar_documento(request, doc_id):
         "aluno": aluno,
         "next": next_url
     })
-
 
 @login_required
 def excluir_documento(request, doc_id):
@@ -611,3 +659,179 @@ def atualizar_paed(request, aluno_id):
         "success": True,
         "paed": aluno.aluno_paed
     })
+
+@login_required
+def gerar_upload_laudo(request):
+
+    filename = request.GET.get("filename")
+    aluno_id = request.GET.get("aluno")
+
+    if not filename or not aluno_id:
+        return JsonResponse({"error": "dados inválidos"}, status=400)
+
+    aluno = Aluno.objects.get(id=aluno_id)
+
+    ext = os.path.splitext(filename)[1]
+
+    nome_final = f"alunos/laudos/Laudo-{aluno.matricula}-{uuid.uuid4().hex}{ext}"
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
+
+    url = s3.generate_presigned_url(
+        "put_object",
+        Params={
+            "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+            "Key": nome_final,
+        },
+        ExpiresIn=1800
+    )
+
+    return JsonResponse({
+        "upload_url": url,
+        "file_key": nome_final
+    })
+
+
+@login_required
+def verificar_arquivos_orfaos(request):
+
+    import boto3
+    import re
+    from django.conf import settings
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
+
+    arquivos_bucket = []
+
+    continuation_token = None
+
+    while True:
+
+        if continuation_token:
+
+            response = s3.list_objects_v2(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Prefix="alunos/laudos/",
+                ContinuationToken=continuation_token
+            )
+
+        else:
+
+            response = s3.list_objects_v2(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Prefix="alunos/laudos/"
+            )
+
+        if "Contents" in response:
+            arquivos_bucket.extend(response["Contents"])
+
+        if response.get("IsTruncated"):
+            continuation_token = response.get("NextContinuationToken")
+        else:
+            break
+
+
+    arquivos_db = set(
+        DocumentoAluno.objects.exclude(arquivo="")
+        .values_list("arquivo", flat=True)
+    )
+
+
+    arquivos_orfaos = []
+
+    for obj in arquivos_bucket:
+
+        key = obj["Key"]
+
+        if key.endswith("/"):
+            continue
+
+        if key not in arquivos_db:
+
+            aluno = None
+
+            match = re.search(r"Laudo-(\d+)-", key)
+
+            if match:
+
+                matricula = match.group(1)
+
+                aluno = Aluno.objects.filter(
+                    matricula=matricula
+                ).only("id","nome","matricula").first()
+
+            presigned_url = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                    "Key": key
+                },
+                ExpiresIn=3600
+            )
+
+            arquivos_orfaos.append({
+
+                "arquivo": key,
+                "url": presigned_url,
+                "tamanho": obj["Size"],
+                "data": obj["LastModified"],
+                "aluno": aluno
+
+            })
+
+    arquivos_orfaos.sort(key=lambda x: x["data"], reverse=True)
+
+
+    total_bucket = len(arquivos_bucket)
+    total_db = len(arquivos_db)
+    total_orfaos = len(arquivos_orfaos)
+
+
+    return render(
+        request,
+        "alunos/arquivos_orfaos.html",
+        {
+            "arquivos_orfaos": arquivos_orfaos,
+            "total_orfaos": total_orfaos,
+            "total_bucket": total_bucket,
+            "total_db": total_db
+        }
+    )
+
+@login_required
+def excluir_arquivo_orfao(request):
+
+    if not (request.user.is_superuser or request.user.groups.filter(name="Gerencial").exists()):
+        return JsonResponse({"error": "Sem permissão"}, status=403)
+
+    key = request.POST.get("arquivo")
+
+    if not key:
+        return JsonResponse({"error": "Arquivo inválido"}, status=400)
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
+
+    s3.delete_object(
+        Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        Key=key
+    )
+
+    return JsonResponse({"success": True})

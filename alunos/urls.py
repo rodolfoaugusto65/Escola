@@ -33,4 +33,19 @@ path(
     views.atualizar_paed,
     name="atualizar_paed"
 ),
+path(
+    "upload/laudo/",
+    views.gerar_upload_laudo,
+    name="gerar_upload_laudo"
+),
+path(
+    "laudos/verificar-orfaos/",
+    views.verificar_arquivos_orfaos,
+    name="verificar_orfaos"
+),
+path(
+    "laudos/orfaos/excluir/",
+    views.excluir_arquivo_orfao,
+    name="excluir_orfao"
+),
 ]

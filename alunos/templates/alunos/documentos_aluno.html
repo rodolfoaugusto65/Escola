@@ -1,16 +1,12 @@
 {% extends "core/base.html" %}
 {% load widget_tweaks %}
-
 {% block title %}Laudos PAED{% endblock %}
-
 {% block content %}
 
 <div class="container-fluid mt-4 fade-in">
 
 <div class="card modern-card shadow-sm border-0">
 <div class="card-body p-4">
-
-<!-- CABEÇALHO -->
 
 <div class="d-flex justify-content-between align-items-center mb-4">
 
@@ -36,12 +32,29 @@ Matrícula {{ aluno.matricula }}
 
 </h4>
 
+<div class="d-flex gap-2">
+
 <a id="btnVoltarAluno"
-   href="{{ voltar_aluno }}#indicadores"
-   class="btn btn-light btn-modern d-flex align-items-center gap-2">
-  <i data-lucide="arrow-left"></i>
-  Voltar
+href="{{ voltar_aluno }}#indicadores"
+class="btn btn-light btn-modern d-flex align-items-center gap-2">
+
+<i data-lucide="arrow-left"></i>
+Voltar
+
 </a>
+
+<button id="btnVerificarOrfaos"
+class="btn btn-outline-secondary btn-modern d-flex align-items-center gap-2">
+
+<i data-lucide="search"></i>
+Verificar arquivos órfãos
+
+</button>
+
+
+</a>
+
+</div>
 
 </div>
 
@@ -53,11 +66,10 @@ Matrícula {{ aluno.matricula }}
 📄 Anexar novo laudo
 </h6>
 
-<form method="POST" enctype="multipart/form-data">
-    
-{% csrf_token %}
-<input type="hidden" name="next" value="{{ next }}">
+<form id="formUploadLaudo" method="POST" enctype="multipart/form-data" action="{{ request.path }}">
 
+{% csrf_token %}
+<input type="hidden" name="next" value="{{ request.path }}">
 
 <div id="uploadLoader" class="upload-loader d-none">
 
@@ -69,47 +81,34 @@ Matrícula {{ aluno.matricula }}
 </div>
 
 <div class="progress mt-3">
-<div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated"
-style="width:0%"></div>
+<div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
 </div>
 
 <div class="upload-info mt-3">
 
-<div class="upload-row">
-<span><strong id="uploadPercent">0%</strong></span>
-</div>
+<div><strong id="uploadPercent">0%</strong></div>
 
-<div class="upload-row">
-<span id="uploadTransferred">0 MB</span>
-<span>/</span>
+<div>
+<span id="uploadTransferred">0 MB</span> /
 <span id="uploadTotal">0 MB</span>
 </div>
 
-<div class="upload-row">
-<span id="uploadRemaining">Restante: 0 MB</span>
-</div>
-
-<div class="upload-row">
-<span id="uploadSpeed">Velocidade: 0 KB/s</span>
-</div>
-
-<div class="upload-row">
-<span id="uploadTime">Calculando tempo...</span>
-</div>
+<div id="uploadRemaining">Restante: 0 MB</div>
+<div id="uploadSpeed">Velocidade: 0 KB/s</div>
+<div id="uploadTime">Calculando tempo...</div>
 
 </div>
 
 <div class="text-end mt-3">
-
-<button id="cancelUpload" class="btn btn-danger btn-sm">
+<button type="button" id="cancelUpload" class="btn btn-danger btn-sm">
 Cancelar envio
 </button>
-
 </div>
 
 </div>
 
 </div>
+
 <div class="row g-3">
 
 <div class="col-md-4">
@@ -142,13 +141,12 @@ Anexar Laudo
 </div>
 
 </div>
+
 </form>
-
-
 
 </div>
 
-<!-- TABELA DE LAUDOS -->
+<!-- TABELA DE LAUDOS RESTAURADA -->
 
 <div class="section-box">
 
@@ -186,104 +184,56 @@ Anexar Laudo
 
 <td class="d-flex gap-2">
 
-<!-- VER DETALHES -->
-
 <a href="{% url 'detalhe_documento' doc.id %}?next={{ next|urlencode }}"
-   class="btn btn-sm btn-info">
+class="btn btn-sm btn-info">
 
 <i data-lucide="eye"></i>
 
 </a>
 
-<!-- EDITAR -->
-
 <a href="{% url 'editar_documento' doc.id %}?next={{ request.path }}"
-   class="btn btn-sm btn-warning">
+class="btn btn-sm btn-warning">
 
 <i data-lucide="edit"></i>
 
 </a>
 
-<!-- EXCLUIR -->
-
 <button class="btn btn-sm btn-danger btnExcluirLaudo"
-        data-id="{{ doc.id }}"
-        data-nome="{{ doc.tipo_laudo }}">
+data-id="{{ doc.id }}"
+data-nome="{{ doc.tipo_laudo }}">
 
 <i data-lucide="trash"></i>
 
 </button>
 
-<!-- DOWNLOAD -->
+{% if doc.arquivo %}
 
 <a href="{{ doc.arquivo.url }}"
-   target="_blank"
-   class="btn btn-sm btn-primary">
+target="_blank"
+class="btn btn-sm btn-primary">
 
 <i data-lucide="download"></i>
 
 </a>
+
+{% else %}
+
+<span class="badge bg-secondary">
+Sem arquivo
+</span>
+
+{% endif %}
 
 </td>
 
 </tr>
 
-<!-- MODAL DETALHES -->
-
-<div class="modal fade" id="laudoModal{{ doc.id }}">
-<div class="modal-dialog">
-<div class="modal-content">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-{{ doc.tipo_laudo }}
-</h5>
-
-<button class="btn-close" data-bs-dismiss="modal"></button>
-
-</div>
-
-<div class="modal-body">
-
-<p>
-<strong>Data do laudo:</strong>
-{{ doc.data_laudo|date:"d/m/Y" }}
-</p>
-
-<p>
-<strong>Observações:</strong>
-</p>
-
-<div class="text-muted">
-{{ doc.descricao|linebreaks }}
-</div>
-
-<hr>
-
-<a href="{{ doc.arquivo.url }}"
-   target="_blank"
-   class="btn btn-primary btn-sm d-flex align-items-center gap-2">
-
-<i data-lucide="download"></i>
-Baixar arquivo
-
-</a>
-
-</div>
-
-</div>
-</div>
-</div>
-
 {% empty %}
 
 <tr>
-
 <td colspan="3" class="text-center text-muted py-4">
 Nenhum laudo registrado para este aluno.
 </td>
-
 </tr>
 
 {% endfor %}
@@ -340,7 +290,7 @@ window.location.href="/alunos/laudos/"+id+"/excluir/?next={{ request.path }}";
 
 document.addEventListener("DOMContentLoaded",function(){
 
-const form=document.querySelector("form");
+const form = document.getElementById("formUploadLaudo");
 const loader=document.getElementById("uploadLoader");
 
 const progress=document.getElementById("uploadProgress");
@@ -371,82 +321,88 @@ return (bytes/Math.pow(k,i)).toFixed(2)+" "+sizes[i];
 
 }
 
-form.addEventListener("submit",function(e){
+cancelBtn.addEventListener("click",function(){
+
+if(xhr){
+xhr.abort();
+}
+
+loader.classList.add("d-none");
+
+Swal.fire({
+icon:"info",
+title:"Upload cancelado"
+});
+
+});
+
+form.addEventListener("submit", async function(e){
 
 e.preventDefault();
 
 const fileInput=form.querySelector('input[type="file"]');
 
 if(!fileInput.files.length){
-
 form.submit();
 return;
-
 }
 
-const formData=new FormData(form);
-
-xhr=new XMLHttpRequest();
-
-xhr.open("POST",form.action,true);
+const file=fileInput.files[0];
 
 loader.classList.remove("d-none");
 
 startTime=Date.now();
 
-xhr.upload.onprogress=function(e){
+try{
 
-if(!e.lengthComputable) return;
+const alunoId = "{{ aluno.id }}";
 
-const percentComplete=(e.loaded/e.total)*100;
+const resp = await fetch(
+`/alunos/upload/laudo/?filename=${encodeURIComponent(file.name)}&aluno=${alunoId}`
+);
 
-progress.style.width=percentComplete.toFixed(1)+"%";
-
-percent.textContent=percentComplete.toFixed(1)+"%";
-
-transferred.textContent=formatBytes(e.loaded);
-totalEl.textContent=formatBytes(e.total);
-
-remainingEl.textContent="Restante: "+formatBytes(e.total-e.loaded);
-
-const elapsed=(Date.now()-startTime)/1000;
-
-if(elapsed < 0.5) return;
-
-const speed=e.loaded/elapsed;
-
-speedEl.textContent="Velocidade: "+formatBytes(speed)+"/s";
-
-const remainingTime=(e.total-e.loaded)/speed;
-
-if(isFinite(remainingTime) && remainingTime>0){
-
-timeEl.textContent=Math.round(remainingTime)+" s restantes";
-
+if(!resp.ok){
+throw new Error("Falha ao gerar URL de upload");
 }
 
-};
+const data=await resp.json();
 
-xhr.onload=function(){
+xhr=new XMLHttpRequest();
+
+xhr.onload=async function(){
 
 percent.textContent="100%";
 progress.style.width="100%";
 
 speedEl.textContent="Finalizando...";
-timeEl.textContent="Processando arquivo...";
+timeEl.textContent="Registrando documento...";
 
 if(xhr.status===200){
 
-setTimeout(()=>{
+const formData=new FormData(form);
+
+formData.delete("arquivo");
+
+formData.append("arquivo_path",data.file_key);
+
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+await fetch(form.action,{
+method:"POST",
+body:formData,
+headers:{
+"X-CSRFToken": csrfToken
+},
+credentials:"same-origin"
+});
+
 location.reload();
-},800);
 
 }else{
 
 Swal.fire({
 icon:"error",
-title:"Erro no upload",
-text:"Falha ao enviar arquivo."
+title:"Erro no upload"
 });
 
 loader.classList.add("d-none");
@@ -466,28 +422,29 @@ loader.classList.add("d-none");
 
 };
 
-xhr.send(formData);
+xhr.open("PUT",data.upload_url,true);
 
-});
+xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
 
-cancelBtn.addEventListener("click",function(){
+xhr.send(file);
 
-if(xhr){
+}catch(err){
 
-xhr.abort();
-
-loader.classList.add("d-none");
+console.error(err);
 
 Swal.fire({
-icon:"info",
-title:"Upload cancelado"
+icon:"error",
+title:"Falha ao iniciar upload"
 });
+
+loader.classList.add("d-none");
 
 }
 
 });
 
 });
+
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -520,6 +477,60 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
+
+
+document.getElementById("btnVerificarOrfaos").addEventListener("click",function(){
+
+Swal.fire({
+
+title:"Verificando armazenamento",
+
+html:`
+<div style="text-align:left;font-size:14px">
+
+<div id="s1">🔎 Conectando ao armazenamento...</div>
+<div id="s2">📂 Listando arquivos...</div>
+<div id="s3">🧠 Comparando com banco de dados...</div>
+
+</div>
+`,
+
+allowOutsideClick:false,
+didOpen:()=>{
+
+Swal.showLoading();
+
+setTimeout(()=>{
+
+document.getElementById("s1").style.opacity="0.4";
+
+},700);
+
+setTimeout(()=>{
+
+document.getElementById("s2").style.opacity="0.4";
+
+},1400);
+
+setTimeout(()=>{
+
+document.getElementById("s3").style.opacity="0.4";
+
+},2100);
+
+}
+
+});
+
+setTimeout(()=>{
+
+window.location.href="{% url 'verificar_orfaos' %}";
+
+},400);
+
+});
+
+
 </script>
 
 <style>

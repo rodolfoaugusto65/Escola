@@ -1,0 +1,214 @@
+{% extends "core/base.html" %}
+
+{% block title %}Arquivos órfãos{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<h4 class="fw-bold d-flex align-items-center gap-2 mb-0">
+
+<i data-lucide="search"></i>
+Arquivos órfãos encontrados
+
+</h4>
+
+<a href="{% url 'lista_alunos' %}"
+class="btn btn-light btn-modern d-flex align-items-center gap-2">
+
+<i data-lucide="arrow-left"></i>
+Voltar
+
+</a>
+
+</div>
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle">
+
+<thead class="table-light">
+
+<tr>
+
+<th>Arquivo</th>
+<th>Possível aluno</th>
+<th>Tamanho</th>
+<th>Data</th>
+<th width="160">Ações</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for arq in arquivos_orfaos %}
+
+<tr>
+
+<td>
+
+{{ arq.arquivo|cut:"alunos/laudos/" }}
+
+</td>
+
+<td>
+
+{% if arq.aluno %}
+
+<strong>{{ arq.aluno.nome }}</strong><br>
+
+<small class="text-muted">
+Matrícula {{ arq.aluno.matricula }}
+</small>
+
+{% else %}
+
+<span class="text-muted">Não identificado</span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+{{ arq.tamanho|filesizeformat }}
+
+</td>
+
+<td>
+
+{{ arq.data|date:"d/m/Y H:i" }}
+
+</td>
+
+<td class="d-flex gap-2">
+
+<a href="{{ arq.url }}"
+target="_blank"
+class="btn btn-sm btn-primary">
+
+<i data-lucide="eye"></i>
+
+</a>
+
+{% if request.user.is_superuser or request.user.groups.all.0.name == "Gerencial" %}
+
+<button
+class="btn btn-sm btn-danger btnExcluirOrfao"
+data-arquivo="{{ arq.arquivo }}">
+
+<i data-lucide="trash"></i>
+
+</button>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="5" class="text-center text-muted py-4">
+
+Nenhum arquivo órfão encontrado.
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded",function(){
+
+lucide.createIcons();
+
+});
+
+document.querySelectorAll(".btnExcluirOrfao").forEach(btn=>{
+
+btn.addEventListener("click",function(){
+
+const arquivo=this.dataset.arquivo;
+
+Swal.fire({
+
+title:"Excluir arquivo?",
+text:"Este arquivo será removido permanentemente do armazenamento.",
+icon:"warning",
+showCancelButton:true,
+confirmButtonColor:"#dc3545",
+confirmButtonText:"Excluir",
+cancelButtonText:"Cancelar"
+
+}).then(async result=>{
+
+if(result.isConfirmed){
+
+const resp=await fetch("{% url 'excluir_orfao' %}",{
+
+method:"POST",
+
+headers:{
+"X-CSRFToken":"{{ csrf_token }}"
+},
+
+body:new URLSearchParams({
+arquivo:arquivo
+})
+
+});
+
+const data=await resp.json();
+
+if(data.success){
+
+Swal.fire({
+icon:"success",
+title:"Arquivo removido"
+}).then(()=>location.reload());
+
+}else{
+
+Swal.fire({
+icon:"error",
+title:"Erro ao remover"
+});
+
+}
+
+}
+
+});
+
+});
+
+});
+
+</script>
+
+{% endblock %}
