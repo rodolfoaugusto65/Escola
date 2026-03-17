@@ -1,1 +1,1 @@
-web: gunicorn escola.wsgi:application
+web: PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers playwright install chromium && gunicorn escola.wsgi:application
