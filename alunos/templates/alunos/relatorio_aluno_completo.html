@@ -57,7 +57,15 @@ Matrícula: {{ aluno.matricula }} •
 
 </div>
 
-<div class="d-flex gap-2">
+<div class="d-flex gap-2 flex-wrap">
+
+<button
+class="btn btn-danger btn-modern fw-bold"
+onclick="abrirResetSenha('{{ aluno.id }}','{{ aluno.nome }}','{{ aluno.matricula }}')"
+>
+<i data-lucide="key"></i>
+Redefinir senha SEDUC
+</button>
 
 <a href="{% url 'editar_aluno' aluno.id %}" class="btn btn-warning btn-modern">
 <i data-lucide="edit"></i> Editar
@@ -87,8 +95,19 @@ Matrícula: {{ aluno.matricula }} •
 
 <i data-lucide="alert-triangle"></i>
 
-<a href="{% url 'lista_ocorrencias' %}?matricula={{ aluno.matricula }}"
-class="text-decoration-none">
+<a
+href="{% url 'lista_ocorrencias' %}?matricula={{ aluno.matricula }}"
+class="text-decoration-none btn-ocorrencias"
+
+data-permissao="{{ user.pode_gerenciar_usuarios }}"
+data-tipo="{{ user.get_perfil_display }}"
+data-usuario="{{ user.get_full_name|default:user.username }}"
+
+hx-get="{% url 'lista_ocorrencias' %}?matricula={{ aluno.matricula }}"
+hx-target="#mainContent"
+hx-swap="innerHTML"
+hx-push-url="true"
+>
 
 <div class="indicator-number text-danger">
 {{ total_ocorrencias|default:0 }}
@@ -360,10 +379,60 @@ Responsáveis
 <div class="col-md-6"><strong>Mãe:</strong> {{ aluno.nome_mae|default:"—" }}</div>
 <div class="col-md-6"><strong>Pai:</strong> {{ aluno.nome_pai|default:"—" }}</div>
 
-<div class="col-md-3"><strong>Telefone:</strong> {{ aluno.telefone_responsavel|default:"—" }}</div>
+<div class="col-md-3">
+
+<strong>Telefone:</strong>
+
+{% if aluno.telefone_responsavel %}
+
+{{ aluno.telefone_responsavel }}
+
+<a
+href="#"
+class="ms-2 text-success"
+onclick="abrirWhatsapp('{{ aluno.telefone_responsavel }}','{{ aluno.nome }}')"
+title="Enviar mensagem no WhatsApp"
+>
+
+<i class="bi bi-whatsapp fs-4"></i>
+
+</a>
+
+{% else %}
+
+—
+
+{% endif %}
+
+</div>
 <div class="col-md-3"><strong>Contato:</strong> {{ aluno.nome_telefone_responsavel|default:"—" }}</div>
 
-<div class="col-md-3"><strong>Telefone 2:</strong> {{ aluno.telefone_responsavel2|default:"—" }}</div>
+<div class="col-md-3">
+
+<strong>Telefone 2:</strong>
+
+{% if aluno.telefone_responsavel2 %}
+
+{{ aluno.telefone_responsavel2 }}
+
+<a
+href="#"
+class="ms-2 text-success"
+onclick="abrirWhatsapp('{{ aluno.telefone_responsavel2 }}','{{ aluno.nome }}')"
+title="Enviar mensagem no WhatsApp"
+>
+
+<i class="bi bi-whatsapp fs-5"></i>
+
+</a>
+
+{% else %}
+
+—
+
+{% endif %}
+
+</div>
 <div class="col-md-3"><strong>Contato 2:</strong> {{ aluno.nome_telefone_responsavel2|default:"—" }}</div>
 
 </div>
@@ -462,4 +531,375 @@ Controle interno
 </div>
 
 </div>
+
+<!-- MODAL RESET SENHA -->
+
+<div id="modalResetSenha" class="modal fade" tabindex="-1">
+
+<div class="modal-dialog modal-dialog-centered">
+
+<div class="modal-content border-0 shadow-lg">
+
+<div class="modal-header bg-danger text-white">
+
+<h5 class="modal-title fw-bold">
+<i data-lucide="key"></i>
+Redefinir senha do estudante
+</h5>
+
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<div class="alert alert-warning">
+
+<strong>Atenção</strong><br>
+Será gerada uma nova senha para o portal estudante da SEDUC.
+
+</div>
+
+<div class="mb-3">
+
+<strong>Aluno:</strong>
+<div id="resetAlunoNome"></div>
+
+</div>
+
+<div class="mb-3">
+
+<strong>Matrícula:</strong>
+<div id="resetMatricula"></div>
+
+</div>
+
+<div id="resultadoReset" class="text-center mt-4">
+
+<div class="text-muted">
+Clique em <b>Gerar nova senha</b> para continuar.
+</div>
+
+</div>
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-secondary" data-bs-dismiss="modal">
+Cancelar
+</button>
+
+<button class="btn btn-danger fw-bold" onclick="executarReset()">
+
+<i data-lucide="refresh-ccw"></i>
+Gerar nova senha
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+let alunoId = null
+
+function abrirResetSenha(id,nome,matricula){
+
+alunoId = id
+
+document.getElementById("resetAlunoNome").innerText = nome
+document.getElementById("resetMatricula").innerText = matricula
+
+document.getElementById("resultadoReset").innerHTML = `
+<div class="text-muted text-center">
+Clique em <b>Gerar nova senha</b>.
+</div>
+`
+
+const modal = new bootstrap.Modal(document.getElementById('modalResetSenha'))
+modal.show()
+
+}
+
+async function executarReset(){
+
+const container = document.getElementById("resultadoReset")
+
+container.innerHTML = `
+
+<div id="logBox"
+style="
+background:#0f172a;
+color:#e2e8f0;
+padding:16px;
+border-radius:10px;
+font-size:13px;
+max-height:220px;
+overflow-y:auto;
+overflow-x:hidden;
+font-family:monospace;
+line-height:1.5;
+box-shadow:0 8px 18px rgba(0,0,0,.25);
+">
+
+<div class="text-center mb-3">
+
+<div class="spinner-border spinner-border-sm text-light"></div>
+
+<div class="mt-2 small">
+Gerando nova senha no portal SEDUC...
+</div>
+
+</div>
+
+<div id="logContainer"></div>
+
+</div>
+`
+
+const logContainer = document.getElementById("logContainer")
+
+function addLog(text){
+
+const line = document.createElement("div")
+
+line.style.opacity = "0"
+line.style.transform = "translateY(6px)"
+line.style.transition = "all .25s ease"
+
+line.innerHTML = "• " + text
+
+logContainer.appendChild(line)
+
+requestAnimationFrame(()=>{
+line.style.opacity = "1"
+line.style.transform = "translateY(0)"
+})
+
+/* SCROLL AUTOMÁTICO */
+setTimeout(()=>{
+logContainer.scrollTop = logContainer.scrollHeight
+},10)
+
+}
+
+addLog("Preparando dados do aluno")
+addLog("Iniciando navegador seguro")
+
+try{
+
+const response = await fetch("/alunos/resetar-senha-seduc/",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"X-CSRFToken":"{{ csrf_token }}"
+},
+
+body:JSON.stringify({
+aluno_id: alunoId
+})
+
+})
+
+const data = await response.json()
+
+if(data.logs){
+
+logContainer.innerHTML = ""
+
+for(const log of data.logs){
+
+addLog(log)
+
+await new Promise(r => setTimeout(r,80))
+
+}
+
+}
+
+setTimeout(()=>{
+
+const logBox = document.getElementById("logBox")
+
+logBox.style.opacity = "0"
+logBox.style.transform = "translateY(-10px)"
+
+setTimeout(()=>{
+
+if(data.status === "ok"){
+
+container.innerHTML = `
+
+<div class="alert alert-success text-center"
+style="animation:fadeResult .5s ease">
+
+<div class="mb-2">
+<strong>Email:</strong>
+</div>
+
+<div class="fw-bold mb-2">
+${data.email}
+</div>
+
+<button class="btn btn-sm btn-outline-dark mb-3"
+onclick="copiarTexto('${data.email}')">
+
+<i data-lucide="copy"></i>
+Copiar email
+
+</button>
+
+<hr>
+
+<div class="mb-2">
+<strong>Senha provisória:</strong>
+</div>
+
+<h4 class="fw-bold text-danger mb-2">
+${data.senha}
+</h4>
+
+<button class="btn btn-sm btn-outline-dark"
+onclick="copiarTexto('${data.senha}')">
+
+<i data-lucide="copy"></i>
+Copiar senha
+
+</button>
+
+</div>
+
+`
+
+lucide.createIcons()
+
+}else{
+
+container.innerHTML = `
+
+<div class="alert alert-danger text-center"
+style="animation:fadeResult .5s ease">
+
+Erro ao gerar senha no portal SEDUC.
+
+</div>
+
+`
+
+}
+
+},300)
+
+},600)
+
+}catch(e){
+
+container.innerHTML = `
+
+<div class="alert alert-danger text-center">
+
+Falha ao acessar o sistema.
+
+</div>
+
+`
+
+}
+
+}
+
+function copiarTexto(texto){
+
+navigator.clipboard.writeText(texto)
+
+const toast = document.createElement("div")
+
+toast.innerHTML = "Copiado!"
+
+toast.style.position = "fixed"
+toast.style.bottom = "20px"
+toast.style.right = "20px"
+toast.style.background = "#111"
+toast.style.color = "#fff"
+toast.style.padding = "10px 16px"
+toast.style.borderRadius = "8px"
+toast.style.boxShadow = "0 5px 14px rgba(0,0,0,.25)"
+toast.style.opacity = "0"
+toast.style.transition = "all .3s"
+
+document.body.appendChild(toast)
+
+setTimeout(()=>{
+toast.style.opacity = "1"
+},10)
+
+setTimeout(()=>{
+toast.style.opacity = "0"
+setTimeout(()=>toast.remove(),300)
+},2000)
+
+}
+
+function abrirWhatsapp(telefone,nomeAluno){
+
+const agora = new Date().getHours()
+
+let saudacao = "Bom dia"
+
+if(agora >= 12 && agora < 18){
+saudacao = "Boa tarde"
+}
+
+if(agora >= 18){
+saudacao = "Boa noite"
+}
+
+const mensagem = `${saudacao},
+
+Responsável pelo estudante ${nomeAluno}, aqui é da Escola E. Rodolfo Augusto Teixeira Curvo.
+
+Entramos em contato para tratar de assuntos relacionados à vida escolar do estudante.
+
+Solicitamos que o responsável entre em contato com a escola ou compareça à unidade para conversarmos.
+
+Atenciosamente,
+
+Coordenação Pedagógica.`
+
+const texto = encodeURIComponent(mensagem)
+
+telefone = telefone.replace(/\D/g,'')
+
+const url = `https://wa.me/55${telefone}?text=${texto}`
+
+window.open(url,"_blank")
+
+}
+
+</script>
+
+
+<style>
+     @keyframes fadeResult{
+
+from{
+opacity:0;
+transform:translateY(10px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+</style>
+
 {% endblock %}

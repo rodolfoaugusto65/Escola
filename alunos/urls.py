@@ -48,4 +48,9 @@ path(
     views.excluir_arquivo_orfao,
     name="excluir_orfao"
 ),
+path(
+    "resetar-senha-seduc/",
+    views.resetar_senha_seduc,
+    name="resetar_senha_seduc"
+),
 ]

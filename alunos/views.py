@@ -835,3 +835,165 @@ def excluir_arquivo_orfao(request):
     )
 
     return JsonResponse({"success": True})
+
+
+# ==================================================
+# RESETAR SENHA SEDUC
+# ==================================================
+
+@login_required
+@require_POST
+def resetar_senha_seduc(request):
+
+    import json
+    import re
+    import time
+    from datetime import datetime
+    from playwright.sync_api import sync_playwright
+
+    try:
+
+        data = json.loads(request.body)
+
+        aluno_id = data.get("aluno_id")
+
+        aluno = Aluno.objects.only(
+            "id",
+            "nome",
+            "matricula",
+            "data_nascimento"
+        ).get(id=aluno_id)
+
+        matricula = aluno.matricula
+        data_nascimento = aluno.data_nascimento.strftime("%d/%m/%Y")
+
+        logs = []
+
+        def log(msg):
+            logs.append(msg)
+
+        log("🔎 Preparando dados do aluno")
+        log(f"Aluno: {aluno.nome}")
+        log(f"Matrícula: {matricula}")
+
+        data_convertida = datetime.strptime(
+            data_nascimento,
+            "%d/%m/%Y"
+        ).strftime("%Y-%m-%d")
+
+        with sync_playwright() as p:
+
+            log("🌐 Iniciando navegador seguro")
+
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage"
+                ]
+            )
+
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                viewport={"width": 1280, "height": 720},
+                locale="pt-BR",
+                timezone_id="America/Cuiaba"
+            )
+
+            page = context.new_page()
+
+            page.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                })
+            """)
+
+            log("🔗 Abrindo portal estudante")
+
+            page.goto(
+                "https://www3.seduc.mt.gov.br/acesso-estudante",
+                timeout=60000
+            )
+
+            page.wait_for_timeout(5000)
+
+            log("🔍 Localizando formulário")
+
+            frame = None
+
+            for f in page.frames:
+
+                try:
+
+                    if f.locator("#inputCode").count() > 0:
+                        frame = f
+                        log("✅ Formulário encontrado")
+                        break
+
+                except:
+                    pass
+
+            if frame is None:
+
+                browser.close()
+
+                return JsonResponse({
+                    "status": "erro",
+                    "logs": logs,
+                    "erro": "Formulário não encontrado"
+                })
+
+            log("⌨️ Inserindo matrícula")
+
+            frame.fill("#inputCode", matricula)
+
+            log("📅 Inserindo data de nascimento")
+
+            frame.evaluate(f'''
+                document.querySelector("#birthDay").value = "{data_convertida}";
+            ''')
+
+            log("🔐 Solicitando nova senha")
+
+            frame.click("#changePass")
+
+            time.sleep(5)
+
+            log("📡 Processando resposta do sistema")
+
+            texto = frame.inner_text("body")
+
+            email = re.search(r"e\d+@edu\.mt\.gov\.br", texto)
+            senha = re.search(r"mt\d+", texto)
+
+            browser.close()
+
+            if not email or not senha:
+
+                log("⚠️ Sistema não retornou credenciais")
+
+                return JsonResponse({
+                    "status": "erro",
+                    "logs": logs
+                })
+
+            log("✅ Credenciais geradas com sucesso")
+
+            return JsonResponse({
+
+                "status": "ok",
+
+                "email": email.group(),
+                "senha": senha.group(),
+
+                "logs": logs
+
+            })
+
+    except Exception as e:
+
+        return JsonResponse({
+            "status": "erro",
+            "erro": str(e)
+        })
