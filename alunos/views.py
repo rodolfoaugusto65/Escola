@@ -18,6 +18,13 @@ import boto3
 import uuid
 from django.conf import settings
 import os
+import json
+import re
+import time
+from datetime import datetime
+from django.http import JsonResponse
+from playwright.sync_api import sync_playwright
+
 
 # ==================================================
 # LISTA DE ALUNOS
@@ -845,52 +852,47 @@ def excluir_arquivo_orfao(request):
 @require_POST
 def resetar_senha_seduc(request):
 
-    import json
-    import re
-    import time
-    from datetime import datetime
-    from playwright.sync_api import sync_playwright
+    data = json.loads(request.body)
+    aluno_id = data.get("aluno_id")
+
+    logs = []
+
+    def log(msg):
+        logs.append(msg)
 
     try:
 
-        data = json.loads(request.body)
-
-        aluno_id = data.get("aluno_id")
-
-        aluno = Aluno.objects.only(
-            "id",
-            "nome",
-            "matricula",
-            "data_nascimento"
-        ).get(id=aluno_id)
+        aluno = Aluno.objects.get(id=aluno_id)
 
         matricula = aluno.matricula
         data_nascimento = aluno.data_nascimento.strftime("%d/%m/%Y")
+        data_convertida = datetime.strptime(
+            data_nascimento, "%d/%m/%Y"
+        ).strftime("%Y-%m-%d")
 
-        logs = []
-
-        def log(msg):
-            logs.append(msg)
-
-        log("🔎 Preparando dados do aluno")
+        log("Preparando dados do aluno")
         log(f"Aluno: {aluno.nome}")
         log(f"Matrícula: {matricula}")
 
-        data_convertida = datetime.strptime(
-            data_nascimento,
-            "%d/%m/%Y"
-        ).strftime("%Y-%m-%d")
-
         with sync_playwright() as p:
 
-            log("🌐 Iniciando navegador seguro")
+            log("Iniciando navegador seguro")
 
             browser = p.chromium.launch(
                 headless=True,
                 args=[
-                    "--disable-blink-features=AutomationControlled",
                     "--no-sandbox",
-                    "--disable-dev-shm-usage"
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--disable-software-rasterizer",
+                    "--disable-extensions",
+                    "--disable-background-networking",
+                    "--disable-background-timer-throttling",
+                    "--disable-renderer-backgrounding",
+                    "--disable-features=site-per-process",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-ipc-flooding-protection"
                 ]
             )
 
@@ -909,28 +911,26 @@ def resetar_senha_seduc(request):
                 })
             """)
 
-            log("🔗 Abrindo portal estudante")
+            log("Abrindo portal estudante")
 
             page.goto(
                 "https://www3.seduc.mt.gov.br/acesso-estudante",
-                timeout=60000
+                timeout=120000
             )
 
-            page.wait_for_timeout(5000)
+            page.wait_for_load_state("networkidle")
 
-            log("🔍 Localizando formulário")
+            log("Localizando formulário")
 
             frame = None
 
             for f in page.frames:
 
                 try:
-
                     if f.locator("#inputCode").count() > 0:
                         frame = f
-                        log("✅ Formulário encontrado")
+                        log("Formulário encontrado")
                         break
-
                 except:
                     pass
 
@@ -944,23 +944,23 @@ def resetar_senha_seduc(request):
                     "erro": "Formulário não encontrado"
                 })
 
-            log("⌨️ Inserindo matrícula")
+            log("Inserindo matrícula")
 
             frame.fill("#inputCode", matricula)
 
-            log("📅 Inserindo data de nascimento")
+            log("Inserindo data de nascimento")
 
-            frame.evaluate(f'''
+            frame.evaluate(f"""
                 document.querySelector("#birthDay").value = "{data_convertida}";
-            ''')
+            """)
 
-            log("🔐 Solicitando nova senha")
+            log("Solicitando nova senha")
 
             frame.click("#changePass")
 
             time.sleep(5)
 
-            log("📡 Processando resposta do sistema")
+            log("Processando resposta do sistema")
 
             texto = frame.inner_text("body")
 
@@ -971,29 +971,28 @@ def resetar_senha_seduc(request):
 
             if not email or not senha:
 
-                log("⚠️ Sistema não retornou credenciais")
+                log("Sistema não retornou credenciais")
 
                 return JsonResponse({
                     "status": "erro",
                     "logs": logs
                 })
 
-            log("✅ Credenciais geradas com sucesso")
+            log("Credenciais geradas com sucesso")
 
             return JsonResponse({
-
                 "status": "ok",
-
                 "email": email.group(),
                 "senha": senha.group(),
-
                 "logs": logs
-
             })
 
     except Exception as e:
 
+        log("Erro interno no processo")
+
         return JsonResponse({
             "status": "erro",
-            "erro": str(e)
+            "erro": str(e),
+            "logs": logs
         })
