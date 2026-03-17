@@ -1,1 +1,1 @@
-web: playwright install chromium && gunicorn escola.wsgi:application
+web: gunicorn escola.wsgi:application
