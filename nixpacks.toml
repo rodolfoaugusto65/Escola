@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ["chromium", "nss", "atk", "at-spi2-atk", "libdrm", "libxkbcommon", "xorg.libxcomposite", "xorg.libxdamage", "xorg.libxfixes", "xorg.libxrandr", "mesa"]
+
+[phases.install]
+cmds = [
+  "pip install -r requirements.txt"
+]
+
+[start]
+cmd = "gunicorn escola.wsgi:application"
