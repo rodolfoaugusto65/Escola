@@ -877,24 +877,18 @@ def resetar_senha_seduc(request):
         with sync_playwright() as p:
 
             log("Iniciando navegador seguro")
-
+            
             browser = p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--disable-software-rasterizer",
-                    "--disable-extensions",
-                    "--disable-background-networking",
-                    "--disable-background-timer-throttling",
-                    "--disable-renderer-backgrounding",
-                    "--disable-features=site-per-process",
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-ipc-flooding-protection"
-                ]
-            )
+                    executable_path="/usr/bin/chromium",
+                    headless=True,
+                    args=[
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                        "--disable-software-rasterizer"
+                    ]
+                )
 
             context = browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
