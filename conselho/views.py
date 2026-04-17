@@ -10,8 +10,9 @@ from django.http import HttpResponse
 
 # 🔹 Base padrão
 def get_base_template(request):
+    if request.headers.get("HX-Request"):
+        return "core/base_partial.html"
     return "core/base.html"
-
 
 # 📋 LISTA
 def lista_conselhos(request):
