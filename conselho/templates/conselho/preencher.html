@@ -1,0 +1,154 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<i data-lucide="clipboard-check"></i>
+Conselho de Classe - {{ conselho.turma }}
+</h4>
+<p class="text-muted mb-0">
+Preenchimento pedagógico dos alunos
+</p>
+</div>
+
+<a hx-get="{% url 'conselho:lista' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-light rounded-3">
+    Voltar
+</a>
+
+</div>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="table-responsive">
+
+<table class="table table-bordered align-middle">
+
+<thead class="table-light">
+<tr>
+<th>Aluno</th>
+<th>Faltas</th>
+<th>Disciplina</th>
+<th>Aprendizagem</th>
+<th>APA</th>
+<th>Família</th>
+<th>Reclass.</th>
+<th>Observação</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for a in alunos %}
+<tr>
+
+<td class="fw-semibold">{{ a.aluno }}</td>
+
+<!-- FALTAS -->
+<td>
+<select name="aluno_{{ a.id }}_faltas" class="form-select form-select-sm">
+<option value="">-</option>
+<option value="freq">Frequente</option>
+<option value="faltoso">Faltoso</option>
+<option value="gravida">Grávida</option>
+<option value="atestado">Atestado</option>
+</select>
+</td>
+
+<!-- DISCIPLINA -->
+<td>
+<select name="aluno_{{ a.id }}_disciplina" class="form-select form-select-sm">
+<option value="reg">Regular</option>
+<option value="ind">Indisciplinado</option>
+</select>
+</td>
+
+<!-- APRENDIZAGEM -->
+<td>
+<select name="aluno_{{ a.id }}_aprendizagem" class="form-select form-select-sm">
+<option value="ok">Acompanha</option>
+<option value="nao">Não faz atividades</option>
+</select>
+</td>
+
+<!-- APA -->
+<td>
+<select name="aluno_{{ a.id }}_apa" class="form-select form-select-sm">
+<option value="sim">Sim</option>
+<option value="nao">Não</option>
+</select>
+</td>
+
+<!-- FAMÍLIA -->
+<td>
+<select name="aluno_{{ a.id }}_familia" class="form-select form-select-sm">
+<option value="sim">Sim</option>
+<option value="nao">Não</option>
+</select>
+</td>
+
+<!-- RECLASSIFICAÇÃO -->
+<td>
+<select name="aluno_{{ a.id }}_reclass" class="form-select form-select-sm">
+<option value="sim">Sim</option>
+<option value="nao">Não</option>
+</select>
+</td>
+
+<!-- OBS -->
+<td>
+<input type="text"
+       name="aluno_{{ a.id }}_obs"
+       class="form-control form-control-sm"
+       placeholder="Observação...">
+</td>
+
+</tr>
+{% empty %}
+<tr>
+<td colspan="8" class="text-center text-muted">
+Nenhum aluno encontrado
+</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+<!-- BOTÃO -->
+<div class="mt-4 d-flex justify-content-end">
+
+<button class="btn btn-success px-4 d-flex align-items-center gap-2">
+<i data-lucide="save"></i>
+Salvar Conselho
+</button>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+<script>
+if (window.lucide) lucide.createIcons();
+</script>
+
+{% endblock %}

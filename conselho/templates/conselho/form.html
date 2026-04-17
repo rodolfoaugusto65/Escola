@@ -1,0 +1,97 @@
+{% extends base_template %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+
+<div class="container-fluid fade-in">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<i data-lucide="clipboard-list"></i>
+Gerar Conselho de Classe
+</h4>
+<p class="text-muted mb-0">
+Selecione os dados para gerar o conselho automaticamente
+</p>
+</div>
+
+<a hx-get="{% url 'conselho:lista' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'conselho:lista' %}"
+   class="btn btn-light rounded-3 d-flex align-items-center gap-2">
+    <i data-lucide="arrow-left"></i>
+    Voltar
+</a>
+
+</div>
+
+<!-- FORM -->
+<form method="post" action="{% url 'conselho:criar' %}">
+{% csrf_token %}
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    <ul class="mb-0">
+    {% for field in form %}
+        {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row g-3">
+
+<!-- TURMA -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Turma</label>
+{{ form.turma|add_class:"form-select rounded-3" }}
+</div>
+
+<!-- BIMESTRE -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Bimestre</label>
+{{ form.bimestre|add_class:"form-select rounded-3" }}
+</div>
+
+<!-- ANO -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Ano Letivo</label>
+{{ form.ano|add_class:"form-select rounded-3" }}
+</div>
+
+</div>
+
+<!-- BOTÃO -->
+<div class="mt-4 d-flex justify-content-end">
+
+<button type="submit"
+        class="btn btn-primary px-4 rounded-3 d-flex align-items-center gap-2 shadow-sm">
+    <i data-lucide="play"></i>
+    Gerar Conselho
+</button>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+<script>
+if (window.lucide) lucide.createIcons();
+</script>
+
+{% endblock %}

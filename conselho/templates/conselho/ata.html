@@ -1,0 +1,200 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4" id="area-impressao">
+<div class="card-body p-5">
+
+<!-- 🔥 BOTÕES -->
+<div class="d-flex justify-content-end gap-2 mb-3 no-print">
+
+<button onclick="window.print()" class="btn btn-outline-secondary">
+    🖨️ Imprimir
+</button>
+
+<a href="{% url 'conselho:ata_pdf' conselho.id %}" class="btn btn-danger">
+    📄 Gerar PDF
+</a>
+
+</div>
+
+<!-- 🏫 CABEÇALHO -->
+<div class="text-center mb-4">
+<h5 class="fw-bold mb-0">ATA DO CONSELHO DE CLASSE</h5>
+<p class="mb-0">GerEdu - Sistema Escolar</p>
+</div>
+
+<hr>
+
+<!-- 📊 DADOS GERAIS -->
+<div class="row mb-3">
+
+<div class="col-md-4">
+<strong>Turma:</strong> {{ conselho.turma }}
+</div>
+
+<div class="col-md-4">
+<strong>Bimestre:</strong> {{ conselho.bimestre }}º
+</div>
+
+<div class="col-md-4">
+<strong>Ano Letivo:</strong> {{ conselho.ano }}
+</div>
+
+</div>
+
+<div class="mb-3">
+<strong>Data do Conselho:</strong> {{ conselho.data_conselho|default:"____/____/______" }}
+</div>
+
+<hr>
+
+<!-- 📋 RESUMO -->
+<div class="mb-4">
+<p>
+Aos ______ dias do mês de __________________ do ano de {{ conselho.ano }},
+foi realizado o Conselho de Classe da turma <strong>{{ conselho.turma }}</strong>,
+com a participação da equipe pedagógica e professores, para análise do desempenho dos alunos.
+</p>
+</div>
+
+<!-- 📊 TABELA -->
+<h5 class="fw-bold mb-3">Registro dos Alunos</h5>
+
+<div class="table-responsive">
+
+<table class="table table-bordered">
+
+<thead class="table-light">
+<tr>
+<th>Aluno</th>
+<th>Faltas</th>
+<th>Disciplina</th>
+<th>Aprendizagem</th>
+<th>APA</th>
+<th>Família</th>
+<th>Reclass.</th>
+<th>Ocorr.</th>
+<th>Classificação</th>
+<th>Observação</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for a in conselho.alunos.all %}
+<tr>
+<td>{{ a.aluno }}</td>
+<td>{{ a.get_faltas_display|default:"-" }}</td>
+<td>{{ a.get_disciplina_display|default:"-" }}</td>
+<td>{{ a.get_aprendizagem_display|default:"-" }}</td>
+<td>{{ a.get_apa_display|default:"-" }}</td>
+<td>{{ a.get_chamar_familia_display|default:"-" }}</td>
+<td>{{ a.get_reclassificacao_display|default:"-" }}</td>
+<td>{{ a.total_ocorrencias }}</td>
+<td>{{ a.classificacao }}</td>
+<td>{{ a.observacao|default:"-" }}</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+<hr>
+
+<!-- 📌 CRÍTICOS -->
+<h5 class="fw-bold mt-4">Casos Críticos</h5>
+
+<ul class="list-group mb-4">
+{% for a in criticos %}
+<li class="list-group-item">
+<strong>{{ a.aluno }}</strong><br>
+{{ a.diagnostico }}
+</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum caso crítico</li>
+{% endfor %}
+</ul>
+
+<!-- 📌 ENCAMINHAMENTOS -->
+<h5 class="fw-bold">Encaminhamentos</h5>
+
+<ul class="list-group mb-4">
+{% for a in prioritarios %}
+<li class="list-group-item">
+<strong>{{ a.aluno }}</strong><br>
+{{ a.sugestao }}
+</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum encaminhamento</li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<!-- ✍️ ASSINATURAS -->
+<h5 class="fw-bold mt-5">Assinaturas</h5>
+
+<div class="row mt-4">
+
+<div class="col-md-4 text-center mb-4">
+<br><br>
+<hr>
+Professor(a)
+</div>
+
+<div class="col-md-4 text-center mb-4">
+<br><br>
+<hr>
+Coordenador(a)
+</div>
+
+<div class="col-md-4 text-center mb-4">
+<br><br>
+<hr>
+Direção
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+<!-- 🖨️ ESTILO DE IMPRESSÃO -->
+<style>
+@media print {
+
+    body * {
+        visibility: hidden;
+    }
+
+    #area-impressao, #area-impressao * {
+        visibility: visible;
+    }
+
+    #area-impressao {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+}
+</style>
+
+<script>
+if (window.lucide) lucide.createIcons();
+</script>
+
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<div class="d-flex justify-content-between mb-4">
+
+<div>
+<h4 class="fw-bold">
+<i data-lucide="users"></i>
+{{ conselho }}
+</h4>
+<p class="text-muted mb-0">Análise automática da turma</p>
+</div>
+
+<a hx-get="{% url 'conselho:ata' conselho.id %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-success">
+    <i data-lucide="file-text"></i> Gerar Ata
+</a>
+
+</div>
+
+<table class="table table-hover align-middle">
+
+<thead>
+<tr>
+<th>Aluno</th>
+<th>Média</th>
+<th>Freq.</th>
+<th>Ocorr.</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+{% for a in alunos %}
+<tr>
+
+<td>{{ a.aluno }}</td>
+<td>{{ a.media }}</td>
+<td>{{ a.frequencia }}</td>
+<td>{{ a.total_ocorrencias }}</td>
+
+<td>
+{% if a.classificacao == "critico" %}
+<span class="badge bg-danger">Crítico</span>
+{% elif a.classificacao == "atencao" %}
+<span class="badge bg-warning text-dark">Atenção</span>
+{% else %}
+<span class="badge bg-success">OK</span>
+{% endif %}
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</div>
+
+<script>lucide.createIcons();</script>
+
+{% endblock %}

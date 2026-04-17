@@ -361,6 +361,17 @@ hx-push-url="true">
 </a>
 {% endif %}
 
+{% if user.pode_gerenciar_usuarios %}
+<a hx-get="{% url 'conselho:lista' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'conselho:lista' %}">
+    <i data-lucide="clipboard-list"></i>
+    <span>Conselho de Classe</span>
+</a>
+{% endif %}
+
 {% if user.is_authenticated %}
 <a href="{% url 'logout' %}" class="logout-link">
     <i data-lucide="log-out"></i><span>Sair</span>

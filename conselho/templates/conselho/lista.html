@@ -1,0 +1,83 @@
+{% extends base_template %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+
+<div class="card-body p-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<div>
+<h4 class="fw-bold mb-1">
+<i data-lucide="clipboard-list"></i>
+Conselhos de Classe
+</h4>
+<p class="text-muted mb-0">
+Histórico de conselhos gerados
+</p>
+</div>
+
+<a hx-get="{% url 'conselho:criar' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-primary rounded-3">
+    <i data-lucide="plus"></i>
+    Novo Conselho
+</a>
+
+</div>
+
+<table class="table table-hover align-middle">
+
+<thead>
+<tr>
+<th>Turma</th>
+<th>Bimestre</th>
+<th>Ano</th>
+<th>Data</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody>
+{% for c in conselhos %}
+<tr>
+<td>{{ c.turma }}</td>
+<td>{{ c.bimestre }}º</td>
+<td>{{ c.ano }}</td>
+<td>{{ c.criado_em|date:"d/m/Y" }}</td>
+<td>
+<a hx-get="{% url 'conselho:detalhe' c.id %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-sm btn-light">
+    Ver
+</a>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="5" class="text-center text-muted">
+Nenhum conselho gerado ainda
+</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</div>
+
+<script>
+lucide.createIcons();
+</script>
+
+{% endblock %}
