@@ -10,4 +10,8 @@ urlpatterns = [
     path("<int:pk>/ata/", views.gerar_ata, name="ata"),
     path("<int:pk>/preencher/", views.preencher_conselho, name="preencher"),
     path("<int:pk>/ata/pdf/", views.gerar_ata_pdf, name="ata_pdf"),
+    path("<int:pk>/relatorio/", views.relatorio_pedagogico, name="relatorio_pedagogico"),
+    path("relatorio/bimestre/<int:bimestre>/<int:ano>/",
+     views.relatorio_bimestre,
+     name="relatorio_bimestre"),
 ]

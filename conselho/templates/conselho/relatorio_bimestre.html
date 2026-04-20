@@ -1,0 +1,57 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<h4 class="fw-bold mb-3">
+Relatório Geral - {{ bimestre }}º Bimestre / {{ ano }}
+</h4>
+
+<hr>
+
+<div class="row text-center mb-4">
+
+<div class="col-md-4 text-danger">
+<h5>{{ criticos.count }}</h5>
+<small>Críticos</small>
+</div>
+
+<div class="col-md-4 text-warning">
+<h5>{{ atencao.count }}</h5>
+<small>Atenção</small>
+</div>
+
+<div class="col-md-4 text-success">
+<h5>{{ regular.count }}</h5>
+<small>Regulares</small>
+</div>
+
+</div>
+
+<hr>
+
+<h5 class="mt-4">Lista de Alunos</h5>
+
+<ul class="list-group">
+
+{% for a in alunos %}
+<li class="list-group-item d-flex justify-content-between">
+<span>{{ a.aluno }}</span>
+<span class="badge bg-secondary">{{ a.classificacao }}</span>
+</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno encontrado</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+
+</div>
+
+{% endblock %}

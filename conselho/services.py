@@ -1,5 +1,7 @@
 from alunos.models import Aluno
 from ocorrencias.models import Ocorrencia
+from frequencia.models import FrequenciaAluno
+from django.db.models import Count, Q
 from .models import ConselhoClasse, ConselhoAluno
 
 
@@ -58,6 +60,18 @@ def sugestao(media, frequencia, ocorrencias):
     return "Manter acompanhamento."
 
 
+def calcular_frequencia(aluno):
+    dados = FrequenciaAluno.objects.filter(aluno=aluno).aggregate(
+        total=Count("id"),
+        presencas=Count("id", filter=Q(presente=True))
+    )
+
+    total = dados["total"] or 0
+    presencas = dados["presencas"] or 0
+
+    return round((presencas / total * 100), 1) if total else 0
+
+
 def gerar_conselho(turma, bimestre, ano, usuario):
     conselho = ConselhoClasse.objects.create(
         turma=turma,
@@ -69,8 +83,12 @@ def gerar_conselho(turma, bimestre, ano, usuario):
     alunos = turma.alunos.all()
 
     for aluno in alunos:
+
+        # ❗ média ainda depende do seu sistema
         media = getattr(aluno, "media", None)
-        frequencia = getattr(aluno, "frequencia", None)
+
+        # ✅ CORREÇÃO REAL
+        frequencia = calcular_frequencia(aluno)
 
         ocorrencias = contar_ocorrencias(aluno)
 

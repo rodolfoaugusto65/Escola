@@ -1,0 +1,226 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-5">
+
+<!-- CABEÇALHO -->
+<div class="text-center mb-4">
+<h4 class="fw-bold mb-1">
+RELATÓRIO PEDAGÓGICO
+</h4>
+<p class="text-muted mb-0">
+Conselho de Classe - {{ conselho.turma }}
+</p>
+</div>
+
+<hr>
+
+<!-- DADOS -->
+<div class="row mb-4">
+
+<div class="col-md-4">
+<strong>Turma:</strong><br>
+{{ conselho.turma }}
+</div>
+
+<div class="col-md-4">
+<strong>Bimestre:</strong><br>
+{{ conselho.bimestre }}º
+</div>
+
+<div class="col-md-4">
+<strong>Ano:</strong><br>
+{{ conselho.ano }}
+</div>
+
+</div>
+
+<hr>
+
+<!-- RESUMO -->
+<div class="mb-4">
+<p>
+Este relatório apresenta os principais encaminhamentos pedagógicos definidos durante o conselho de classe,
+com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
+</p>
+</div>
+
+<!-- GRID DE RELATÓRIOS -->
+<div class="row g-4">
+
+<!-- RECLASSIFICAÇÃO -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-danger">
+🔴 Reclassificação
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in reclassificacao %}
+<li class="list-group-item d-flex justify-content-between">
+<span>{{ a.aluno }}</span>
+</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- CHAMAR FAMÍLIA -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-warning">
+👨‍👩‍👧 Chamar responsáveis
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in familia %}
+<li class="list-group-item">{{ a.aluno }}</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- APA -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-primary">
+🧠 Atendimento APA
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in apa %}
+<li class="list-group-item">{{ a.aluno }}</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- INDISCIPLINA -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-danger">
+⚠️ Indisciplina
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in indisciplina %}
+<li class="list-group-item">{{ a.aluno }}</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- BAIXA APRENDIZAGEM -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-warning">
+📉 Baixa aprendizagem
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in baixa_aprendizagem %}
+<li class="list-group-item">{{ a.aluno }}</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- FALTOSOS -->
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+<div class="card-body">
+
+<h6 class="fw-bold text-danger">
+🚫 Alunos faltosos
+</h6>
+
+<ul class="list-group list-group-flush mt-2">
+{% for a in faltosos %}
+<li class="list-group-item">{{ a.aluno }}</li>
+{% empty %}
+<li class="list-group-item text-muted">Nenhum aluno</li>
+{% endfor %}
+</ul>
+
+</div>
+</div>
+</div>
+
+</div>
+
+<hr class="my-5">
+
+<!-- ASSINATURAS -->
+<h5 class="fw-bold mb-4">Assinaturas</h5>
+
+<div class="row text-center">
+
+<div class="col-md-4">
+<br><br>
+<hr>
+Professor(a)
+</div>
+
+<div class="col-md-4">
+<br><br>
+<hr>
+Coordenação
+</div>
+
+<div class="col-md-4">
+<br><br>
+<hr>
+Direção
+</div>
+
+</div>
+
+<!-- BOTÕES -->
+<div class="mt-5 d-flex justify-content-end gap-2">
+
+<button onclick="window.print()" class="btn btn-outline-secondary">
+🖨️ Imprimir
+</button>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+{% endblock %}

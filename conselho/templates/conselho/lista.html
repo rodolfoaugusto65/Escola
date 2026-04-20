@@ -7,69 +7,196 @@
 <div class="container-fluid">
 
 <div class="card shadow-sm border-0 rounded-4">
-
 <div class="card-body p-4">
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
 <div>
-<h4 class="fw-bold mb-1">
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
 <i data-lucide="clipboard-list"></i>
 Conselhos de Classe
 </h4>
 <p class="text-muted mb-0">
-Histórico de conselhos gerados
+Histórico e acompanhamento pedagógico
 </p>
 </div>
+
+<div class="d-flex gap-2">
+
+<input type="text"
+       id="searchInput"
+       class="form-control rounded-3"
+       placeholder="Buscar turma...">
 
 <a hx-get="{% url 'conselho:criar' %}"
    hx-target="#mainContent"
    hx-swap="innerHTML"
-   class="btn btn-primary rounded-3">
+   class="btn btn-primary rounded-3 d-flex align-items-center gap-2">
     <i data-lucide="plus"></i>
-    Novo Conselho
+    Novo
 </a>
 
 </div>
 
-<table class="table table-hover align-middle">
+</div>
 
-<thead>
+<!-- INDICADORES -->
+<div class="row mb-4 text-center">
+
+<div class="col-md-4">
+<div class="card border-0 shadow-sm rounded-3 p-3">
+<h6 class="text-muted mb-1">Total</h6>
+<h4 class="fw-bold">{{ conselhos|length }}</h4>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card border-0 shadow-sm rounded-3 p-3">
+<h6 class="text-muted mb-1">Ano Atual</h6>
+<h4 class="fw-bold">
+{% if conselhos %}{{ conselhos.0.ano }}{% else %}-{% endif %}
+</h4>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card border-0 shadow-sm rounded-3 p-3">
+<h6 class="text-muted mb-1">Último Conselho</h6>
+<h4 class="fw-bold">
+{% if conselhos %}{{ conselhos.0.criado_em|date:"d/m" }}{% else %}-{% endif %}
+</h4>
+</div>
+</div>
+
+</div>
+
+<!-- 🔥 RELATÓRIO POR BIMESTRE -->
+{% if conselhos %}
+<div class="mb-4">
+
+<h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+<i data-lucide="layers"></i>
+Relatórios por Bimestre
+</h6>
+
+<div class="d-flex flex-wrap gap-2">
+
+{% regroup conselhos by ano as anos %}
+
+{% for ano_grupo in anos %}
+    {% regroup ano_grupo.list by bimestre as bimestres %}
+
+    {% for grupo in bimestres %}
+        <a hx-get="{% url 'conselho:relatorio_bimestre' grupo.grouper ano_grupo.grouper %}"
+           hx-target="#mainContent"
+           hx-swap="innerHTML"
+           class="btn btn-outline-dark rounded-3 d-flex align-items-center gap-2">
+
+            <i data-lucide="bar-chart-2"></i>
+            {{ grupo.grouper }}º Bim / {{ ano_grupo.grouper }}
+
+        </a>
+    {% endfor %}
+
+{% endfor %}
+
+</div>
+
+</div>
+{% endif %}
+
+<!-- TABELA -->
+<div class="table-responsive">
+
+<table class="table table-hover align-middle" id="tabelaConselho">
+
+<thead class="table-light">
 <tr>
 <th>Turma</th>
 <th>Bimestre</th>
 <th>Ano</th>
 <th>Data</th>
-<th>Ações</th>
+<th class="text-end">Ações</th>
 </tr>
 </thead>
 
 <tbody>
+
 {% for c in conselhos %}
 <tr>
-<td>{{ c.turma }}</td>
-<td>{{ c.bimestre }}º</td>
-<td>{{ c.ano }}</td>
-<td>{{ c.criado_em|date:"d/m/Y" }}</td>
+
+<td class="fw-semibold">{{ c.turma }}</td>
+
 <td>
+<span class="badge bg-primary">
+{{ c.bimestre }}º Bimestre
+</span>
+</td>
+
+<td>{{ c.ano }}</td>
+
+<td>
+{{ c.criado_em|date:"d/m/Y" }}
+<br>
+<small class="text-muted">
+{{ c.criado_em|date:"H:i" }}
+</small>
+</td>
+
+<td class="text-end">
+
+<div class="btn-group">
+
 <a hx-get="{% url 'conselho:detalhe' c.id %}"
    hx-target="#mainContent"
    hx-swap="innerHTML"
    class="btn btn-sm btn-light">
-    Ver
+    <i data-lucide="eye"></i>
 </a>
+
+<a hx-get="{% url 'conselho:preencher' c.id %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-sm btn-warning">
+    <i data-lucide="edit"></i>
+</a>
+
+<a hx-get="{% url 'conselho:ata' c.id %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-sm btn-success">
+    <i data-lucide="file-text"></i>
+</a>
+
+<a hx-get="{% url 'conselho:relatorio_pedagogico' c.id %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-sm btn-dark">
+    <i data-lucide="bar-chart-3"></i>
+</a>
+
+</div>
+
 </td>
+
 </tr>
 {% empty %}
+
 <tr>
-<td colspan="5" class="text-center text-muted">
-Nenhum conselho gerado ainda
+<td colspan="5" class="text-center py-5">
+<i data-lucide="clipboard-x" style="width:40px;height:40px;"></i>
+<p class="mt-3 text-muted">Nenhum conselho registrado ainda</p>
 </td>
 </tr>
+
 {% endfor %}
+
 </tbody>
 
 </table>
+
+</div>
 
 </div>
 </div>
@@ -78,6 +205,17 @@ Nenhum conselho gerado ainda
 
 <script>
 lucide.createIcons();
+
+// 🔎 BUSCA
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let filtro = this.value.toLowerCase();
+    let linhas = document.querySelectorAll("#tabelaConselho tbody tr");
+
+    linhas.forEach(tr => {
+        let texto = tr.innerText.toLowerCase();
+        tr.style.display = texto.includes(filtro) ? "" : "none";
+    });
+});
 </script>
 
 {% endblock %}

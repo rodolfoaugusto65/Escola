@@ -57,13 +57,14 @@ def criar_conselho(request):
 # 🧠 NOVA TELA (LANÇAMENTO DO CONSELHO)
 def preencher_conselho(request, pk):
     conselho = get_object_or_404(ConselhoClasse, pk=pk)
-    alunos = conselho.alunos.all()
+
+    alunos = conselho.alunos.select_related("aluno").order_by("aluno__nome")
 
     if request.method == "POST":
-
         for a in alunos:
             prefix = f"aluno_{a.id}"
 
+            # 📊 CAMPOS DO CONSELHO
             a.faltas = request.POST.get(f"{prefix}_faltas")
             a.disciplina = request.POST.get(f"{prefix}_disciplina")
             a.aprendizagem = request.POST.get(f"{prefix}_aprendizagem")
@@ -72,9 +73,18 @@ def preencher_conselho(request, pk):
             a.reclassificacao = request.POST.get(f"{prefix}_reclass")
             a.observacao = request.POST.get(f"{prefix}_obs")
 
+            # 🔥 PAED (CORRETO AGORA)
+            paed = request.POST.get(f"{prefix}_paed")
+            novo_valor = True if paed == "on" else False
+
+            # só salva se mudou (evita escrita desnecessária)
+            if a.aluno.aluno_paed != novo_valor:
+                a.aluno.aluno_paed = novo_valor
+                a.aluno.save(update_fields=["aluno_paed"])
+
+            # salva o conselho
             a.save()
 
-        # 🔥 após salvar → vai para detalhe
         return redirect("conselho:detalhe", conselho.id)
 
     return render(request, "conselho/preencher.html", {
@@ -82,7 +92,6 @@ def preencher_conselho(request, pk):
         "alunos": alunos,
         "base_template": get_base_template(request)
     })
-
 
 # 📊 DETALHE
 def detalhe_conselho(request, pk):
@@ -178,3 +187,48 @@ def gerar_ata_pdf(request, pk):
     doc.build(elementos)
 
     return response
+
+
+def relatorio_pedagogico(request, pk):
+    conselho = get_object_or_404(ConselhoClasse, pk=pk)
+
+    alunos = conselho.alunos.all()
+
+    return render(request, "conselho/relatorio.html", {
+        "conselho": conselho,
+        "reclassificacao": alunos.filter(reclassificacao="sim"),
+        "familia": alunos.filter(chamar_familia="sim"),
+        "apa": alunos.filter(apa="sim"),
+        "indisciplina": alunos.filter(disciplina="ind"),
+        "baixa_aprendizagem": alunos.filter(aprendizagem="nao"),
+        "faltosos": alunos.filter(faltas="faltoso"),
+        "criticos": alunos.filter(classificacao="critico"),
+        "base_template": get_base_template(request),
+    })
+
+def relatorio_bimestre(request, bimestre, ano):
+    conselhos = ConselhoClasse.objects.filter(
+        bimestre=bimestre,
+        ano=ano
+    )
+
+    alunos = ConselhoAluno.objects.filter(
+        conselho__in=conselhos
+    ).select_related("aluno", "conselho")
+
+    context = {
+        "bimestre": bimestre,
+        "ano": ano,
+        "total_alunos": alunos.count(),
+
+        "criticos": alunos.filter(classificacao="critico"),
+        "atencao": alunos.filter(classificacao="atencao"),
+        "regulares": alunos.filter(classificacao="regular"),
+
+        "alunos": alunos,
+
+        # 🔥 GARANTE QUE NÃO QUEBRE
+        "base_template": "core/base.html",
+    }
+
+    return render(request, "conselho/relatorio_bimestre.html", context)
