@@ -4,54 +4,315 @@
 
 <div class="container-fluid">
 
-<div class="card shadow-sm border-0 rounded-4">
-<div class="card-body p-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<h4 class="fw-bold mb-3">
-Relatório Geral - {{ bimestre }}º Bimestre / {{ ano }}
-</h4>
+    <div>
+        <h3 class="fw-bold mb-1">
+            Relatório Geral
+        </h3>
 
-<hr>
+        <p class="text-muted mb-0">
+            {{ bimestre }}º Bimestre • {{ ano }}
+        </p>
+    </div>
 
-<div class="row text-center mb-4">
+    <div class="d-flex gap-2">
 
-<div class="col-md-4 text-danger">
-<h5>{{ criticos.count }}</h5>
-<small>Críticos</small>
+        <a
+            hx-get="{% url 'conselho:lista' %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            class="btn btn-outline-secondary">
+
+            Voltar
+
+        </a>
+
+        <button
+            onclick="window.print()"
+            class="btn btn-success">
+
+            🖨️ Imprimir
+
+        </button>
+
+    </div>
+
 </div>
 
-<div class="col-md-4 text-warning">
-<h5>{{ atencao.count }}</h5>
-<small>Atenção</small>
+<!-- INDICADORES -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-4">
+
+            <h2 class="text-primary">
+                {{ total_alunos }}
+            </h2>
+
+            <small>
+                Total de Alunos
+            </small>
+
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-4">
+
+            <h2 class="text-danger">
+                {{ criticos.count }}
+            </h2>
+
+            <small>
+                Críticos
+            </small>
+
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-4">
+
+            <h2 class="text-warning">
+                {{ atencao.count }}
+            </h2>
+
+            <small>
+                Atenção
+            </small>
+
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-4">
+
+            <h2 class="text-success">
+                {{ regulares.count }}
+            </h2>
+
+            <small>
+                Regulares
+            </small>
+
+        </div>
+    </div>
+
 </div>
 
-<div class="col-md-4 text-success">
-<h5>{{ regular.count }}</h5>
-<small>Regulares</small>
-</div>
+<!-- TABELA -->
 
-</div>
+<div class="card shadow-sm border-0 mb-4">
+<div class="card-body">
 
-<hr>
+<h5 class="fw-bold mb-3">
+Desempenho dos Estudantes
+</h5>
 
-<h5 class="mt-4">Lista de Alunos</h5>
+<div class="table-responsive">
 
-<ul class="list-group">
+<table class="table table-hover align-middle">
+
+<thead class="table-light">
+<tr>
+    <th>Aluno</th>
+    <th>Média</th>
+    <th>Frequência</th>
+    <th>Ocorrências</th>
+    <th>Informes</th>
+    <th>Classificação</th>
+</tr>
+</thead>
+
+<tbody>
 
 {% for a in alunos %}
-<li class="list-group-item d-flex justify-content-between">
-<span>{{ a.aluno }}</span>
-<span class="badge bg-secondary">{{ a.classificacao }}</span>
+<tr>
+
+    <td>
+
+        <a
+            href="{% url 'relatorio_aluno_completo' a.aluno.id %}"
+            class="text-decoration-none fw-semibold">
+
+            {{ a.aluno }}
+
+        </a>
+
+    </td>
+
+    <td>
+        {{ a.media|default:"-" }}
+    </td>
+
+    <td>
+        {{ a.frequencia|default:"-" }}%
+    </td>
+
+    <td>
+        {{ a.total_ocorrencias }}
+    </td>
+
+    <td>
+
+        {% if a.aluno.aluno_paed %}
+            <span class="badge bg-danger">PAED</span>
+        {% endif %}
+
+        {% if a.busca_ativa == "sim" %}
+            <span class="badge bg-warning text-dark">
+                Busca Ativa
+            </span>
+        {% endif %}
+
+        {% if a.faltas == "faltoso" %}
+            <span class="badge bg-secondary">
+                Faltoso
+            </span>
+        {% endif %}
+
+    </td>
+
+    <td>
+
+        {% if a.classificacao == "critico" %}
+            <span class="badge bg-danger">
+                Crítico
+            </span>
+
+        {% elif a.classificacao == "atencao" %}
+            <span class="badge bg-warning text-dark">
+                Atenção
+            </span>
+
+        {% else %}
+            <span class="badge bg-success">
+                Regular
+            </span>
+        {% endif %}
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="6" class="text-center text-muted py-4">
+Nenhum aluno encontrado.
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+<!-- GRUPOS -->
+
+<div class="row g-4">
+
+<div class="col-md-4">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="text-danger fw-bold">
+Alunos Críticos
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in criticos %}
+<li class="list-group-item">
+{{ a.aluno }}
 </li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno encontrado</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
 
 </ul>
 
 </div>
 </div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="text-warning fw-bold">
+Alunos em Atenção
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in atencao %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
 
 </div>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="text-success fw-bold">
+Alunos Regulares
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in regulares %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<style>
+@media print{
+
+    .btn{
+        display:none !important;
+    }
+
+    .card{
+        box-shadow:none !important;
+    }
+}
+</style>
 
 {% endblock %}

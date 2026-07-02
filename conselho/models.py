@@ -15,9 +15,15 @@ class ConselhoClasse(models.Model):
         ("rascunho", "Rascunho"),
         ("finalizado", "Finalizado"),
     ]
-    status = models.CharField(max_length=20, choices=STATUS, default="rascunho")
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS,
+        default="rascunho"
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
+
     criado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -42,16 +48,36 @@ class ConselhoAluno(models.Model):
         related_name="alunos"
     )
 
-    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
+    aluno = models.ForeignKey(
+        Aluno,
+        on_delete=models.CASCADE
+    )
 
     # 📊 DADOS AUTOMÁTICOS
-    media = models.FloatField(null=True, blank=True)
-    frequencia = models.FloatField(null=True, blank=True)
-    total_ocorrencias = models.IntegerField(default=0)
+    media = models.FloatField(
+        null=True,
+        blank=True
+    )
 
-    classificacao = models.CharField(max_length=20)
+    frequencia = models.FloatField(
+        null=True,
+        blank=True
+    )
+
+    total_ocorrencias = models.IntegerField(
+        default=0
+    )
+
+    classificacao = models.CharField(
+        max_length=20
+    )
+
     diagnostico = models.TextField()
-    prioridade = models.CharField(max_length=20)
+
+    prioridade = models.CharField(
+        max_length=20
+    )
+
     sugestao = models.TextField()
 
     # 🧠 DADOS DO CONSELHO (INTERATIVO)
@@ -78,17 +104,73 @@ class ConselhoAluno(models.Model):
         ("nao", "Não"),
     ]
 
-    faltas = models.CharField(max_length=20, choices=FALTAS, blank=True)
-    disciplina = models.CharField(max_length=20, choices=DISCIPLINA, blank=True)
-    aprendizagem = models.CharField(max_length=20, choices=APRENDIZAGEM, blank=True)
+    PLANO_RECOMPOSICAO = [
+        ("feito", "Feito"),
+        ("nao_feito", "Não feito"),
+    ]
 
-    apa = models.CharField(max_length=3, choices=SIM_NAO, blank=True)
-    chamar_familia = models.CharField(max_length=3, choices=SIM_NAO, blank=True)
-    reclassificacao = models.CharField(max_length=3, choices=SIM_NAO, blank=True)
+    faltas = models.CharField(
+        max_length=20,
+        choices=FALTAS,
+        blank=True
+    )
 
-    observacao = models.TextField(blank=True)
+    disciplina = models.CharField(
+        max_length=20,
+        choices=DISCIPLINA,
+        blank=True
+    )
 
-    atualizado_em = models.DateTimeField(auto_now=True)
+    aprendizagem = models.CharField(
+        max_length=20,
+        choices=APRENDIZAGEM,
+        blank=True
+    )
+
+    apa = models.CharField(
+        max_length=3,
+        choices=SIM_NAO,
+        blank=True
+    )
+
+    chamar_familia = models.CharField(
+        max_length=3,
+        choices=SIM_NAO,
+        blank=True
+    )
+
+    reclassificacao = models.CharField(
+        max_length=3,
+        choices=SIM_NAO,
+        blank=True
+    )
+
+    # 🆕 NOVOS CAMPOS
+    busca_ativa = models.CharField(
+        max_length=3,
+        choices=SIM_NAO,
+        blank=True
+    )
+
+    afastamento = models.CharField(
+        max_length=3,
+        choices=SIM_NAO,
+        blank=True
+    )
+
+    plano_recomposicao = models.CharField(
+        max_length=15,
+        choices=PLANO_RECOMPOSICAO,
+        blank=True
+    )
+
+    observacao = models.TextField(
+        blank=True
+    )
+
+    atualizado_em = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         unique_together = ("conselho", "aluno")
@@ -96,3 +178,4 @@ class ConselhoAluno(models.Model):
 
     def __str__(self):
         return f"{self.aluno} - {self.classificacao}"
+

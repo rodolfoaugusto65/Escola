@@ -1,0 +1,514 @@
+{% extends base_template %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+    <!-- CABEÇALHO -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+            <h4 class="fw-bold mb-1">
+                Conselho de Classe - {{ conselho.turma }}
+            </h4>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <span class="text-muted">
+                    Aluno {{ indice|add:1 }} de {{ total }}
+                </span>
+
+                <span class="badge bg-primary fs-6">
+                    {{ percentual }}% concluído
+                </span>
+
+            </div>
+        </div>
+
+        <a
+            hx-get="{% url 'conselho:painel' conselho.id %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+            href="{% url 'conselho:painel' conselho.id %}"
+            class="btn btn-outline-primary d-flex align-items-center gap-2">
+
+            <i data-lucide="layout-dashboard"></i>
+            Painel
+
+        </a>
+
+    </div>
+
+    <!-- PROGRESSO -->
+    <div class="progress mb-4" style="height:20px;">
+        <div
+            class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+            role="progressbar"
+            aria-valuenow="{{ percentual }}"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            style="width: {{ percentual }}%;">
+
+            {{ percentual }}%
+
+        </div>
+    </div>
+
+    <!-- CARD DO ALUNO -->
+    <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+
+        <div class="row align-items-center">
+
+            <!-- FOTO -->
+            <div class="col-lg-2 text-center">
+
+                {% if aluno.aluno.foto %}
+                <img
+                    src="{{ aluno.aluno.foto.url }}"
+                    class="rounded-circle shadow"
+                    style="
+                        width:120px;
+                        height:120px;
+                        object-fit:cover;
+                    ">
+                {% else %}
+                <img
+                    src="{% static 'img/aluno_sem_foto.png' %}"
+                    class="rounded-circle shadow"
+                    style="
+                        width:120px;
+                        height:120px;
+                        object-fit:cover;
+                    ">
+                {% endif %}
+
+            </div>
+
+            <!-- DADOS -->
+            <div class="col-lg-10">
+
+                <h4 class="fw-bold mb-3">
+                    {{ aluno.aluno }}
+                </h4>
+
+                <div class="row g-2">
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Matrícula</small>
+                        <div class="fw-semibold">
+                            {{ aluno.aluno.matricula }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Idade</small>
+                        <div class="fw-semibold">
+                            {{ idade|default:"-" }} anos
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Nascimento</small>
+                        <div class="fw-semibold">
+                            {{ aluno.aluno.data_nascimento|date:"d/m/Y"|default:"-" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Matrícula</small>
+                        <div class="fw-semibold">
+                            {{ aluno.aluno.data_matricula|date:"d/m/Y"|default:"-" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Transferido</small>
+
+                        {% if aluno.aluno.transferido %}
+                        <span class="badge bg-warning text-dark">
+                            Sim
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            Não
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Transferência</small>
+                        <div class="fw-semibold">
+                            {{ aluno.aluno.data_transferencia|date:"d/m/Y"|default:"-" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">PAED</small>
+
+                        {% if aluno.aluno.aluno_paed %}
+                        <span class="badge bg-danger">
+                            Sim
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            Não
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Busca Ativa</small>
+
+                        {% if aluno.aluno.aluno_busca_ativa %}
+                        <span class="badge bg-warning text-dark">
+                            Sim
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            Não
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Trabalhador</small>
+
+                        {% if aluno.aluno.aluno_trabalhador %}
+                        <span class="badge bg-primary">
+                            Sim
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            Não
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <small class="text-muted">Dependência</small>
+
+                        {% if aluno.aluno.possui_dependencia %}
+                        <span class="badge bg-danger">
+                            Sim
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success">
+                            Não
+                        </span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+
+    <!-- INDICADORES -->
+    <div class="row g-2 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center py-3">
+                    <h3 class="fw-bold mb-1">
+                        {{ aluno.media|default:"-" }}
+                    </h3>
+                    <small class="text-muted">
+                        Média
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center py-3">
+                    <h3 class="fw-bold mb-1">
+                        {{ aluno.frequencia|default:"-" }}%
+                    </h3>
+                    <small class="text-muted">
+                        Frequência
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center py-3">
+                    <h3 class="fw-bold mb-1">
+                        {{ aluno.total_ocorrencias }}
+                    </h3>
+                    <small class="text-muted">
+                        Ocorrências
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center py-3">
+
+                    {% if aluno.classificacao == "critico" %}
+                        <h3 class="text-danger mb-1">Crítico</h3>
+                    {% elif aluno.classificacao == "atencao" %}
+                        <h3 class="text-warning mb-1">Atenção</h3>
+                    {% elif aluno.classificacao == "alto" %}
+                        <h3 class="text-success mb-1">Excelente</h3>
+                    {% else %}
+                        <h3 class="text-primary mb-1">Regular</h3>
+                    {% endif %}
+
+                    <small class="text-muted">
+                        Situação
+                    </small>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FORMULÁRIO -->
+    <form
+    method="post"
+    action="{% url 'conselho:preencher_aluno' conselho.id %}?indice={{ indice }}"
+    autocomplete="off">
+
+    {% csrf_token %}
+
+    <input
+        type="hidden"
+        name="indice"
+        value="{{ indice }}">
+
+        <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label class="form-label">Faltas</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_faltas"
+                        class="form-select">
+
+                        <option value="">-</option>
+                        <option value="freq" {% if aluno.faltas == 'freq' %}selected{% endif %}>Frequente</option>
+                        <option value="faltoso" {% if aluno.faltas == 'faltoso' %}selected{% endif %}>Faltoso</option>
+                        <option value="gravida" {% if aluno.faltas == 'gravida' %}selected{% endif %}>Grávida</option>
+                        <option value="atestado" {% if aluno.faltas == 'atestado' %}selected{% endif %}>Atestado</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Disciplina</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_disciplina"
+                        class="form-select">
+
+                        <option value="reg" {% if aluno.disciplina == 'reg' %}selected{% endif %}>Regular</option>
+                        <option value="ind" {% if aluno.disciplina == 'ind' %}selected{% endif %}>Indisciplinado</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Aprendizagem</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_aprendizagem"
+                        class="form-select">
+
+                        <option value="ok" {% if aluno.aprendizagem == 'ok' %}selected{% endif %}>Acompanha</option>
+                        <option value="nao" {% if aluno.aprendizagem == 'nao' %}selected{% endif %}>Não faz atividades</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">APA</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_apa"
+                        class="form-select">
+
+                        <option value="sim" {% if aluno.apa == 'sim' %}selected{% endif %}>Sim</option>
+                        <option value="nao" {% if aluno.apa == 'nao' %}selected{% endif %}>Não</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Chamar Família</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_familia"
+                        class="form-select">
+
+                        <option value="sim" {% if aluno.chamar_familia == 'sim' %}selected{% endif %}>Sim</option>
+                        <option value="nao" {% if aluno.chamar_familia == 'nao' %}selected{% endif %}>Não</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Reclassificação</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_reclass"
+                        class="form-select">
+
+                        <option value="sim" {% if aluno.reclassificacao == 'sim' %}selected{% endif %}>Sim</option>
+                        <option value="nao" {% if aluno.reclassificacao == 'nao' %}selected{% endif %}>Não</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Busca Ativa</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_busca_ativa"
+                        class="form-select">
+
+                        <option value="">-</option>
+                        <option value="sim" {% if aluno.busca_ativa == 'sim' %}selected{% endif %}>Sim</option>
+                        <option value="nao" {% if aluno.busca_ativa == 'nao' %}selected{% endif %}>Não</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Afastamento</label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_afastamento"
+                        class="form-select">
+
+                        <option value="">-</option>
+                        <option value="sim" {% if aluno.afastamento == 'sim' %}selected{% endif %}>Sim</option>
+                        <option value="nao" {% if aluno.afastamento == 'nao' %}selected{% endif %}>Não</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Plano de Recomposição
+                    </label>
+
+                    <select
+                        name="aluno_{{ aluno.id }}_plano_recomposicao"
+                        class="form-select">
+
+                        <option value="">-</option>
+                        <option value="feito" {% if aluno.plano_recomposicao == 'feito' %}selected{% endif %}>Feito</option>
+                        <option value="nao_feito" {% if aluno.plano_recomposicao == 'nao_feito' %}selected{% endif %}>Não Feito</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">PAED</label>
+
+                    <div class="form-check form-switch mt-2">
+
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="aluno_{{ aluno.id }}_paed"
+                            {% if aluno.aluno.aluno_paed %}checked{% endif %}>
+
+                        <label class="form-check-label">
+                            Aluno PAED
+                        </label>
+
+                    </div>
+                </div>
+
+                <div class="col-12">
+
+                    <label class="form-label">
+                        Observações
+                    </label>
+
+                    <textarea
+                        name="aluno_{{ aluno.id }}_obs"
+                        rows="3"
+                        class="form-control">{{ aluno.observacao|default:'' }}</textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+        </div>
+
+        <!-- BOTÕES -->
+        <div class="d-flex justify-content-between mt-4">
+
+            <button
+                type="submit"
+                name="acao"
+                value="anterior"
+                class="btn btn-outline-secondary"
+                {% if indice == 0 %}disabled{% endif %}>
+                ◄ Salvar e Anterior
+            </button>
+
+            <div class="d-flex gap-2">
+
+                <button
+                    type="submit"
+                    name="acao"
+                    value="salvar"
+                    class="btn btn-primary">
+                    Salvar
+                </button>
+
+                <button
+                    type="submit"
+                    name="acao"
+                    value="proximo"
+                    class="btn btn-success px-5">
+
+                    {% if indice < total|add:'-1' %}
+                        Salvar e Próximo ►
+                    {% else %}
+                        Finalizar Conselho
+                    {% endif %}
+
+                </button>
+
+            </div>
+
+        </div>
+
+        </form>
+
+        </div>
+        </div>
+
+        </div>
+
+        <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+        </script>
+
+{% endblock %}

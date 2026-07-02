@@ -1,221 +1,663 @@
 {% extends base_template %}
-
 {% load widget_tweaks %}
 
 {% block content %}
 
 <div class="container-fluid">
 
-<div class="card shadow-sm border-0 rounded-4">
-<div class="card-body p-4">
+    <!-- CABEÇALHO -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
 
-<!-- HEADER -->
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-<div>
-<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
-<i data-lucide="clipboard-list"></i>
-Conselhos de Classe
-</h4>
-<p class="text-muted mb-0">
-Histórico e acompanhamento pedagógico
-</p>
-</div>
+                <div>
+                    <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i data-lucide="clipboard-list"></i>
+                        Conselhos de Classe
+                    </h3>
 
-<div class="d-flex gap-2">
+                    <p class="text-muted mb-0">
+                        Histórico, acompanhamento pedagógico e relatórios.
+                    </p>
+                </div>
 
-<input type="text"
-       id="searchInput"
-       class="form-control rounded-3"
-       placeholder="Buscar turma...">
+                <div class="d-flex gap-2 flex-wrap">
 
-<a hx-get="{% url 'conselho:criar' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   class="btn btn-primary rounded-3 d-flex align-items-center gap-2">
-    <i data-lucide="plus"></i>
-    Novo
-</a>
+                    <div class="position-relative">
 
-</div>
+                        <i
+                            data-lucide="search"
+                            class="position-absolute text-muted"
+                            style="
+                                left:12px;
+                                top:50%;
+                                transform:translateY(-50%);
+                                width:18px;
+                                height:18px;
+                            ">
+                        </i>
 
-</div>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control ps-5 rounded-3"
+                            placeholder="Buscar turma...">
 
-<!-- INDICADORES -->
-<div class="row mb-4 text-center">
+                    </div>
 
-<div class="col-md-4">
-<div class="card border-0 shadow-sm rounded-3 p-3">
-<h6 class="text-muted mb-1">Total</h6>
-<h4 class="fw-bold">{{ conselhos|length }}</h4>
-</div>
-</div>
+                    {% if relatorios %}
+                        <div class="dropdown position-relative">
 
-<div class="col-md-4">
-<div class="card border-0 shadow-sm rounded-3 p-3">
-<h6 class="text-muted mb-1">Ano Atual</h6>
-<h4 class="fw-bold">
-{% if conselhos %}{{ conselhos.0.ano }}{% else %}-{% endif %}
-</h4>
-</div>
-</div>
+                            <button
+                                class="btn btn-dark dropdown-toggle d-flex align-items-center gap-2"
+                                data-bs-toggle="dropdown">
 
-<div class="col-md-4">
-<div class="card border-0 shadow-sm rounded-3 p-3">
-<h6 class="text-muted mb-1">Último Conselho</h6>
-<h4 class="fw-bold">
-{% if conselhos %}{{ conselhos.0.criado_em|date:"d/m" }}{% else %}-{% endif %}
-</h4>
-</div>
-</div>
+                                <i data-lucide="bar-chart-3"></i>
+                                Relatórios
 
-</div>
+                            </button>
 
-<!-- 🔥 RELATÓRIO POR BIMESTRE -->
-{% if conselhos %}
-<div class="mb-4">
+                            <ul
+                                class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
 
-<h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-<i data-lucide="layers"></i>
-Relatórios por Bimestre
-</h6>
+                                {% for r in relatorios %}
 
-<div class="d-flex flex-wrap gap-2">
+                                <li>
 
-{% regroup conselhos by ano as anos %}
+                                    <a
+                                        class="dropdown-item py-2"
+                                        hx-get="{% url 'conselho:relatorio_bimestre' r.bimestre r.ano %}"
+                                        hx-target="#mainContent"
+                                        hx-swap="innerHTML">
 
-{% for ano_grupo in anos %}
-    {% regroup ano_grupo.list by bimestre as bimestres %}
+                                        {{ r.bimestre }}º Bimestre / {{ r.ano }}
 
-    {% for grupo in bimestres %}
-        <a hx-get="{% url 'conselho:relatorio_bimestre' grupo.grouper ano_grupo.grouper %}"
-           hx-target="#mainContent"
-           hx-swap="innerHTML"
-           class="btn btn-outline-dark rounded-3 d-flex align-items-center gap-2">
+                                    </a>
 
-            <i data-lucide="bar-chart-2"></i>
-            {{ grupo.grouper }}º Bim / {{ ano_grupo.grouper }}
+                                </li>
 
-        </a>
-    {% endfor %}
+                                {% empty %}
 
-{% endfor %}
+                                <li>
+                                    <span class="dropdown-item text-muted">
+                                        Nenhum relatório disponível
+                                    </span>
+                                </li>
 
-</div>
+                                {% endfor %}
 
-</div>
-{% endif %}
+                            </ul>
 
-<!-- TABELA -->
-<div class="table-responsive">
+                        </div>
+                    {% endif %}
 
-<table class="table table-hover align-middle" id="tabelaConselho">
+                    <a
+                        hx-get="{% url 'conselho:criar' %}"
+                        hx-target="#mainContent"
+                        hx-swap="innerHTML"
+                        class="btn btn-primary d-flex align-items-center gap-2">
 
-<thead class="table-light">
-<tr>
-<th>Turma</th>
-<th>Bimestre</th>
-<th>Ano</th>
-<th>Data</th>
-<th class="text-end">Ações</th>
-</tr>
-</thead>
+                        <i data-lucide="plus"></i>
+                        Novo Conselho
 
-<tbody>
+                    </a>
 
-{% for c in conselhos %}
-<tr>
+                </div>
 
-<td class="fw-semibold">{{ c.turma }}</td>
+            </div>
 
-<td>
-<span class="badge bg-primary">
-{{ c.bimestre }}º Bimestre
-</span>
-</td>
+        </div>
+    </div>
 
-<td>{{ c.ano }}</td>
+    <!-- INDICADORES -->
+    <div class="row g-3 mb-4">
 
-<td>
-{{ c.criado_em|date:"d/m/Y" }}
-<br>
-<small class="text-muted">
-{{ c.criado_em|date:"H:i" }}
-</small>
-</td>
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="clipboard-check"
+                    class="text-primary mb-2"
+                    style="width:32px;height:32px;">
+                </i>
 
-<td class="text-end">
+                <h2 class="fw-bold">
+                    {{ total_geral }}
+                </h2>
 
-<div class="btn-group">
+                <small class="text-muted">
+                    Conselhos
+                </small>
+            </div>
+        </div>
 
-<a hx-get="{% url 'conselho:detalhe' c.id %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   class="btn btn-sm btn-light">
-    <i data-lucide="eye"></i>
-</a>
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="calendar-days"
+                    class="text-success mb-2"
+                    style="width:32px;height:32px;">
+                </i>
 
-<a hx-get="{% url 'conselho:preencher' c.id %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   class="btn btn-sm btn-warning">
-    <i data-lucide="edit"></i>
-</a>
+                <h2 class="fw-bold">
+                    {{ ano_atual|default:"-" }}
+                </h2>
 
-<a hx-get="{% url 'conselho:ata' c.id %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   class="btn btn-sm btn-success">
-    <i data-lucide="file-text"></i>
-</a>
+                <small class="text-muted">
+                    Ano Atual
+                </small>
+            </div>
+        </div>
 
-<a hx-get="{% url 'conselho:relatorio_pedagogico' c.id %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   class="btn btn-sm btn-dark">
-    <i data-lucide="bar-chart-3"></i>
-</a>
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="clock"
+                    class="text-warning mb-2"
+                    style="width:32px;height:32px;">
+                </i>
 
-</div>
+                <h2 class="fw-bold">
 
-</td>
+                    {% if ultimo_conselho %}
+                        {{ ultimo_conselho.criado_em|date:"d/m" }}
+                    {% else %}
+                        -
+                    {% endif %}
 
-</tr>
-{% empty %}
+                </h2>
 
-<tr>
-<td colspan="5" class="text-center py-5">
-<i data-lucide="clipboard-x" style="width:40px;height:40px;"></i>
-<p class="mt-3 text-muted">Nenhum conselho registrado ainda</p>
-</td>
-</tr>
+                <small class="text-muted">
+                    Último Conselho
+                </small>
+            </div>
+        </div>
 
-{% endfor %}
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="check-circle"
+                    class="text-success mb-2"
+                    style="width:32px;height:32px;">
+                </i>
 
-</tbody>
+                <h2 class="fw-bold text-success">
+                    {{ finalizados }}
+                </h2>
 
-</table>
+                <small class="text-muted">
+                    Finalizados
+                </small>
+            </div>
+        </div>
 
-</div>
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="file-pen-line"
+                    class="text-warning mb-2"
+                    style="width:32px;height:32px;">
+                </i>
 
-</div>
-</div>
+                <h2 class="fw-bold text-warning">
+                    {{ rascunhos }}
+                </h2>
+
+                <small class="text-muted">
+                    Rascunhos
+                </small>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <i
+                    data-lucide="chart-pie"
+                    class="text-info mb-2"
+                    style="width:32px;height:32px;">
+                </i>
+
+                <h2 class="fw-bold text-info">
+                    {{ percentual_geral }}%
+                </h2>
+
+                <small class="text-muted">
+                    Concluídos
+                </small>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CARDS DOS CONSELHOS -->
+    <div class="row g-4">
+
+        {% for c in conselhos %}
+
+        <div class="col-xl-4 col-lg-6 conselho-card">
+
+            <div
+                class="card shadow-sm rounded-4 border-0 h-100
+                {% if c.status == 'finalizado' %}
+                    border-start border-5 border-success
+                {% else %}
+                    border-start border-5 border-warning
+                {% endif %}">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+
+                            <h4 class="fw-bold mb-1">
+                                {{ c.turma }}
+                            </h4>
+
+                            <p class="text-muted mb-0">
+                                {{ c.bimestre }}º Bimestre • {{ c.ano }}
+                            </p>
+
+                        </div>
+
+                        {% if c.status == "finalizado" %}
+                            <span class="badge rounded-pill bg-success px-3 py-2">
+                                Finalizado
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                                Rascunho
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                    <hr>
+
+                    <!-- PROGRESSO -->
+                    <div class="mb-3">
+
+                        <div class="d-flex justify-content-between small mb-2">
+
+                            <span>Preenchimento</span>
+
+                            <span>
+                                {{ c.percentual }}%
+                            </span>
+
+                        </div>
+
+                        <div
+                            class="progress"
+                            style="
+                                height:8px;
+                                border-radius:10px;
+                            ">
+
+                            <div
+                                class="progress-bar bg-{{ c.percentual_cor }}"
+                                style="width:{{ c.percentual }}%;">
+                            </div>
+
+                        </div>
+
+                        <div class="small text-muted mt-2">
+
+                            {{ c.concluidos }}
+                            de
+                            {{ c.total_alunos }}
+                            alunos preenchidos
+
+                        </div>
+
+                    </div>
+
+                    <!-- INFORMAÇÕES -->
+                    <div class="small text-muted mb-4">
+
+                        <div class="mb-2">
+                            <i data-lucide="users"></i>
+                            {{ c.total_alunos }} alunos
+                        </div>
+
+                        <div
+                            class="mb-2
+                            {% if c.pendentes %}
+                                text-warning fw-semibold
+                            {% endif %}
+                            ">
+                            <i data-lucide="triangle-alert"></i>
+                            {{ c.pendentes }} pendentes
+                        </div>
+
+                        <div class="mb-2">
+                            <i data-lucide="calendar"></i>
+                            {{ c.criado_em|date:"d/m/Y" }}
+                        </div>
+
+                        <div class="mb-2">
+                            <i data-lucide="clock"></i>
+                            {{ c.criado_em|date:"H:i" }}
+                        </div>
+
+                        {% if c.criado_por %}
+                        <div>
+                            <i data-lucide="user"></i>
+                            {{ c.criado_por }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    <!-- BOTÃO PRINCIPAL -->
+                    <div class="d-grid mb-3">
+
+                        {% if c.status == "finalizado" %}
+
+                        <a
+                            hx-get="{% url 'conselho:preencher' c.id %}"
+                            hx-target="#mainContent"
+                            hx-swap="innerHTML"
+                            class="btn btn-outline-success">
+
+                            <i data-lucide="play-circle"></i>
+                            Revisar Conselho
+
+                        </a>
+
+                        {% else %}
+
+                        <a
+                            hx-get="{% url 'conselho:preencher' c.id %}"
+                            hx-target="#mainContent"
+                            hx-swap="innerHTML"
+                            class="btn btn-outline-warning">
+
+                            <i data-lucide="play-circle"></i>
+                            Continuar Preenchimento
+
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                    <!-- AÇÕES -->
+                        <div class="btn-group w-100 mt-3">
+
+                            <a
+                                hx-get="{% url 'conselho:detalhe' c.id %}"
+                                hx-target="#mainContent"
+                                hx-swap="innerHTML"
+                                class="btn btn-light">
+
+                                <i data-lucide="eye"></i>
+
+                            </a>
+
+                            <a
+                                hx-get="{% url 'conselho:painel' c.id %}"
+                                hx-target="#mainContent"
+                                hx-swap="innerHTML"
+                                class="btn btn-outline-primary">
+
+                                <i data-lucide="layout-dashboard"></i>
+
+                            </a>
+
+                            <a
+                                hx-get="{% url 'conselho:ata' c.id %}"
+                                hx-target="#mainContent"
+                                hx-swap="innerHTML"
+                                class="btn btn-success">
+
+                                <i data-lucide="file-text"></i>
+
+                            </a>
+
+                            <a
+                                hx-get="{% url 'conselho:relatorio_pedagogico' c.id %}"
+                                hx-target="#mainContent"
+                                hx-swap="innerHTML"
+                                class="btn btn-dark">
+
+                                <i data-lucide="bar-chart-3"></i>
+
+                            </a>
+
+                            <button
+                                class="btn btn-outline-danger"
+                                onclick="excluirConselho(
+                                    {{ c.id }},
+                                    '{{ c.turma|escapejs }}'
+                                )">
+
+                                <i data-lucide="trash-2"></i>
+
+                            </button>
+
+                        </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12">
+
+            <div class="card border-0 shadow-sm rounded-4">
+
+                <div class="card-body text-center py-5">
+
+                    <i
+                        data-lucide="clipboard-x"
+                        style="width:60px;height:60px;">
+                    </i>
+
+                    <h5 class="mt-3">
+                        Nenhum conselho registrado
+                    </h5>
+
+                    <p class="text-muted">
+                        Crie o primeiro Conselho de Classe.
+                    </p>
+
+                    <a
+                        hx-get="{% url 'conselho:criar' %}"
+                        hx-target="#mainContent"
+                        hx-swap="innerHTML"
+                        class="btn btn-primary">
+
+                        Novo Conselho
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
 
 </div>
 
 <script>
-lucide.createIcons();
+if (window.lucide){
+    lucide.createIcons();
+}
 
-// 🔎 BUSCA
-document.getElementById("searchInput").addEventListener("keyup", function() {
-    let filtro = this.value.toLowerCase();
-    let linhas = document.querySelectorAll("#tabelaConselho tbody tr");
+document.getElementById("searchInput")
+.addEventListener("keyup", function(){
 
-    linhas.forEach(tr => {
-        let texto = tr.innerText.toLowerCase();
-        tr.style.display = texto.includes(filtro) ? "" : "none";
-    });
+    const filtro = this.value.toLowerCase();
+
+    document.querySelectorAll(".conselho-card")
+        .forEach(card => {
+
+            const texto =
+                card.innerText.toLowerCase();
+
+            card.style.display =
+                texto.includes(filtro)
+                    ? ""
+                    : "none";
+        });
 });
 </script>
 
+
+<style>
+@media print{
+    .no-print{
+        display:none !important;
+    }
+
+    body{
+        background:#fff;
+    }
+
+    .card{
+        border:1px solid #ddd !important;
+        box-shadow:none !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+});
+
+document.body.addEventListener("htmx:afterSwap", function () {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+});
+</script>
+
+<style>
+.dropdown-menu{
+    z-index:99999 !important;
+}
+
+.conselho-card{
+    overflow:visible !important;
+}
+
+.card{
+    overflow:visible;
+}
+</style>
+
+
+<script>
+
+function excluirConselho(id, turma){
+
+    Swal.fire({
+        title: 'Excluir Conselho',
+        html:
+            'O conselho da turma <b>' +
+            turma +
+            '</b> será removido.<br><br>' +
+            '<span class="text-danger fw-bold">' +
+            'Esta ação não poderá ser desfeita.' +
+            '</span><br><br>' +
+            'Digite <b>EXCLUIR</b> para confirmar.',
+
+        icon: 'warning',
+
+        input: 'text',
+        inputPlaceholder: 'Digite EXCLUIR',
+
+        showCancelButton: true,
+
+        confirmButtonText: 'Excluir',
+        cancelButtonText: 'Cancelar',
+
+        confirmButtonColor: '#dc3545',
+
+        reverseButtons: true,
+
+        preConfirm: (valor) => {
+
+            if (valor !== 'EXCLUIR') {
+                Swal.showValidationMessage(
+                    'Digite EXCLUIR para continuar.'
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+    }).then((result) => {
+
+        if(result.isConfirmed){
+
+            fetch(
+                `/conselho/${id}/excluir/`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            )
+            .then(response => {
+
+                if(!response.ok){
+                    throw new Error();
+                }
+
+                return response.text();
+            })
+            .then(() => {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Excluído!',
+                    text: 'Conselho removido com sucesso.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => {
+
+                    htmx.ajax(
+                        'GET',
+                        '{% url "conselho:lista" %}',
+                        '#mainContent'
+                    );
+
+                }, 1200);
+
+            })
+            .catch(() => {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text:
+                        'Não foi possível excluir o conselho.'
+                });
+
+            });
+        }
+    });
+}
+
+</script>
+
+
 {% endblock %}
+

@@ -7,96 +7,201 @@
 <div class="card shadow-sm border-0 rounded-4" id="area-impressao">
 <div class="card-body p-5">
 
-<!-- 🔥 BOTÕES -->
-<div class="d-flex justify-content-end gap-2 mb-3 no-print">
+<!-- BOTÕES -->
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
 
-<button onclick="window.print()" class="btn btn-outline-secondary">
-    🖨️ Imprimir
-</button>
+    <a
+        hx-get="{% url 'conselho:painel' conselho.id %}"
+        hx-target="#mainContent"
+        hx-swap="innerHTML"
+        class="btn btn-outline-secondary">
 
-<a href="{% url 'conselho:ata_pdf' conselho.id %}" class="btn btn-danger">
-    📄 Gerar PDF
-</a>
+        <i data-lucide="arrow-left"></i>
+        Voltar
+
+    </a>
+
+    <div class="d-flex gap-2">
+
+        <button
+            onclick="window.print()"
+            class="btn btn-outline-secondary">
+
+            <i data-lucide="printer"></i>
+            Imprimir
+
+        </button>
+
+        <a
+            href="{% url 'conselho:ata_pdf' conselho.id %}"
+            class="btn btn-danger">
+
+            <i data-lucide="file-text"></i>
+            Gerar PDF
+
+        </a>
+
+    </div>
 
 </div>
 
-<!-- 🏫 CABEÇALHO -->
+<!-- CABEÇALHO -->
+
 <div class="text-center mb-4">
-<h5 class="fw-bold mb-0">ATA DO CONSELHO DE CLASSE</h5>
-<p class="mb-0">GerEdu - Sistema Escolar</p>
+
+    <h4 class="fw-bold">
+        ATA DO CONSELHO DE CLASSE
+    </h4>
+
+    <p class="mb-0">
+        GerEdu - Sistema de Gestão Escolar
+    </p>
+
 </div>
 
 <hr>
 
-<!-- 📊 DADOS GERAIS -->
-<div class="row mb-3">
+<!-- DADOS GERAIS -->
 
-<div class="col-md-4">
-<strong>Turma:</strong> {{ conselho.turma }}
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <strong>Turma:</strong>
+        {{ conselho.turma }}
+    </div>
+
+    <div class="col-md-4">
+        <strong>Bimestre:</strong>
+        {{ conselho.bimestre }}º
+    </div>
+
+    <div class="col-md-4">
+        <strong>Ano Letivo:</strong>
+        {{ conselho.ano }}
+    </div>
+
 </div>
 
-<div class="col-md-4">
-<strong>Bimestre:</strong> {{ conselho.bimestre }}º
-</div>
-
-<div class="col-md-4">
-<strong>Ano Letivo:</strong> {{ conselho.ano }}
-</div>
-
-</div>
-
-<div class="mb-3">
-<strong>Data do Conselho:</strong> {{ conselho.data_conselho|default:"____/____/______" }}
-</div>
-
-<hr>
-
-<!-- 📋 RESUMO -->
 <div class="mb-4">
-<p>
-Aos ______ dias do mês de __________________ do ano de {{ conselho.ano }},
-foi realizado o Conselho de Classe da turma <strong>{{ conselho.turma }}</strong>,
-com a participação da equipe pedagógica e professores, para análise do desempenho dos alunos.
-</p>
+    <strong>Data do Conselho:</strong>
+    {{ conselho.data_conselho|default:"____/____/______" }}
 </div>
 
-<!-- 📊 TABELA -->
-<h5 class="fw-bold mb-3">Registro dos Alunos</h5>
+<hr>
+
+<!-- RESUMO -->
+
+<p style="text-align:justify;">
+
+Aos ______ dias do mês de __________________ de
+{{ conselho.ano }}, realizou-se o Conselho de Classe
+da turma <strong>{{ conselho.turma }}</strong>, com a
+participação da equipe gestora, coordenação pedagógica
+e professores, tendo por objetivo analisar o desempenho
+acadêmico, a frequência, os aspectos comportamentais e
+as necessidades pedagógicas dos estudantes, bem como
+deliberar encaminhamentos e estratégias para a melhoria
+do processo de ensino e aprendizagem.
+
+</p>
+
+<hr>
+
+<!-- RESUMO ESTATÍSTICO -->
+
+<div class="row text-center mb-5">
+
+    <div class="col">
+        <div class="border rounded p-3">
+            <h4>{{ conselho.alunos.count }}</h4>
+            Total de Alunos
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="border rounded p-3">
+            <h4>{{ criticos.count }}</h4>
+            Casos Críticos
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="border rounded p-3">
+            <h4>{{ familia.count }}</h4>
+            Chamar Família
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="border rounded p-3">
+            <h4>{{ busca_ativa.count }}</h4>
+            Busca Ativa
+        </div>
+    </div>
+
+</div>
+
+<!-- TABELA -->
+
+<h5 class="fw-bold mb-3">
+Registro dos Alunos
+</h5>
 
 <div class="table-responsive">
 
-<table class="table table-bordered">
+<table class="table table-bordered table-sm">
 
 <thead class="table-light">
+
 <tr>
-<th>Aluno</th>
-<th>Faltas</th>
-<th>Disciplina</th>
-<th>Aprendizagem</th>
-<th>APA</th>
-<th>Família</th>
-<th>Reclass.</th>
-<th>Ocorr.</th>
-<th>Classificação</th>
-<th>Observação</th>
+    <th>Aluno</th>
+    <th>Faltas</th>
+    <th>Disciplina</th>
+    <th>Aprendizagem</th>
+    <th>APA</th>
+    <th>Família</th>
+    <th>Reclass.</th>
+    <th>Busca Ativa</th>
+    <th>Afastamento</th>
+    <th>Plano</th>
+    <th>Ocorr.</th>
+    <th>Classificação</th>
 </tr>
+
 </thead>
 
 <tbody>
 
 {% for a in conselho.alunos.all %}
+
 <tr>
-<td>{{ a.aluno }}</td>
-<td>{{ a.get_faltas_display|default:"-" }}</td>
-<td>{{ a.get_disciplina_display|default:"-" }}</td>
-<td>{{ a.get_aprendizagem_display|default:"-" }}</td>
-<td>{{ a.get_apa_display|default:"-" }}</td>
-<td>{{ a.get_chamar_familia_display|default:"-" }}</td>
-<td>{{ a.get_reclassificacao_display|default:"-" }}</td>
-<td>{{ a.total_ocorrencias }}</td>
-<td>{{ a.classificacao }}</td>
-<td>{{ a.observacao|default:"-" }}</td>
+
+    <td>{{ a.aluno }}</td>
+
+    <td>{{ a.get_faltas_display|default:"-" }}</td>
+
+    <td>{{ a.get_disciplina_display|default:"-" }}</td>
+
+    <td>{{ a.get_aprendizagem_display|default:"-" }}</td>
+
+    <td>{{ a.get_apa_display|default:"-" }}</td>
+
+    <td>{{ a.get_chamar_familia_display|default:"-" }}</td>
+
+    <td>{{ a.get_reclassificacao_display|default:"-" }}</td>
+
+    <td>{{ a.get_busca_ativa_display|default:"-" }}</td>
+
+    <td>{{ a.get_afastamento_display|default:"-" }}</td>
+
+    <td>{{ a.get_plano_recomposicao_display|default:"-" }}</td>
+
+    <td>{{ a.total_ocorrencias }}</td>
+
+    <td>{{ a.classificacao }}</td>
+
 </tr>
+
 {% endfor %}
 
 </tbody>
@@ -107,57 +212,160 @@ com a participação da equipe pedagógica e professores, para análise do desem
 
 <hr>
 
-<!-- 📌 CRÍTICOS -->
-<h5 class="fw-bold mt-4">Casos Críticos</h5>
+<!-- CASOS CRÍTICOS -->
+
+<h5 class="fw-bold mt-4">
+Casos Críticos
+</h5>
 
 <ul class="list-group mb-4">
+
 {% for a in criticos %}
 <li class="list-group-item">
 <strong>{{ a.aluno }}</strong><br>
 {{ a.diagnostico }}
 </li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum caso crítico</li>
+<li class="list-group-item text-muted">
+Nenhum caso crítico.
+</li>
 {% endfor %}
+
 </ul>
 
-<!-- 📌 ENCAMINHAMENTOS -->
-<h5 class="fw-bold">Encaminhamentos</h5>
+<!-- ENCAMINHAMENTOS -->
+
+<h5 class="fw-bold">
+Encaminhamentos
+</h5>
 
 <ul class="list-group mb-4">
+
 {% for a in prioritarios %}
 <li class="list-group-item">
 <strong>{{ a.aluno }}</strong><br>
 {{ a.sugestao }}
 </li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum encaminhamento</li>
+<li class="list-group-item text-muted">
+Nenhum encaminhamento.
+</li>
 {% endfor %}
+
+</ul>
+
+<!-- FALTOSOS -->
+
+<h5 class="fw-bold">
+Alunos Faltosos
+</h5>
+
+<ul class="list-group mb-4">
+
+{% for a in conselho.alunos.all %}
+{% if a.faltas == "faltoso" %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% endif %}
+{% endfor %}
+
+</ul>
+
+<!-- BUSCA ATIVA -->
+
+<h5 class="fw-bold">
+Alunos em Busca Ativa
+</h5>
+
+<ul class="list-group mb-4">
+
+{% for a in conselho.alunos.all %}
+{% if a.busca_ativa == "sim" %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% endif %}
+{% endfor %}
+
+</ul>
+
+<!-- AFASTAMENTO -->
+
+<h5 class="fw-bold">
+Alunos em Afastamento
+</h5>
+
+<ul class="list-group mb-4">
+
+{% for a in conselho.alunos.all %}
+{% if a.afastamento == "sim" %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% endif %}
+{% endfor %}
+
+</ul>
+
+<!-- RECOMPOSIÇÃO -->
+
+<h5 class="fw-bold">
+Plano de Recomposição Pendente
+</h5>
+
+<ul class="list-group mb-5">
+
+{% for a in conselho.alunos.all %}
+{% if a.plano_recomposicao == "nao_feito" %}
+<li class="list-group-item">
+{{ a.aluno }}
+</li>
+{% endif %}
+{% endfor %}
+
 </ul>
 
 <hr>
 
-<!-- ✍️ ASSINATURAS -->
-<h5 class="fw-bold mt-5">Assinaturas</h5>
+<!-- ASSINATURAS -->
+
+<h5 class="fw-bold">
+Assinaturas dos Professores
+</h5>
 
 <div class="row mt-4">
 
-<div class="col-md-4 text-center mb-4">
-<br><br>
+{% for i in "123456789012"|make_list %}
+<div class="col-md-6 mb-5">
 <hr>
-Professor(a)
+</div>
+{% endfor %}
+
 </div>
 
-<div class="col-md-4 text-center mb-4">
+<h5 class="fw-bold mt-5">
+Equipe Gestora
+</h5>
+
+<div class="row mt-5">
+
+<div class="col-md-4 text-center">
 <br><br>
 <hr>
 Coordenador(a)
 </div>
 
-<div class="col-md-4 text-center mb-4">
+<div class="col-md-4 text-center">
 <br><br>
 <hr>
-Direção
+Diretor(a)
+</div>
+
+<div class="col-md-4 text-center">
+<br><br>
+<hr>
+Secretário(a)
 </div>
 
 </div>
@@ -167,7 +375,6 @@ Direção
 
 </div>
 
-<!-- 🖨️ ESTILO DE IMPRESSÃO -->
 <style>
 @media print {
 
@@ -175,7 +382,8 @@ Direção
         visibility: hidden;
     }
 
-    #area-impressao, #area-impressao * {
+    #area-impressao,
+    #area-impressao * {
         visibility: visible;
     }
 
@@ -190,11 +398,17 @@ Direção
         display: none !important;
     }
 
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+    }
 }
 </style>
 
 <script>
-if (window.lucide) lucide.createIcons();
+if (window.lucide) {
+    lucide.createIcons();
+}
 </script>
 
 {% endblock %}

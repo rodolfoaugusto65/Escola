@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "turmas",
     "ocorrencias",
     "frequencia",
+    'transferencias',
     "conselho",
 ]
 

@@ -4,92 +4,160 @@
 
 <div class="container-fluid">
 
-<div class="card shadow-sm border-0 rounded-4">
-<div class="card-body p-5">
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<!-- CABEÇALHO -->
-<div class="text-center mb-4">
-<h4 class="fw-bold mb-1">
-RELATÓRIO PEDAGÓGICO
-</h4>
-<p class="text-muted mb-0">
-Conselho de Classe - {{ conselho.turma }}
-</p>
+    <div>
+        <h3 class="fw-bold mb-1">
+            Relatório Pedagógico
+        </h3>
+
+        <p class="text-muted mb-0">
+            Conselho de Classe - {{ conselho.turma }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a
+            hx-get="{% url 'conselho:detalhe' conselho.id %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            class="btn btn-outline-secondary">
+
+            Voltar
+        </a>
+
+        <button
+            onclick="window.print()"
+            class="btn btn-success">
+
+            🖨️ Imprimir
+        </button>
+
+    </div>
+
 </div>
 
-<hr>
+<!-- INDICADORES -->
 
-<!-- DADOS -->
-<div class="row mb-4">
+<div class="row g-3 mb-5">
 
-<div class="col-md-4">
-<strong>Turma:</strong><br>
-{{ conselho.turma }}
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-primary">
+                {{ total_alunos }}
+            </h2>
+            <small>Total de Alunos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-danger">
+                {{ total_criticos }}
+            </h2>
+            <small>Críticos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-warning">
+                {{ total_faltosos }}
+            </h2>
+            <small>Faltosos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-info">
+                {{ total_apa }}
+            </h2>
+            <small>APA</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-warning">
+                {{ total_busca_ativa }}
+            </h2>
+            <small>Busca Ativa</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-danger">
+                {{ total_afastados }}
+            </h2>
+            <small>Afastados</small>
+        </div>
+    </div>
+
 </div>
 
-<div class="col-md-4">
-<strong>Bimestre:</strong><br>
-{{ conselho.bimestre }}º
-</div>
-
-<div class="col-md-4">
-<strong>Ano:</strong><br>
-{{ conselho.ano }}
-</div>
-
-</div>
-
-<hr>
-
-<!-- RESUMO -->
-<div class="mb-4">
-<p>
-Este relatório apresenta os principais encaminhamentos pedagógicos definidos durante o conselho de classe,
-com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
-</p>
-</div>
-
-<!-- GRID DE RELATÓRIOS -->
 <div class="row g-4">
 
 <!-- RECLASSIFICAÇÃO -->
+
 <div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
+<div class="card shadow-sm border-0 h-100">
 <div class="card-body">
 
-<h6 class="fw-bold text-danger">
+<h5 class="fw-bold text-danger">
 🔴 Reclassificação
-</h6>
+</h5>
 
-<ul class="list-group list-group-flush mt-2">
+<ul class="list-group list-group-flush">
+
 {% for a in reclassificacao %}
-<li class="list-group-item d-flex justify-content-between">
-<span>{{ a.aluno }}</span>
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
 </li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
+
 </ul>
 
 </div>
 </div>
 </div>
 
-<!-- CHAMAR FAMÍLIA -->
+<!-- FAMÍLIA -->
+
 <div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
+<div class="card shadow-sm border-0 h-100">
 <div class="card-body">
 
-<h6 class="fw-bold text-warning">
-👨‍👩‍👧 Chamar responsáveis
-</h6>
+<h5 class="fw-bold text-warning">
+👨‍👩‍👧 Chamar Responsáveis
+</h5>
 
-<ul class="list-group list-group-flush mt-2">
+<ul class="list-group list-group-flush">
+
 {% for a in familia %}
-<li class="list-group-item">{{ a.aluno }}</li>
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
+
 </ul>
 
 </div>
@@ -97,41 +165,31 @@ com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
 </div>
 
 <!-- APA -->
+
 <div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
+<div class="card shadow-sm border-0 h-100">
 <div class="card-body">
 
-<h6 class="fw-bold text-primary">
+<h5 class="fw-bold text-primary">
 🧠 Atendimento APA
-</h6>
+</h5>
 
-<ul class="list-group list-group-flush mt-2">
+<ul class="list-group list-group-flush">
+
 {% for a in apa %}
-<li class="list-group-item">{{ a.aluno }}</li>
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
-</ul>
 
-</div>
-</div>
-</div>
-
-<!-- INDISCIPLINA -->
-<div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
-<div class="card-body">
-
-<h6 class="fw-bold text-danger">
-⚠️ Indisciplina
-</h6>
-
-<ul class="list-group list-group-flush mt-2">
-{% for a in indisciplina %}
-<li class="list-group-item">{{ a.aluno }}</li>
-{% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
-{% endfor %}
 </ul>
 
 </div>
@@ -139,20 +197,31 @@ com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
 </div>
 
 <!-- BAIXA APRENDIZAGEM -->
+
 <div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
+<div class="card shadow-sm border-0 h-100">
 <div class="card-body">
 
-<h6 class="fw-bold text-warning">
-📉 Baixa aprendizagem
-</h6>
+<h5 class="fw-bold text-warning">
+📉 Baixa Aprendizagem
+</h5>
 
-<ul class="list-group list-group-flush mt-2">
+<ul class="list-group list-group-flush">
+
 {% for a in baixa_aprendizagem %}
-<li class="list-group-item">{{ a.aluno }}</li>
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
+
 </ul>
 
 </div>
@@ -160,20 +229,127 @@ com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
 </div>
 
 <!-- FALTOSOS -->
+
 <div class="col-md-6">
-<div class="card border-0 shadow-sm h-100">
+<div class="card shadow-sm border-0 h-100">
 <div class="card-body">
 
-<h6 class="fw-bold text-danger">
-🚫 Alunos faltosos
-</h6>
+<h5 class="fw-bold text-danger">
+🚫 Alunos Faltosos
+</h5>
 
-<ul class="list-group list-group-flush mt-2">
+<ul class="list-group list-group-flush">
+
 {% for a in faltosos %}
-<li class="list-group-item">{{ a.aluno }}</li>
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
 {% empty %}
-<li class="list-group-item text-muted">Nenhum aluno</li>
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
 {% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- BUSCA ATIVA -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-warning">
+🔍 Busca Ativa
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in busca_ativa %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- AFASTAMENTO -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-danger">
+🏥 Afastamento
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in afastados %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- RECOMPOSIÇÃO -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-primary">
+📚 Plano de Recomposição Não Realizado
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in plano_pendente %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
 </ul>
 
 </div>
@@ -184,43 +360,52 @@ com foco na melhoria do desempenho acadêmico e acompanhamento dos estudantes.
 
 <hr class="my-5">
 
-<!-- ASSINATURAS -->
-<h5 class="fw-bold mb-4">Assinaturas</h5>
+<h5 class="fw-bold">
+Encaminhamentos Pedagógicos
+</h5>
 
-<div class="row text-center">
+<ul>
+<li>Intensificar ações de busca ativa.</li>
+<li>Realizar contato com as famílias.</li>
+<li>Fortalecer ações de recomposição.</li>
+<li>Acompanhar estudantes PAED e APA.</li>
+<li>Monitorar alunos críticos e faltosos.</li>
+</ul>
 
-<div class="col-md-4">
-<br><br>
-<hr>
-Professor(a)
+<hr class="my-5">
+
+<h5 class="fw-bold">
+Assinaturas dos Professores
+</h5>
+
+{% for i in "123456789"|make_list %}
+<div class="mb-4">
+_______________________________________________
 </div>
+{% endfor %}
 
-<div class="col-md-4">
-<br><br>
+<div class="row mt-5">
+
+<div class="col-md-6 text-center">
 <hr>
 Coordenação
 </div>
 
-<div class="col-md-4">
-<br><br>
+<div class="col-md-6 text-center">
 <hr>
 Direção
 </div>
 
 </div>
 
-<!-- BOTÕES -->
-<div class="mt-5 d-flex justify-content-end gap-2">
-
-<button onclick="window.print()" class="btn btn-outline-secondary">
-🖨️ Imprimir
-</button>
-
 </div>
 
-</div>
-</div>
-
-</div>
+<style>
+@media print{
+    .btn{
+        display:none !important;
+    }
+}
+</style>
 
 {% endblock %}

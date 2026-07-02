@@ -4,24 +4,22 @@
 
 <div class="container-fluid">
 
-<!-- CABEÇALHO -->
-
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <div>
         <h3 class="fw-bold mb-1">
-            {{ conselho }}
+            Painel - {{ conselho.turma }}
         </h3>
 
         <p class="text-muted mb-0">
-            Análise automática da turma
+            Acompanhamento do preenchimento do Conselho de Classe
         </p>
     </div>
 
     <div class="d-flex gap-2">
 
         <a
-            hx-get="{% url 'conselho:lista' %}"
+            hx-get="{% url 'conselho:detalhe' conselho.id %}"
             hx-target="#mainContent"
             hx-swap="innerHTML"
             class="btn btn-outline-secondary">
@@ -29,27 +27,6 @@
             <i data-lucide="arrow-left"></i>
             Voltar
 
-        </a>
-
-        <a
-            hx-get="{% url 'conselho:painel' conselho.id %}"
-            hx-target="#mainContent"
-            hx-swap="innerHTML"
-            class="btn btn-outline-primary">
-
-            <i data-lucide="layout-dashboard"></i>
-            Painel
-
-        </a>
-
-       <a
-            hx-get="{% url 'conselho:relatorio_pedagogico' conselho.id %}"
-            hx-target="#mainContent"
-            hx-swap="innerHTML"
-            class="btn btn-warning">
-
-            <i data-lucide="bar-chart-3"></i>
-            Relatório
         </a>
 
         <a
@@ -73,8 +50,30 @@
 
     <div class="col-md-3">
         <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-success">
+                {{ concluidos }}
+            </h2>
+            <small class="text-muted">
+                Concluídos
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-danger">
+                {{ pendentes }}
+            </h2>
+            <small class="text-muted">
+                Pendentes
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
             <h2 class="fw-bold text-primary">
-                {{ alunos|length }}
+                {{ total }}
             </h2>
             <small class="text-muted">
                 Total de Alunos
@@ -84,37 +83,39 @@
 
     <div class="col-md-3">
         <div class="card border-0 shadow-sm text-center p-3">
-            <h2 class="fw-bold text-danger">
-                {{ criticos }}
-            </h2>
-            <small class="text-muted">
-                Casos Críticos
-            </small>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
             <h2 class="fw-bold text-warning">
-                {{ conselho.bimestre }}º
+                {{ percentual }}%
             </h2>
             <small class="text-muted">
-                Bimestre
+                Preenchido
             </small>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <h2 class="fw-bold text-success">
-                {{ conselho.ano }}
-            </h2>
-            <small class="text-muted">
-                Ano Letivo
-            </small>
+</div>
+
+<!-- PROGRESSO -->
+
+<div class="card shadow-sm border-0 mb-4">
+<div class="card-body">
+
+    <h6 class="fw-bold mb-3">
+        Progresso do Conselho
+    </h6>
+
+    <div class="progress" style="height:22px;">
+
+        <div
+            class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+            style="width: {{ percentual }}%;">
+
+            {{ percentual }}%
+
         </div>
+
     </div>
 
+</div>
 </div>
 
 <!-- TABELA -->
@@ -181,13 +182,11 @@
     </td>
 
     <td>
-
         {% if a.frequencia %}
             {{ a.frequencia }}%
         {% else %}
             -
         {% endif %}
-
     </td>
 
     <td>
@@ -224,24 +223,14 @@
 
     <td>
 
-        {% if a.classificacao == "critico" %}
-
-            <span class="badge bg-danger">
-                Crítico
-            </span>
-
-        {% elif a.classificacao == "atencao" %}
-
-            <span class="badge bg-warning text-dark">
-                Atenção
-            </span>
-
-        {% else %}
-
+        {% if a.preenchido %}
             <span class="badge bg-success">
-                Regular
+                Concluído
             </span>
-
+        {% else %}
+            <span class="badge bg-danger">
+                Pendente
+            </span>
         {% endif %}
 
     </td>
@@ -249,12 +238,11 @@
     <td>
 
         <a
-            hx-get="{% url 'conselho:preencher_aluno' conselho.id %}?indice={{ forloop.counter0 }}"
-            hx-target="#mainContent"
-            hx-swap="innerHTML"
+            href="{% url 'conselho:preencher_aluno' conselho.id %}?indice={{ forloop.counter0 }}"
             class="btn btn-sm btn-outline-primary">
 
             Abrir
+
         </a>
 
     </td>
@@ -283,7 +271,7 @@
 </div>
 
 <script>
-if (window.lucide){
+if (window.lucide) {
     lucide.createIcons();
 }
 </script>
