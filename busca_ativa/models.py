@@ -28,6 +28,34 @@ class ImportacaoInfrequencia(models.Model):
         return f"{self.arquivo} ({self.criado_em:%d/%m/%Y %H:%M})"
 
 
+class ImportacaoLote(models.Model):
+    STATUS = [("pendente", "Pendente"), ("processando", "Processando"), ("concluida", "Concluída"), ("erro", "Erro")]
+    arquivo = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=[("geral", "Base geral"), ("25mais", "Relatório 25%+")])
+    ano_letivo = models.PositiveSmallIntegerField(default=ano_letivo_atual)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    importacao = models.ForeignKey(ImportacaoInfrequencia, null=True, blank=True, on_delete=models.SET_NULL, related_name="lotes")
+    dados = models.JSONField(default=list, blank=True)
+    total = models.PositiveIntegerField(default=0)
+    processados = models.PositiveIntegerField(default=0)
+    vinculados = models.PositiveIntegerField(default=0)
+    nao_vinculados = models.PositiveIntegerField(default=0)
+    pendentes = models.JSONField(default=list, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, default="pendente")
+    erro = models.TextField(blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        verbose_name = "Processamento de importação"
+        verbose_name_plural = "Processamentos de importação"
+
+    @property
+    def percentual(self):
+        return int((self.processados / self.total) * 100) if self.total else (100 if self.status == "concluida" else 0)
+
+
 class SituacaoInfrequencia(models.Model):
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="situacoes_infrequencia")
     codigo_fonte = models.CharField(max_length=30, db_index=True)

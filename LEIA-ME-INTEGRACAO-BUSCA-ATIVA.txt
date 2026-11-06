@@ -114,3 +114,13 @@ SEGURANCA ADICIONAL DO PACOTE
 - O arquivo local que continha credenciais de acesso ao Cloudflare R2 nao foi incluido neste pacote. Configure as chaves por variaveis de ambiente no Railway.
 - A criacao automatica do administrador inicial agora depende de GEREDU_ROOT_CPF e GEREDU_ROOT_PASSWORD no ambiente. Usuarios ja existentes no banco nao sao removidos ou alterados.
 - Como havia credenciais em texto puro no arquivo original, recomenda-se rotacionar as chaves do Cloudflare R2 antes de continuar usando o ambiente de producao.
+
+
+ATUALIZAÇÃO DA IMPORTAÇÃO (VERSÃO COM LOTES)
+- A tela importar/ agora valida arquivos Excel/CSV e inicia um processamento em lotes de 250 registros.
+- A página de processamento exibe progresso, registros processados, vínculos e códigos não localizados.
+- As matrículas são cruzadas em consultas agrupadas; os registros são gravados com bulk_create/bulk_update.
+- Foi adicionada a migração busca_ativa.0004_importacao_lote.
+- Após publicar o código, executar: python manage.py migrate
+- Limite do upload: 15 MB e 20.000 registros por arquivo. Divida arquivos maiores.
+- O arquivo SQLite de backup do módulo continua sendo importado pela tela específica de restauração, não pela tela de planilhas.

@@ -10,6 +10,7 @@ urlpatterns = [
     path("aluno/<int:aluno_id>/acao/<int:acao_id>/status/", views.atualizar_status_acao, name="status_acao"),
     path("aluno/<int:aluno_id>/acesso/", views.gerenciar_acesso, name="acesso"),
     path("importar/", views.importar_planilha, name="importar"),
+    path("importar/processar/<int:job_id>/", views.processar_importacao, name="processar_importacao"),
     path("backup/importar/", views.importar_backup_local, name="importar_backup"),
     path("backup/baixar/", views.baixar_backup_busca_ativa, name="baixar_backup"),
     path("relatorios/", views.relatorio_acoes, name="relatorio"),

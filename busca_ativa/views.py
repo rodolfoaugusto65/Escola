@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.db.models import Count, Q, Exists, OuterRef, Subquery, DecimalField, Value
 from django.db.models.functions import Coalesce, Greatest
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from openpyxl import load_workbook
@@ -22,7 +22,7 @@ from frequencia.models import FrequenciaAluno
 from .models import (
     AcaoBuscaAtiva, AcessoConsultaAluno, ImportacaoInfrequencia,
     SituacaoInfrequencia, ConsultaFrequenciaLog, ComunicadoSistema,
-    LeituraComunicado, CalendarioEscolar, DiaNaoLetivo,
+    LeituraComunicado, CalendarioEscolar, DiaNaoLetivo, ImportacaoLote,
 )
 
 
@@ -41,6 +41,15 @@ def _percent(value):
     if Decimal("0") <= n <= Decimal("1.5"):
         n *= 100
     return n.quantize(Decimal("0.01"))
+
+
+def _decimal_import(value):
+    if value in (None, ""):
+        return Decimal("0")
+    try:
+        return Decimal(str(value).strip().replace(",", "."))
+    except (InvalidOperation, ValueError):
+        return Decimal("0")
 
 
 def _active_action_subquery():
@@ -399,110 +408,213 @@ def baixar_backup_busca_ativa(request):
 @login_required
 @user_passes_test(gerencial)
 def importar_planilha(request):
-    if request.method == "POST":
-        arquivo = request.FILES.get("arquivo")
-        tipo = request.POST.get("tipo", "geral")
-        if not arquivo:
-            messages.error(request, "Selecione o arquivo que deseja importar.")
-            return redirect("busca_ativa:importar")
-        try:
-            if tipo == "25mais":
-                if not arquivo.name.lower().endswith(".csv"):
-                    raise ValueError("O relatório complementar 25%+ deve ser enviado em CSV.")
-                raw = arquivo.read()
-                conteudo = None
-                for enc in ("utf-8-sig", "cp1252", "latin1"):
-                    try:
-                        conteudo = raw.decode(enc)
-                        break
-                    except UnicodeDecodeError:
-                        continue
-                sample = conteudo[:4096]
+    """Recebe e valida o arquivo; o processamento acontece em lotes via requisições curtas."""
+    if request.method != "POST":
+        return render(request, "busca_ativa/importar.html")
+
+    arquivo = request.FILES.get("arquivo")
+    tipo = request.POST.get("tipo", "geral")
+    if not arquivo:
+        messages.error(request, "Selecione o arquivo que deseja importar.")
+        return redirect("busca_ativa:importar")
+    if arquivo.size > 15 * 1024 * 1024:
+        messages.error(request, "O arquivo ultrapassa o limite de 15 MB. Divida a planilha em arquivos menores.")
+        return redirect("busca_ativa:importar")
+
+    try:
+        dados = []
+        ano = timezone.localdate().year
+        if tipo == "25mais":
+            if not arquivo.name.lower().endswith(".csv"):
+                raise ValueError("O relatório complementar 25%+ deve ser enviado em CSV.")
+            raw = arquivo.read()
+            conteudo = None
+            for enc in ("utf-8-sig", "cp1252", "latin1"):
                 try:
-                    dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
-                except csv.Error:
-                    dialect = csv.excel
-                    dialect.delimiter = ";"
-                reader = csv.DictReader(io.StringIO(conteudo), dialect=dialect)
-                obrigatorias = {"CodAluno", "PercFaltas_GeralFinal"}
-                if not reader.fieldnames or not obrigatorias.issubset(set(x.strip() for x in reader.fieldnames)):
-                    raise ValueError("O CSV precisa conter CodAluno e PercFaltas_GeralFinal.")
-                reader.fieldnames = [x.strip() for x in reader.fieldnames]
-                vinculados = nao_vinculados = total = 0
-                with transaction.atomic():
-                    imp = ImportacaoInfrequencia.objects.create(arquivo=arquivo.name, ano_letivo=timezone.localdate().year, importado_por=request.user)
-                    pendentes = []
-                    for row in reader:
-                        total += 1
-                        codigo = str(row.get("CodAluno") or "").strip().replace(".0", "")
-                        aluno = Aluno.objects.filter(matricula=codigo).first()
-                        if not aluno:
-                            nao_vinculados += 1
-                            pendentes.append(codigo)
-                            continue
-                        situacao, _ = SituacaoInfrequencia.objects.get_or_create(aluno=aluno, ano_letivo=timezone.localdate().year, defaults={"codigo_fonte": codigo})
-                        situacao.percentual_relatorio_25 = _percent(row.get("PercFaltas_GeralFinal"))
-                        situacao.consta_relatorio_25 = True
-                        situacao.importacao = imp
-                        situacao.save(update_fields=["percentual_relatorio_25", "consta_relatorio_25", "importacao", "atualizado_em"])
-                        vinculados += 1
-                    imp.total_registros, imp.vinculados, imp.nao_vinculados = total, vinculados, nao_vinculados
-                    imp.observacao = "Importação complementar 25%+. Códigos não localizados: " + "; ".join(pendentes[:300])
-                    imp.save(update_fields=["total_registros", "vinculados", "nao_vinculados", "observacao"])
-                messages.success(request, f"Relatório 25%+ importado: {vinculados} vinculados; {nao_vinculados} códigos não localizados.")
-            else:
-                if not arquivo.name.lower().endswith((".xlsx", ".xlsm")):
-                    raise ValueError("A base geral deve ser enviada em Excel (.xlsx ou .xlsm).")
-                wb = load_workbook(arquivo, read_only=True, data_only=True)
+                    conteudo = raw.decode(enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            sample = conteudo[:4096]
+            try:
+                dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
+            except csv.Error:
+                dialect = csv.excel
+                dialect.delimiter = ";"
+            reader = csv.DictReader(io.StringIO(conteudo), dialect=dialect)
+            obrigatorias = {"CodAluno", "PercFaltas_GeralFinal"}
+            if not reader.fieldnames or not obrigatorias.issubset({x.strip() for x in reader.fieldnames}):
+                raise ValueError("O CSV precisa conter CodAluno e PercFaltas_GeralFinal.")
+            reader.fieldnames = [x.strip() for x in reader.fieldnames]
+            for row in reader:
+                codigo = str(row.get("CodAluno") or "").strip().replace(".0", "")
+                if codigo:
+                    dados.append({"codigo": codigo, "percentual": str(row.get("PercFaltas_GeralFinal") or "0")})
+                if len(dados) > 20000:
+                    raise ValueError("A planilha possui mais de 20.000 registros. Divida o arquivo para importar.")
+        else:
+            if tipo != "geral" or not arquivo.name.lower().endswith((".xlsx", ".xlsm")):
+                raise ValueError("A base geral deve ser enviada em Excel (.xlsx ou .xlsm).")
+            wb = load_workbook(arquivo, read_only=True, data_only=True)
+            try:
                 ws = wb.active
                 rows = ws.iter_rows(values_only=True)
-                headers = [str(v).strip() if v is not None else "" for v in next(rows)]
+                headers = [str(v).strip() if v is not None else "" for v in next(rows, ())]
                 ix = {name: i for i, name in enumerate(headers)}
                 obrigatorias = {"CodAluno", "NomeAluno", "PercFaltas_GeralFinal"}
                 if not obrigatorias.issubset(ix):
                     raise ValueError("A planilha não contém as colunas essenciais CodAluno, NomeAluno e PercFaltas_GeralFinal.")
-                primeira_linha = next(ws.iter_rows(min_row=2, max_row=2, values_only=True), None)
-                ano_valor = primeira_linha[ix["AnoLetivo"]] if primeira_linha and "AnoLetivo" in ix else timezone.localdate().year
-                ano = int(ano_valor or timezone.localdate().year)
-                with transaction.atomic():
-                    imp = ImportacaoInfrequencia.objects.create(arquivo=arquivo.name, ano_letivo=ano, importado_por=request.user)
-                    total = vinculados = nao_vinculados = 0
-                    pendentes = []
-                    for row in rows:
-                        if not row or row[ix["CodAluno"]] is None:
-                            continue
-                        total += 1
-                        codigo = str(row[ix["CodAluno"]]).strip().replace(".0", "")
-                        ged = str(row[ix["GedMatCod"]]).strip().replace(".0", "") if "GedMatCod" in ix and row[ix["GedMatCod"]] is not None else ""
-                        a1 = Aluno.objects.filter(matricula=codigo).first()
-                        a2 = Aluno.objects.filter(matricula=ged).first() if ged else None
-                        if a1 and a2 and a1.pk != a2.pk:
-                            nao_vinculados += 1; pendentes.append(f"{codigo}/{ged} divergentes"); continue
-                        aluno = a1 or a2
-                        if not aluno:
-                            nao_vinculados += 1; pendentes.append(f"{codigo}/{ged}"); continue
-                        def val(col): return row[ix[col]] if col in ix and ix[col] < len(row) else None
-                        SituacaoInfrequencia.objects.update_or_create(aluno=aluno, ano_letivo=ano, defaults={
-                            "codigo_fonte": codigo, "codigo_ged": ged, "importacao": imp,
-                            "percentual_geral": _percent(val("PercFaltas_Geral")),
-                            "percentual_geral_final": _percent(val("PercFaltas_GeralFinal")),
-                            "percentual_1_bim": _percent(val("PercFaltasFinal_1Bim")),
-                            "percentual_2_bim": _percent(val("PercFaltasFinal_2Bim")),
-                            "percentual_3_bim": _percent(val("PercFaltasFinal_3Bim")),
-                            "percentual_4_bim": _percent(val("PercFaltasFinal_4Bim")),
-                            "faltas_geral": val("TF_Geral") or 0, "faltas_final": val("TF_Geral_Final") or 0,
-                            "carga_horaria": val("CHAnual") or 0, "paed_na_fonte": str(val("PAED") or ""),
-                        })
-                        vinculados += 1
-                    imp.total_registros, imp.vinculados, imp.nao_vinculados = total, vinculados, nao_vinculados
-                    imp.observacao = "Códigos sem vínculo ou ambíguos: " + "; ".join(pendentes[:300])
-                    imp.save(update_fields=["total_registros", "vinculados", "nao_vinculados", "observacao"])
+                for row in rows:
+                    if not row or ix["CodAluno"] >= len(row) or row[ix["CodAluno"]] is None:
+                        continue
+                    def cell(col):
+                        value = row[ix[col]] if col in ix and ix[col] < len(row) else None
+                        return str(value).strip() if value is not None else ""
+                    codigo = cell("CodAluno").replace(".0", "")
+                    ged = cell("GedMatCod").replace(".0", "")
+                    if not codigo and not ged:
+                        continue
+                    dados.append({
+                        "codigo": codigo, "ged": ged,
+                        "percentual_geral": cell("PercFaltas_Geral"),
+                        "percentual_final": cell("PercFaltas_GeralFinal"),
+                        "bim1": cell("PercFaltasFinal_1Bim"), "bim2": cell("PercFaltasFinal_2Bim"),
+                        "bim3": cell("PercFaltasFinal_3Bim"), "bim4": cell("PercFaltasFinal_4Bim"),
+                        "faltas_geral": cell("TF_Geral") or "0", "faltas_final": cell("TF_Geral_Final") or "0",
+                        "carga_horaria": cell("CHAnual") or "0", "paed": cell("PAED"),
+                    })
+                    if len(dados) > 20000:
+                        raise ValueError("A planilha possui mais de 20.000 registros. Divida o arquivo para importar.")
+                first = dados[0] if dados else None
+                if "AnoLetivo" in ix:
+                    first_row = next(ws.iter_rows(min_row=2, max_row=2, values_only=True), None)
+                    if first_row and ix["AnoLetivo"] < len(first_row) and first_row[ix["AnoLetivo"]]:
+                        ano = int(first_row[ix["AnoLetivo"]])
+            finally:
                 wb.close()
-                messages.success(request, f"Base geral importada: {vinculados} vinculados; {nao_vinculados} sem correspondência. Histórico preservado.")
-        except Exception as exc:
-            messages.error(request, f"Não foi possível importar o arquivo: {exc}")
-        return redirect("busca_ativa:painel")
-    return render(request, "busca_ativa/importar.html")
+
+        if not dados:
+            raise ValueError("O arquivo não contém registros válidos para importar.")
+
+        with transaction.atomic():
+            registro = ImportacaoInfrequencia.objects.create(
+                arquivo=arquivo.name, ano_letivo=ano, importado_por=request.user
+            )
+            job = ImportacaoLote.objects.create(
+                arquivo=arquivo.name, tipo=tipo, ano_letivo=ano, usuario=request.user,
+                importacao=registro, dados=dados, total=len(dados), status="pendente"
+            )
+        return redirect("busca_ativa:processar_importacao", job_id=job.pk)
+    except Exception as exc:
+        messages.error(request, f"Não foi possível preparar o arquivo: {exc}")
+        return redirect("busca_ativa:importar")
+
+
+@login_required
+@user_passes_test(gerencial)
+def processar_importacao(request, job_id):
+    job = get_object_or_404(ImportacaoLote, pk=job_id, usuario=request.user)
+    if request.method == "GET":
+        return render(request, "busca_ativa/processando_importacao.html", {"job": job})
+    if request.method != "POST":
+        return JsonResponse({"erro": "Método não permitido."}, status=405)
+
+    CHUNK_SIZE = 250
+    try:
+        with transaction.atomic():
+            job = ImportacaoLote.objects.select_for_update().get(pk=job_id, usuario=request.user)
+            if job.status in ("concluida", "erro"):
+                return JsonResponse({"status": job.status, "percentual": job.percentual,
+                                     "processados": job.processados, "total": job.total,
+                                     "vinculados": job.vinculados, "nao_vinculados": job.nao_vinculados,
+                                     "erro": job.erro})
+            job.status = "processando"
+            inicio = job.processados
+            lote = job.dados[inicio:inicio + CHUNK_SIZE]
+            if not lote:
+                job.status = "concluida"
+            else:
+                codigos = {r.get("codigo", "") for r in lote if r.get("codigo")}
+                ged_codes = {r.get("ged", "") for r in lote if r.get("ged")}
+                alunos = Aluno.objects.filter(Q(matricula__in=codigos) | Q(matricula__in=ged_codes)).only("id", "matricula")
+                por_codigo = {str(a.matricula): a for a in alunos}
+                alunos_lote = {}
+                registros = {}
+                for row in lote:
+                    codigo, ged = row.get("codigo", ""), row.get("ged", "")
+                    a1, a2 = por_codigo.get(codigo), por_codigo.get(ged) if ged else None
+                    if job.tipo == "geral" and a1 and a2 and a1.pk != a2.pk:
+                        job.nao_vinculados += 1
+                        job.pendentes.append(f"{codigo}/{ged} divergentes")
+                        continue
+                    aluno = a1 or a2
+                    if not aluno:
+                        job.nao_vinculados += 1
+                        job.pendentes.append(f"{codigo}/{ged}" if ged else codigo)
+                        continue
+                    alunos_lote[aluno.pk] = aluno
+                    registros[aluno.pk] = row  # Em duplicidade, prevalece a última linha do arquivo.
+
+                existentes = {s.aluno_id: s for s in SituacaoInfrequencia.objects.filter(
+                    aluno_id__in=alunos_lote.keys(), ano_letivo=job.ano_letivo
+                )}
+                criar, atualizar = [], []
+                agora = timezone.now()
+                for aluno_id, row in registros.items():
+                    situacao = existentes.get(aluno_id)
+                    if situacao is None:
+                        situacao = SituacaoInfrequencia(
+                            aluno_id=aluno_id, ano_letivo=job.ano_letivo,
+                            codigo_fonte=row.get("codigo") or row.get("codigo_ged") or str(alunos_lote[aluno_id].matricula)
+                        )
+                        criar.append(situacao)
+                    if job.tipo == "25mais":
+                        situacao.percentual_relatorio_25 = _percent(row.get("percentual"))
+                        situacao.consta_relatorio_25 = True
+                    else:
+                        situacao.codigo_fonte = row.get("codigo") or str(alunos_lote[aluno_id].matricula)
+                        situacao.codigo_ged = row.get("ged", "")
+                        situacao.importacao_id = job.importacao_id
+                        situacao.percentual_geral = _percent(row.get("percentual_geral"))
+                        situacao.percentual_geral_final = _percent(row.get("percentual_final"))
+                        situacao.percentual_1_bim = _percent(row.get("bim1"))
+                        situacao.percentual_2_bim = _percent(row.get("bim2"))
+                        situacao.percentual_3_bim = _percent(row.get("bim3"))
+                        situacao.percentual_4_bim = _percent(row.get("bim4"))
+                        situacao.faltas_geral = _decimal_import(row.get("faltas_geral"))
+                        situacao.faltas_final = _decimal_import(row.get("faltas_final"))
+                        situacao.carga_horaria = _decimal_import(row.get("carga_horaria"))
+                        situacao.paed_na_fonte = (row.get("paed") or "")[:10]
+                    situacao.atualizado_em = agora
+                    if aluno_id in existentes:
+                        atualizar.append(situacao)
+                if criar:
+                    SituacaoInfrequencia.objects.bulk_create(criar, batch_size=200)
+                if atualizar:
+                    campos = ["percentual_relatorio_25", "consta_relatorio_25", "codigo_fonte", "codigo_ged",
+                              "importacao", "percentual_geral", "percentual_geral_final", "percentual_1_bim",
+                              "percentual_2_bim", "percentual_3_bim", "percentual_4_bim", "faltas_geral",
+                              "faltas_final", "carga_horaria", "paed_na_fonte", "atualizado_em"]
+                    SituacaoInfrequencia.objects.bulk_update(atualizar, campos, batch_size=200)
+                job.vinculados += len(registros)
+                job.processados = min(job.total, inicio + len(lote))
+                if job.processados >= job.total:
+                    job.status = "concluida"
+                    job.importacao.total_registros = job.total
+                    job.importacao.vinculados = job.vinculados
+                    job.importacao.nao_vinculados = job.nao_vinculados
+                    resumo = "Códigos sem vínculo ou ambíguos: " + "; ".join(job.pendentes[:300])
+                    job.importacao.observacao = resumo
+                    job.importacao.save(update_fields=["total_registros", "vinculados", "nao_vinculados", "observacao"])
+                    job.dados = []  # libera espaço após conclusão
+                job.save()
+        return JsonResponse({"status": job.status, "percentual": job.percentual,
+                             "processados": job.processados, "total": job.total,
+                             "vinculados": job.vinculados, "nao_vinculados": job.nao_vinculados,
+                             "erro": job.erro})
+    except Exception as exc:
+        ImportacaoLote.objects.filter(pk=job_id, usuario=request.user).update(status="erro", erro=str(exc)[:2000])
+        return JsonResponse({"status": "erro", "erro": str(exc)[:2000]}, status=500)
 
 
 @login_required
@@ -610,9 +722,10 @@ def relatorios_personalizados(request):
 
     if tipo == "estudantes":
         qs = Aluno.objects.select_related("turma").all().order_by("nome")
+        situacoes = {s.aluno_id: s for s in SituacaoInfrequencia.objects.filter(ano_letivo=hoje.year)}
         for a in qs:
             if not aluno_ok(a): continue
-            sit = SituacaoInfrequencia.objects.filter(aluno=a, ano_letivo=hoje.year).first()
+            sit = situacoes.get(a.id)
             pct = sit.percentual_considerado if sit else 0
             if not faixa_ok(pct): continue
             paed_flag = a.aluno_paed or bool(sit and str(sit.paed_na_fonte).strip().upper() in ["SIM", "S", "1", "TRUE"])
@@ -622,6 +735,8 @@ def relatorios_personalizados(request):
             rows.append({"values": [data[k] for k in selected], "aluno_id": a.id})
     elif tipo in ["acoes", "compensacao"]:
         qs = AcaoBuscaAtiva.objects.select_related("aluno", "aluno__turma", "responsavel").all()
+        ids_alunos = qs.values_list("aluno_id", flat=True).distinct()
+        situacoes = {s.aluno_id: s for s in SituacaoInfrequencia.objects.filter(ano_letivo=hoje.year, aluno_id__in=ids_alunos)}
         if tipo == "compensacao": qs = qs.filter(tipo__in=["Compensação de Ausências", "Compensação de ausências"])
         if inicio: qs = qs.filter(data__gte=inicio)
         if fim: qs = qs.filter(data__lte=fim)
@@ -630,7 +745,7 @@ def relatorios_personalizados(request):
         if q: qs = qs.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q) | Q(descricao__icontains=q) | Q(responsavel_origem__icontains=q))
         if turno: qs = qs.filter(aluno__turma__turno=turno)
         for a in qs.order_by("-data", "aluno__nome"):
-            sit = SituacaoInfrequencia.objects.filter(aluno=a.aluno, ano_letivo=hoje.year).first()
+            sit = situacoes.get(a.aluno_id)
             pct = sit.percentual_considerado if sit else 0
             paed_flag = a.aluno.aluno_paed or bool(sit and str(sit.paed_na_fonte).strip().upper() in ["SIM", "S", "1", "TRUE"])
             if paed == "sim" and not paed_flag: continue
@@ -646,6 +761,9 @@ def relatorios_personalizados(request):
     else:
         qs = SituacaoInfrequencia.objects.select_related("aluno", "aluno__turma").filter(ano_letivo=hoje.year)
         qs = qs.annotate(tem_prazo_ativo=Exists(AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), prazo__gte=hoje).exclude(status__in=["Concluída", "Cancelada"]))).filter(tem_prazo_ativo=False)
+        from django.db.models import Prefetch
+        acoes_recentes = AcaoBuscaAtiva.objects.order_by("-data", "-criado_em")
+        qs = qs.prefetch_related(Prefetch("aluno__acoes_busca_ativa", queryset=acoes_recentes, to_attr="_acoes_busca_ativa_cache"))
         for sit in qs.order_by("-percentual_geral_final", "aluno__nome"):
             a = sit.aluno
             if not aluno_ok(a): continue
@@ -654,7 +772,7 @@ def relatorios_personalizados(request):
             paed_flag = a.aluno_paed or str(sit.paed_na_fonte).strip().upper() in ["SIM", "S", "1", "TRUE"]
             if paed == "sim" and not paed_flag: continue
             if paed == "nao" and paed_flag: continue
-            ultima = AcaoBuscaAtiva.objects.filter(aluno=a).order_by("-data", "-criado_em").first()
+            ultima = a._acoes_busca_ativa_cache[0] if a._acoes_busca_ativa_cache else None
             paed_flag = a.aluno_paed or str(sit.paed_na_fonte).strip().upper() in ["SIM", "S", "1", "TRUE"]
             data = {"estudante": a.nome, "matricula": a.matricula, "turma": str(a.turma or "—"), "turno": a.turma.get_turno_display() if a.turma else "—", "percentual": f"{pct:.1f}%", "paed": "Sim" if paed_flag else "Não", "ultima_acao": ultima.get_tipo_display() if ultima else "—", "prazo": ultima.prazo.strftime("%d/%m/%Y") if ultima and ultima.prazo else "—"}
             rows.append({"values": [data[k] for k in selected], "aluno_id": a.id})
