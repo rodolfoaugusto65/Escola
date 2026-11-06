@@ -351,6 +351,20 @@ hx-push-url="true">
     <i data-lucide="calendar-check"></i><span>Frequência</span>
 </a>
 
+<a href="{% url 'consulta_frequencia_codigo' %}" target="_blank"><i data-lucide="search-check"></i><span>Consulta do estudante</span></a>
+<a href="{% url 'busca_ativa:calendario_letivo' %}"><i data-lucide="calendar-days"></i><span>Contagem do ano letivo</span></a>
+
+{% if user.is_authenticated and user.pode_gerenciar_usuarios %}
+<a href="{% url 'busca_ativa:painel' %}">
+    <i data-lucide="clipboard-check"></i><span>Busca Ativa</span>
+    {% if total_alertas_infrequencia %}<span class="badge bg-danger ms-auto">{{ total_alertas_infrequencia }}</span>{% endif %}
+</a>
+<a href="{% url 'busca_ativa:acompanhamentos' %}"><i data-lucide="users-round"></i><span>Alunos acompanhados</span></a>
+<a href="{% url 'busca_ativa:relatorio' %}"><i data-lucide="list-checks"></i><span>Relatório de providências</span></a>
+<a href="{% url 'busca_ativa:compensacao' %}"><i data-lucide="clipboard-list"></i><span>Compensação de ausências</span></a>
+<a href="{% url 'busca_ativa:relatorios_personalizados' %}"><i data-lucide="file-chart-column"></i><span>Relatórios personalizados</span></a>
+{% endif %}
+
 {% if user.pode_gerenciar_usuarios %}
 <a hx-get="{% url 'lista_usuarios' %}"
    hx-target="#mainContent"
@@ -473,6 +487,12 @@ Home <span>/</span> <span id="breadcrumbTitle">Painel Principal</span>
       hx-on="htmx:afterSwap: this.classList.remove('htmx-swapping')">
 {% endif %}
 
+{% if user.is_authenticated and user.pode_gerenciar_usuarios and total_alertas_infrequencia %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <span><i data-lucide="alert-triangle" class="me-1"></i> <strong>{{ total_alertas_infrequencia }} estudante(s)</strong> com infrequência igual ou superior a 10%.</span>
+  <a class="btn btn-sm btn-warning" href="{% url 'busca_ativa:painel' %}">Acessar Busca Ativa</a>
+</div>
+{% endif %}
 {% block content %}{% endblock %}
 
 {% if not request.htmx %}
@@ -1761,6 +1781,38 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 </script>
 
 
+{% if user.is_authenticated and comunicado_pendente %}
+<div class="modal fade show" id="comunicadoObrigatorio" tabindex="-1" style="display:block;background:rgba(15,23,42,.72);z-index:5000" aria-modal="true" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
+ <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg rounded-4"><div class="modal-header text-white" style="background:linear-gradient(120deg,#312e81,#6d28d9)"><h5 class="modal-title">{{ comunicado_pendente.titulo }}</h5><span class="badge bg-light text-dark">Atualização {{ comunicado_pendente.versao }}</span></div><div class="modal-body"><p class="text-muted">Leia todo o comunicado para continuar utilizando o GerEdu.</p><div id="textoComunicado" class="border rounded-3 p-3" style="white-space:pre-wrap;max-height:48vh;overflow-y:auto;line-height:1.7">{{ comunicado_pendente.texto }}</div><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="confirmouLeitura" disabled><label class="form-check-label" for="confirmouLeitura">Li todo o comunicado e estou ciente das atualizações.</label></div></div><div class="modal-footer"><form method="post" action="{% url 'busca_ativa:confirmar_comunicado' comunicado_pendente.id %}">{% csrf_token %}<input type="hidden" name="confirmacao" value="lido"><input type="hidden" name="next" value="{{ request.path }}"><button id="btnComunicadoLido" class="btn btn-primary" disabled>Confirmar leitura e continuar</button></form></div></div></div>
+</div>
+<script>(function(){const box=document.getElementById('textoComunicado'),check=document.getElementById('confirmouLeitura'),btn=document.getElementById('btnComunicadoLido');function bottom(){if(box.scrollTop+box.clientHeight>=box.scrollHeight-8){check.disabled=false;}}box.addEventListener('scroll',bottom);bottom();check.addEventListener('change',()=>btn.disabled=!check.checked);})();</script>
+{% endif %}
+{% if user.is_authenticated and mostrar_assistente_natalino %}
+<style>
+#assistenteNatalino{z-index:3000;width:min(355px,calc(100vw - 28px));border:1px solid #dce9df;background:linear-gradient(145deg,#fff 0%,#f4fff7 100%);box-shadow:0 18px 55px #123b2d30!important;animation:duendeEntrada .75s cubic-bezier(.2,.9,.2,1) both;overflow:hidden}
+#assistenteNatalino:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 95% 8%,#dcfce7 0 4px,transparent 5px),radial-gradient(circle at 8% 80%,#fee2e2 0 4px,transparent 5px);pointer-events:none}
+#assistenteNatalino .duende-avatar{font-size:52px;display:grid;place-items:center;width:68px;height:68px;border-radius:22px;background:linear-gradient(145deg,#dcfce7,#fff1f2);animation:duendePula 2.8s ease-in-out infinite;transform-origin:bottom center}
+#assistenteNatalino .duende-sino{display:inline-block;animation:sino 1.8s ease-in-out infinite}
+#assistenteNatalino .duende-numero{font-size:48px;line-height:1;font-weight:900;letter-spacing:-2px;color:#b91c1c;text-shadow:0 3px 0 #fee2e2;animation:numeroBrilha 2.5s ease-in-out infinite}
+#assistenteNatalino .duende-faixa{height:7px;border-radius:20px;background:linear-gradient(90deg,#166534,#22c55e,#dc2626);margin:12px 0}
+#assistenteNatalino .duende-floco{position:absolute;top:-15px;color:#93c5fd;animation:neve 5s linear infinite;pointer-events:none}
+#assistenteNatalino .duende-floco.f2{left:75%;animation-delay:2s;font-size:12px}
+@keyframes duendeEntrada{from{opacity:0;transform:translate(25px,35px) scale(.92)}to{opacity:1;transform:translate(0) scale(1)}}
+@keyframes duendePula{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
+@keyframes sino{0%,85%,100%{transform:rotate(0)}88%{transform:rotate(18deg)}92%{transform:rotate(-18deg)}96%{transform:rotate(10deg)}}
+@keyframes numeroBrilha{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes neve{to{transform:translateY(190px) rotate(220deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){#assistenteNatalino,#assistenteNatalino *{animation:none!important}}
+</style>
+<div id="assistenteNatalino" class="position-fixed bottom-0 end-0 m-3 p-3 rounded-4">
+ <span class="duende-floco" style="left:24%">❄</span><span class="duende-floco f2">✦</span>
+ <div class="d-flex gap-3 align-items-center position-relative"><div class="duende-avatar" aria-hidden="true">🧝</div><div class="flex-grow-1"><div class="fw-bold text-success">Duende do GerEdu <span class="duende-sino">🔔</span></div><div class="small text-secondary">Missão: chegar às férias com alegria!</div></div><span aria-hidden="true">🎄</span></div>
+ <div class="duende-faixa"></div>
+ <div class="text-center position-relative"><div class="duende-numero">{{ dias_letivos_restantes|default:'—' }}</div><div class="small fw-bold text-success mt-1">DIAS ÚTEIS RESTANTES</div><div class="small text-muted">{% if data_fim_letivo %}Até {{ data_fim_letivo|date:'d/m/Y' }}{% else %}Calendário escolar a configurar{% endif %}</div></div>
+ <p class="small text-center mt-3 mb-3">Ho, ho, ho! ✨ Cada dia conta. Continue fazendo a diferença na nossa escola!</p>
+ <form method="post" action="{% url 'busca_ativa:dispensar_natalino' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-success btn-sm w-100 rounded-pill fw-semibold">Entendi, até amanhã! 🎁</button></form>
+</div>
+{% endif %}
 
 </body>
 </html>

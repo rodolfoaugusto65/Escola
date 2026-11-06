@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "frequencia",
     'transferencias',
     "conselho",
+    "busca_ativa",
 ]
 
 
@@ -105,6 +106,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.estatisticas_alunos",
+                "core.context_processors.alertas_infrequencia",
+                "core.context_processors.avisos_e_calendario",
             ],
         },
     },
