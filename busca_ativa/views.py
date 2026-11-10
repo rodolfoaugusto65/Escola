@@ -6,6 +6,7 @@ import io
 import hashlib
 import json
 import logging
+import uuid
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from urllib.parse import quote
@@ -396,7 +397,7 @@ def importar_backup_local(request):
             # Reabre o arquivo temporário já validado. Evita depender do cursor/nome
             # do UploadedFile e impede que um nome nulo chegue ao backend de storage.
             with open(temp_path, "rb") as backup_stream:
-                salvar_arquivo_geredu(registro_backup.arquivo_original, nome_seguro, File(backup_stream, name=nome_seguro), save=True)
+                salvar_arquivo_geredu(registro_backup.arquivo_original, f'{uuid.uuid4().hex[:20]}.db', File(backup_stream, name='backup.db'), save=True)
             if registro_backup.arquivo_original.size != os.path.getsize(temp_path):
                 raise IOError("O armazenamento não confirmou o tamanho integral do banco enviado. A integração foi cancelada.")
             # Resolve todas as matrículas de uma vez (em blocos) antes de percorrer
