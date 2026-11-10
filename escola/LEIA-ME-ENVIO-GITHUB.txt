@@ -1,0 +1,20 @@
+GEREDU + BUSCA ATIVA — PACOTE PARA GITHUB
+
+Este pacote inclui o codigo-fonte do GerEdu integrado ao aplicativo Django Busca Ativa,
+as migracoes, templates, arquivos estaticos do aplicativo e modelos vazios de planilhas.
+
+NAO INCLUIDO por seguranca:
+- banco SQLite local da Busca Ativa e qualquer outro banco local;
+- planilhas preenchidas com nomes, matriculas, CPFs ou frequencia de estudantes;
+- fotos/documentos em media;
+- arquivos .env, credenciais e segredos.
+
+As planilhas em busca_ativa/planilhas_modelo sao apenas modelos vazios (cabecalhos).
+A base real e os arquivos preenchidos devem ser importados manualmente pela tela de importacao
+da Busca Ativa no ambiente autorizado, depois de validar o backup e as permissoes.
+
+Antes do push, confira: git status
+Depois, faca commit e push somente se nao houver arquivos privados listados.
+
+Deploy Railway: apos o push, confira as variaveis de ambiente e execute as migracoes
+Django no ambiente de producao, conforme o procedimento de atualizacao do projeto.

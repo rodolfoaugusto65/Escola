@@ -1,0 +1,30 @@
+GEREDU - CORRECAO UNIFICADA DE UPLOADS, DASHBOARD E DIAS NAO LETIVOS
+
+1. UPLOADS DA AVALIACAO E DA BUSCA ATIVA
+Foi criado core/file_storage.py e os dois fluxos agora usam a mesma funcao salvar_arquivo_geredu.
+Em DEBUG=True sem credenciais R2 completas, salva em MEDIA_ROOT. Com R2 completo, usa o backend default.
+Em producao sem as quatro variaveis R2, interrompe com erro explicativo em vez de tentar Bucket=None.
+
+2. CONFIGURACAO
+Mantenha no .env local DEBUG=True para usar Escola/media/. Para R2, configure AWS_ACCESS_KEY_ID,
+AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME e AWS_S3_ENDPOINT_URL. Reinicie o servidor.
+Nao envie .env ou chaves ao GitHub.
+
+3. HISTORICO
+Os arquivos originais continuam associados aos registros de importacao. A importacao SQLite valida
+PRAGMA quick_check e checksum antes de integrar dados. O helper nao apaga nem substitui historicos.
+
+4. DIAS NAO LETIVOS
+A contagem do painel superior e a tela Calendario letivo agora excluem 20/11 e 08/12 de cada ano,
+alem de sabados, domingos e dias nao letivos cadastrados manualmente. A tela tambem lista essas datas.
+
+5. DASHBOARD
+A pagina inicial da Busca Ativa recebeu cabecalho visual, acoes principais agrupadas, hierarquia
+visual mais clara, cards com interacao leve e secoes com icones.
+
+6. APLICACAO
+Faca backup do projeto e do PostgreSQL/R2. Copie os arquivos do pacote para o projeto, mantendo
+os seus .env e arquivos de producao. Esta atualizacao nao cria migracoes.
+Teste localmente: (a) importar uma copia de banco SQLite; (b) importar uma planilha; (c) abrir os
+arquivos originais pelo historico; (d) conferir o contador de dias uteis e as datas no calendario.
+Depois publique no GitHub/Railway e confira as quatro variaveis R2.

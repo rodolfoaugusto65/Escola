@@ -1,0 +1,325 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<i data-lucide="brain"></i>
+Conselho de Classe - {{ conselho.turma }}
+</h4>
+<p class="text-muted mb-0">
+Preenchimento pedagógico inteligente
+</p>
+</div>
+
+<a hx-get="{% url 'conselho:lista' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   class="btn btn-light rounded-3">
+    Voltar
+</a>
+
+</div>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle">
+
+<thead class="table-light">
+<tr>
+    <th>Aluno</th>
+    <th>Status</th>
+    <th>% Freq.</th>
+    <th>Ocorr.</th>
+    <th>PAED</th>
+    <th>Faltas</th>
+    <th>Disciplina</th>
+    <th>Aprendizagem</th>
+    <th>APA</th>
+    <th>Família</th>
+    <th>Reclass.</th>
+    <th>Busca Ativa</th>
+    <th>Afastamento</th>
+    <th>Plano Recomposição</th>
+    <th>Ação</th>
+    <th>Observação</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for a in alunos %}
+<tr class="
+{% if a.total_ocorrencias > 5 or a.frequencia < 75 or a.media < 5 %}
+table-danger
+{% elif a.media < 7 %}
+table-warning
+{% else %}
+table-success
+{% endif %}
+{% if a.aluno.aluno_paed %}
+border border-3 border-dark
+{% endif %}
+">
+
+<!-- ALUNO -->
+<td>
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}"
+   class="fw-semibold text-dark text-decoration-none"
+   title="Ocorrências: {{ a.total_ocorrencias }}">
+
+    {{ a.aluno }}
+</a>
+</td>
+
+<!-- STATUS -->
+<td>
+{% if a.total_ocorrencias > 5 or a.frequencia < 75 or a.media < 5 %}
+<span class="badge bg-danger">Crítico</span>
+{% elif a.media < 7 %}
+<span class="badge bg-warning text-dark">Atenção</span>
+{% else %}
+<span class="badge bg-success">Adequado</span>
+{% endif %}
+</td>
+
+<!-- FREQUÊNCIA -->
+<td>{{ a.frequencia|default:"-" }}%</td>
+
+<!-- OCORRÊNCIAS -->
+<td class="{% if a.total_ocorrencias > 5 %}text-danger fw-bold{% endif %}">
+{{ a.total_ocorrencias }}
+</td>
+
+<!-- PAED -->
+<td class="text-center">
+<input type="checkbox"
+       name="aluno_{{ a.id }}_paed"
+       {% if a.aluno.aluno_paed %}checked{% endif %}
+       onchange="destacarLinha(this)">
+</td>
+
+<!-- FALTAS -->
+<td>
+<select name="aluno_{{ a.id }}_faltas"
+        class="form-select form-select-sm">
+
+    <option value="">-</option>
+    <option value="freq" {% if a.faltas == 'freq' %}selected{% endif %}>
+        Frequente
+    </option>
+    <option value="faltoso" {% if a.faltas == 'faltoso' %}selected{% endif %}>
+        Faltoso
+    </option>
+    <option value="gravida" {% if a.faltas == 'gravida' %}selected{% endif %}>
+        Grávida
+    </option>
+    <option value="atestado" {% if a.faltas == 'atestado' %}selected{% endif %}>
+        Atestado
+    </option>
+</select>
+</td>
+
+<!-- DISCIPLINA -->
+<td>
+<select name="aluno_{{ a.id }}_disciplina"
+        class="form-select form-select-sm">
+
+    <option value="reg" {% if a.disciplina == 'reg' %}selected{% endif %}>
+        Regular
+    </option>
+
+    <option value="ind" {% if a.disciplina == 'ind' %}selected{% endif %}>
+        Indisciplinado
+    </option>
+</select>
+</td>
+
+<!-- APRENDIZAGEM -->
+<td>
+<select name="aluno_{{ a.id }}_aprendizagem"
+        class="form-select form-select-sm">
+
+    <option value="ok" {% if a.aprendizagem == 'ok' %}selected{% endif %}>
+        Acompanha
+    </option>
+
+    <option value="nao" {% if a.aprendizagem == 'nao' %}selected{% endif %}>
+        Não faz atividades
+    </option>
+</select>
+</td>
+
+<!-- APA -->
+<td>
+<select name="aluno_{{ a.id }}_apa"
+        class="form-select form-select-sm">
+
+    <option value="sim" {% if a.apa == 'sim' %}selected{% endif %}>
+        Sim
+    </option>
+
+    <option value="nao" {% if a.apa == 'nao' %}selected{% endif %}>
+        Não
+    </option>
+</select>
+</td>
+
+<!-- FAMÍLIA -->
+<td>
+<select name="aluno_{{ a.id }}_familia"
+        class="form-select form-select-sm">
+
+    <option value="sim" {% if a.chamar_familia == 'sim' %}selected{% endif %}>
+        Sim
+    </option>
+
+    <option value="nao" {% if a.chamar_familia == 'nao' %}selected{% endif %}>
+        Não
+    </option>
+</select>
+</td>
+
+<!-- RECLASSIFICAÇÃO -->
+<td>
+<select name="aluno_{{ a.id }}_reclass"
+        class="form-select form-select-sm">
+
+    <option value="sim" {% if a.reclassificacao == 'sim' %}selected{% endif %}>
+        Sim
+    </option>
+
+    <option value="nao" {% if a.reclassificacao == 'nao' %}selected{% endif %}>
+        Não
+    </option>
+</select>
+</td>
+
+<!-- BUSCA ATIVA -->
+<td>
+<select name="aluno_{{ a.id }}_busca_ativa"
+        class="form-select form-select-sm">
+
+    <option value="">-</option>
+
+    <option value="sim" {% if a.busca_ativa == 'sim' %}selected{% endif %}>
+        Sim
+    </option>
+
+    <option value="nao" {% if a.busca_ativa == 'nao' %}selected{% endif %}>
+        Não
+    </option>
+</select>
+</td>
+
+<!-- AFASTAMENTO -->
+<td>
+<select name="aluno_{{ a.id }}_afastamento"
+        class="form-select form-select-sm">
+
+    <option value="">-</option>
+
+    <option value="sim" {% if a.afastamento == 'sim' %}selected{% endif %}>
+        Sim
+    </option>
+
+    <option value="nao" {% if a.afastamento == 'nao' %}selected{% endif %}>
+        Não
+    </option>
+</select>
+</td>
+
+<!-- PLANO DE RECOMPOSIÇÃO -->
+<td>
+<select name="aluno_{{ a.id }}_plano_recomposicao"
+        class="form-select form-select-sm">
+
+    <option value="">-</option>
+
+    <option value="feito"
+            {% if a.plano_recomposicao == 'feito' %}selected{% endif %}>
+        Feito
+    </option>
+
+    <option value="nao_feito"
+            {% if a.plano_recomposicao == 'nao_feito' %}selected{% endif %}>
+        Não feito
+    </option>
+</select>
+</td>
+
+<!-- AÇÃO AUTOMÁTICA -->
+<td>
+{% if a.frequencia and a.frequencia < 75 %}
+<span class="text-danger">Chamar família</span>
+
+{% elif a.media and a.media < 5 %}
+<span class="text-warning">Reforço</span>
+
+{% elif a.total_ocorrencias > 3 %}
+<span class="text-danger">Disciplina</span>
+
+{% else %}
+<span class="text-success">OK</span>
+{% endif %}
+</td>
+
+<!-- OBSERVAÇÃO -->
+<td>
+<input type="text"
+       name="aluno_{{ a.id }}_obs"
+       class="form-control form-control-sm"
+       value="{{ a.observacao|default:'' }}">
+</td>
+
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="mt-4 d-flex justify-content-end">
+<button class="btn btn-success px-4">
+    Salvar Conselho
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+<script>
+function destacarLinha(el){
+    const tr = el.closest("tr");
+
+    if(el.checked){
+        tr.classList.add("table-warning");
+    } else {
+        tr.classList.remove("table-warning");
+    }
+}
+
+if (window.lucide) {
+    lucide.createIcons();
+}
+</script>
+
+{% endblock %}
+```

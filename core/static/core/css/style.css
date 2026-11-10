@@ -1607,3 +1607,343 @@ color:#495057;
 transition:width 0.2s linear;
 }
 
+
+/* ==========================================================
+   GEREDU DESIGN SYSTEM — CONSISTÊNCIA VISUAL GLOBAL
+   Aplicado a cadastros, frequência, avaliações, busca ativa,
+   ocorrências, conselho de classe, relatórios e administração.
+========================================================== */
+:root{
+  --ge-ink:#172b45;
+  --ge-muted:#718198;
+  --ge-primary:#1769aa;
+  --ge-primary-2:#2f83c5;
+  --ge-line:#e4ebf3;
+  --ge-surface:#ffffff;
+  --ge-canvas:#f4f7fb;
+  --ge-radius:17px;
+  --ge-shadow:0 8px 26px rgba(23,43,69,.065);
+  --ge-shadow-hover:0 14px 34px rgba(23,43,69,.11);
+}
+html{scroll-behavior:smooth}
+body{background:var(--ge-canvas);color:var(--ge-ink)}
+.wrapper{background:var(--ge-canvas);min-height:100vh}
+.content{min-width:0;background:var(--ge-canvas)}
+.main{padding:clamp(14px,2vw,28px)!important;background:var(--ge-canvas);min-height:calc(100vh - 112px)}
+
+/* Navegação compacta e consistente */
+.sidebar.sidebar{width:236px;background:linear-gradient(180deg,#102c49 0%,#123b5c 58%,#102b46 100%);box-shadow:8px 0 30px rgba(16,44,73,.08);border-right:1px solid rgba(255,255,255,.07)}
+.sidebar.sidebar.collapsed{width:70px}
+.sidebar .logo{min-height:58px;margin:0 12px 14px;padding:10px 12px;border-radius:15px;background:rgba(255,255,255,.055);display:flex;align-items:center;justify-content:flex-start;gap:12px;font-size:1.12rem;letter-spacing:.02em}
+.sidebar .logo svg{width:27px!important;height:27px!important;animation:gereduLogoFloat 3.2s ease-in-out infinite,gereduLogoGlow 4.5s ease-in-out infinite!important;transform-origin:50% 55%;color:#69c8f4;filter:drop-shadow(0 4px 9px rgba(56,189,248,.22))}
+.sidebar .sidebar-scroll{padding:0 10px;scrollbar-width:thin;scrollbar-color:#52708a transparent}
+.sidebar .sidebar-group{margin:5px 0 9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.045);border-radius:13px}
+.sidebar .sidebar-group summary{padding:10px 11px;color:#a9bfd2;font-size:.68rem;letter-spacing:.09em}
+.sidebar .sidebar-group summary>svg:first-child{color:#72cafa;width:16px;height:16px}
+.sidebar .sidebar-group>a,.sidebar .sidebar-scroll>a{padding:9px 11px;margin:2px 5px;border-radius:10px!important;color:#d5e2ed;font-size:.84rem;gap:10px;min-height:39px}
+.sidebar .sidebar-group>a svg,.sidebar .sidebar-scroll>a svg{width:17px;height:17px;flex:0 0 17px}
+.sidebar .sidebar-group>a:hover,.sidebar .sidebar-scroll>a:hover{background:rgba(92,190,238,.13);color:#fff;transform:translateX(2px)}
+.sidebar .sidebar-group>a.active,.sidebar .sidebar-scroll>a.active{background:linear-gradient(90deg,rgba(49,157,216,.25),rgba(49,157,216,.09));color:#8edcff;box-shadow:inset 3px 0 #56c2f2;font-weight:700}
+.sidebar .sidebar-footer{padding:8px 10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.sidebar .toggle-btn{border-radius:11px;padding:10px 12px;font-size:.82rem}
+.sidebar .logout-link{margin:6px 15px;padding:10px 12px;border-radius:10px;color:#dce9f3;font-size:.84rem}
+.sidebar.sidebar.collapsed .logo{justify-content:center;padding:10px 0}
+.sidebar.sidebar.collapsed .sidebar-group{border:0}
+.sidebar.sidebar.collapsed .sidebar-group summary{padding:12px 0}
+.sidebar.sidebar.collapsed .sidebar-group>a{margin:2px 0;padding:10px 0}
+
+/* Topbar */
+.topbar.topbar{height:64px;padding:0 clamp(14px,2vw,26px);background:rgba(255,255,255,.88);border-bottom:1px solid var(--ge-line);box-shadow:0 3px 14px rgba(23,43,69,.035)}
+.topbar .page-title{color:var(--ge-ink);font-weight:750;letter-spacing:-.025em}
+.topbar .page-title h5{font-size:1.02rem;font-weight:750}
+.topbar .breadcrumb-custom{font-size:.73rem;color:#8a9ab0}
+.topbar .global-search input{border:1px solid #dfe7f0!important;border-radius:13px!important;background:#f9fbfd!important;min-height:42px;padding:9px 14px!important;transition:border-color .2s,box-shadow .2s}
+.topbar .global-search input:focus{border-color:#80bce0!important;box-shadow:0 0 0 4px rgba(47,131,197,.1)!important;outline:0}
+.topbar .tool-item{gap:6px;color:#5e7087;font-variant-numeric:tabular-nums}
+.topbar .tool-item svg{color:#4c6b8d}
+.user-avatar{box-shadow:0 3px 9px rgba(23,105,170,.2)}
+
+/* Cabeçalho de página inserido pelo aprimoramento global */
+.geredu-page-hero{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;width:100%;min-height:112px;margin:0 0 20px;padding:22px 25px;border:0!important;border-radius:19px;background:linear-gradient(112deg,#12314d 0%,#174e75 58%,#2f70a9 100%);color:#fff;box-shadow:0 12px 30px rgba(20,61,94,.13);overflow:hidden}
+.geredu-page-hero:after{content:"";position:absolute;z-index:-1;width:230px;height:230px;right:-65px;top:-115px;border-radius:50%;background:rgba(255,255,255,.07)}
+.geredu-page-hero:before{content:"GEREDU · GESTÃO ESCOLAR";display:block;flex-basis:100%;order:-2;margin-bottom:-13px;color:rgba(232,245,255,.72);font-size:.66rem;font-weight:800;letter-spacing:.12em}
+.geredu-page-hero h1,.geredu-page-hero h2,.geredu-page-hero h3,.geredu-page-hero h4{position:relative;margin:0!important;color:#fff!important;font-size:clamp(1.35rem,2vw,1.85rem);font-weight:850;letter-spacing:-.045em;line-height:1.18}
+.geredu-page-hero p,.geredu-page-hero .text-muted,.geredu-page-hero small{color:rgba(235,245,255,.82)!important}
+.geredu-page-hero .btn,.geredu-page-hero a.btn{position:relative;border:1px solid rgba(255,255,255,.2);border-radius:10px;font-weight:700;box-shadow:none}
+.geredu-page-hero .btn-primary,.geredu-page-hero .btn-success,.geredu-page-hero .btn-info,.geredu-page-hero .btn-dark{background:#fff!important;color:#174c72!important;border-color:#fff!important}
+.geredu-page-hero .btn-outline-primary,.geredu-page-hero .btn-outline-secondary{background:rgba(255,255,255,.13);color:#fff;border-color:rgba(255,255,255,.22)}
+.geredu-page-hero .btn:hover{transform:translateY(-1px);filter:brightness(.97)}
+
+/* Superfícies e cartões */
+.main .card:not(.upload-card):not(.login-card){border:1px solid var(--ge-line)!important;border-radius:var(--ge-radius)!important;box-shadow:var(--ge-shadow)!important;overflow:hidden;transition:box-shadow .2s ease,border-color .2s ease}
+.main .card:not(.upload-card):not(.login-card):hover{box-shadow:var(--ge-shadow-hover)!important;border-color:#d8e4ef!important}
+.main .card .card-header{background:#fff;border-bottom:1px solid #edf1f6;padding:15px 18px;font-weight:750;color:var(--ge-ink)}
+.main .card .card-body{padding:clamp(14px,1.6vw,21px)}
+.main .card .card-footer{background:#fbfcfe;border-top:1px solid #edf1f6}
+.main .shadow,.main .shadow-sm{box-shadow:var(--ge-shadow)!important}
+.main .rounded-4{border-radius:var(--ge-radius)!important}
+.main .bg-light{background:#f6f9fc!important}
+.main .text-muted{color:var(--ge-muted)!important}
+
+/* Formulários e filtros */
+.main .form-label{margin-bottom:6px;color:#40546d;font-size:.82rem;font-weight:700}
+.main .form-control,.main .form-select,.main textarea,.main input[type="file"]{min-height:42px;border:1px solid #dce5ef;border-radius:10px;background-color:#fff;color:var(--ge-ink);font-size:.9rem;box-shadow:none;transition:border-color .18s,box-shadow .18s}
+.main textarea.form-control{min-height:100px}
+.main .form-control:focus,.main .form-select:focus,.main textarea:focus{border-color:#83b9dd;box-shadow:0 0 0 4px rgba(47,131,197,.1)}
+.main input[type="file"]{padding:7px 10px}
+.main .input-group-text{border-color:#dce5ef;border-radius:10px;background:#f5f8fb;color:#60738b}
+
+/* Botões */
+.main .btn{border-radius:10px;font-size:.86rem;font-weight:700;padding:.58rem .9rem;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+.main .btn:hover{transform:translateY(-1px);box-shadow:0 5px 13px rgba(23,43,69,.09)}
+.main .btn-primary{background:linear-gradient(110deg,#1769aa,#2f83c5);border-color:#1769aa}
+.main .btn-outline-primary{border-color:#b9d4e8;color:#1769aa}
+.main .btn-outline-primary:hover{background:#eaf4fb;color:#14598e}
+.main .btn-light,.main .btn-outline-secondary{border-color:#e1e8f0}
+.main .btn-group .btn{border-radius:8px}
+
+/* Tabelas e listas */
+.main .table-responsive{border:1px solid #e8eef5;border-radius:13px;background:#fff}
+.main table.table{margin-bottom:0;color:#30445d;font-size:.88rem;vertical-align:middle}
+.main .table thead th{padding:12px 13px;background:#f5f8fc;color:#687b92;border-bottom:1px solid #e5edf5;font-size:.7rem;font-weight:800;letter-spacing:.055em;text-transform:uppercase;white-space:nowrap}
+.main .table tbody td{padding:11px 13px;border-color:#edf1f6}
+.main .table tbody tr{transition:background .15s ease}
+.main .table-hover tbody tr:hover{background:#f5faff}
+.main .table > :not(caption) > * > *{box-shadow:none}
+.main .pagination .page-link{border-color:#e3eaf2;color:#315b7d;border-radius:8px;margin:0 2px}
+.main .pagination .page-item.active .page-link{background:#1769aa;border-color:#1769aa}
+
+/* Alertas, badges e progresso */
+.main .alert{border:1px solid transparent;border-radius:13px;padding:13px 16px}
+.main .alert-warning{background:#fff8e5;border-color:#f4e3b1;color:#775515}
+.main .alert-danger{background:#fff0f0;border-color:#f4d4d4;color:#9c3030}
+.main .alert-success{background:#edf9f2;border-color:#cfead9;color:#216744}
+.main .alert-info{background:#edf7fd;border-color:#cfe7f6;color:#245c7b}
+.main .badge{font-weight:750;letter-spacing:.01em;padding:.42em .65em;border-radius:7px}
+.main .progress{height:9px;border-radius:30px;background:#eaf0f6}
+.main .progress-bar{border-radius:30px}
+
+/* Tipografia, espaços e estados vazios */
+.main h1,.main h2,.main h3,.main h4,.main h5,.main h6{color:var(--ge-ink);letter-spacing:-.025em}
+.main h5,.main h6{font-weight:800}
+.main hr{border-color:#e7edf4;opacity:1}
+.main .empty-state{padding:38px 20px;text-align:center;border:1px dashed #d8e3ee;border-radius:15px;background:#fbfdff}
+.main .list-group-item{border-color:#edf1f6;padding:13px 15px}
+.footer{background:#f7f9fc;color:#8998aa;border-top:1px solid #e9eef4;font-size:.77rem}
+
+/* Responsividade */
+@media(max-width:992px){
+ .topbar .topbar-tools{gap:9px;margin-right:10px}
+ .topbar .tool-item{font-size:.76rem}
+ .geredu-page-hero{padding:19px;min-height:100px}
+}
+@media(max-width:768px){
+ .main{padding:12px!important}
+ .topbar.topbar{height:auto;min-height:60px;padding:8px 12px;gap:8px}
+ .topbar .global-search{display:none}
+ .topbar .topbar-tools{gap:8px;margin:0 8px}
+ .topbar .tool-item:nth-child(2),.topbar .tool-item:nth-child(3),.topbar .tool-item:nth-child(5){display:none}
+ .geredu-page-hero{display:block;padding:18px;margin-bottom:15px;border-radius:15px}
+ .geredu-page-hero:before{margin-bottom:9px}
+ .geredu-page-hero h1,.geredu-page-hero h2,.geredu-page-hero h3{margin-bottom:8px!important}
+ .geredu-page-hero .btn{margin-top:12px}
+ .main .card .card-body{padding:14px}
+ .main .table{font-size:.82rem}
+}
+@media(prefers-reduced-motion:reduce){.main .card,.main .btn,.sidebar a{transition:none!important}.geredu-page-hero:after{display:none}}
+
+
+/* Ajustes de estabilidade visual global — evita sobreposição de cabeçalhos e ações. */
+.main { min-width: 0; }
+.main > .container, .main > .container-fluid { max-width: 100%; }
+.main .d-flex.justify-content-between.align-items-center.mb-4,
+.main .d-flex.justify-content-between.flex-wrap.mb-3 { min-width: 0; gap: 14px; }
+.main h1, .main h2, .main h3 { overflow-wrap: anywhere; }
+.main .btn, .main a.btn { white-space: normal; }
+.main .table-responsive { max-width: 100%; }
+.main .row { --bs-gutter-x: 1.25rem; }
+.main .card { min-width: 0; }
+.main .geredu-page-hero { width: 100%; min-width: 0; }
+.main .geredu-page-hero h1, .main .geredu-page-hero h2,
+.main .geredu-page-hero h3, .main .geredu-page-hero h4 { color: #fff !important; }
+.av-turma-card { height:100%; padding:16px; border:1px solid #e3ebf4; border-radius:15px; background:linear-gradient(180deg,#fff 0%,#fbfdff 100%); transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease; }
+.av-turma-card:hover { transform:translateY(-2px); border-color:#c9dced; box-shadow:0 10px 24px rgba(28,64,96,.08); }
+.av-turma-card .progress { height:9px; border-radius:20px; background:#edf2f7; }
+.av-turma-card .progress-bar { border-radius:20px; }
+.av-percentual { display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; font-size:.9rem; font-weight:800; font-variant-numeric:tabular-nums; }
+.av-percentual.is-good { color:#167447; background:#e8f7ef; }
+.av-percentual.is-mid { color:#946200; background:#fff5dc; }
+.av-percentual.is-low { color:#b42332; background:#fff0f0; }
+@media(max-width:767.98px) { .main .d-flex.justify-content-between.align-items-center.mb-4 { align-items:stretch!important; flex-direction:column; } .main .d-flex.justify-content-between.align-items-center.mb-4 > .d-flex { flex-wrap:wrap; } }
+
+
+/* =========================================================
+   GEREDU SIDEBAR — MOVIMENTO SUAVE E IDENTIDADE ANIMADA
+   ========================================================= */
+@keyframes gereduLogoFloat{
+  0%,100%{transform:translateY(0) rotate(0) scale(1)}
+  25%{transform:translateY(-3px) rotate(-3deg) scale(1.025)}
+  50%{transform:translateY(-6px) rotate(0) scale(1.05)}
+  75%{transform:translateY(-3px) rotate(3deg) scale(1.025)}
+}
+@keyframes gereduLogoGlow{
+  0%,100%{filter:drop-shadow(0 3px 7px rgba(56,189,248,.16))}
+  50%{filter:drop-shadow(0 5px 14px rgba(56,189,248,.48))}
+}
+@keyframes geMenuEnter{
+  from{opacity:0;transform:translateX(-7px)}
+  to{opacity:1;transform:translateX(0)}
+}
+.sidebar.sidebar{
+  transition:width .42s cubic-bezier(.22,1,.36,1),box-shadow .3s ease!important;
+  will-change:width;
+}
+.sidebar .logo{position:relative;overflow:hidden;transition:background .3s ease,transform .3s ease}
+.sidebar .logo:after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.07) 48%,transparent 72%);
+  transform:translateX(-130%);transition:transform .75s ease;
+}
+.sidebar .logo:hover:after{transform:translateX(130%)}
+.sidebar .logo svg{animation:gereduLogoFloat 3.2s ease-in-out infinite,gereduLogoGlow 4.5s ease-in-out infinite!important}
+.sidebar .sidebar-group{transition:background .25s ease,border-color .25s ease,box-shadow .25s ease}
+.sidebar .sidebar-group summary{transition:color .22s ease,background .22s ease}
+.sidebar .sidebar-group[open]{background:rgba(255,255,255,.055);border-color:rgba(125,211,252,.13);box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.sidebar .sidebar-group[open]>a{animation:geMenuEnter .22s ease both}
+.sidebar .sidebar-group[open]>a:nth-of-type(2){animation-delay:.025s}
+.sidebar .sidebar-group[open]>a:nth-of-type(3){animation-delay:.05s}
+.sidebar .sidebar-group[open]>a:nth-of-type(4){animation-delay:.075s}
+.sidebar .sidebar-group>a,.sidebar .sidebar-scroll>a{transition:background .22s ease,color .22s ease,transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease}
+.sidebar .sidebar-group>a:hover,.sidebar .sidebar-scroll>a:hover{transform:translateX(3px);box-shadow:inset 0 0 0 1px rgba(125,211,252,.09)}
+.sidebar .sidebar-group summary .group-chevron{transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.sidebar.collapsed .logo svg{animation:gereduLogoFloat 3.2s ease-in-out infinite,gereduLogoGlow 4.5s ease-in-out infinite!important}
+.sidebar.collapsed .sidebar-group summary,.sidebar.collapsed .sidebar-scroll>a,.sidebar.collapsed .logout-link{position:relative}
+.sidebar.collapsed a[title]:hover:after,.sidebar.collapsed summary[title]:hover:after{
+  content:attr(title);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);
+  z-index:3000;white-space:nowrap;padding:7px 10px;border-radius:8px;
+  color:#eaf6ff;background:#102c49;border:1px solid rgba(125,211,252,.2);
+  box-shadow:0 8px 22px rgba(15,23,42,.2);font-size:.78rem;font-weight:650;pointer-events:none;
+}
+@media(max-width:768px){
+  .sidebar.sidebar{transition:transform .32s cubic-bezier(.22,1,.36,1),width .32s ease!important}
+  .sidebar.mobile-open{box-shadow:18px 0 45px rgba(15,35,55,.24)}
+}
+@media(prefers-reduced-motion:reduce){
+  .sidebar .logo svg,.sidebar.collapsed .logo svg{animation:none!important}
+  .sidebar,.sidebar *{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+
+/* =========================================================
+   GEREDU 2026 — REFINAMENTO VISUAL GLOBAL E SIDEBAR PREMIUM
+   Mantém a estrutura funcional dos módulos e melhora a leitura.
+   ========================================================= */
+:root{
+  --ge-sidebar:#10253b;
+  --ge-sidebar-2:#163c5b;
+  --ge-cyan:#29c7f4;
+  --ge-focus:rgba(41,199,244,.22);
+}
+.sidebar.sidebar{
+  position:relative;isolation:isolate;overflow:visible;flex:0 0 auto;
+  width:258px;min-height:100vh;height:100vh;max-height:100vh;position:sticky;top:0;
+  padding:0;background:
+    radial-gradient(ellipse at 12% 0%,rgba(41,199,244,.15),transparent 34%),
+    radial-gradient(ellipse at 100% 72%,rgba(42,111,166,.18),transparent 38%),
+    linear-gradient(165deg,#142b43 0%,#10263d 52%,#0b1d31 100%);
+  border-right:1px solid rgba(160,205,235,.13);
+  box-shadow:10px 0 34px rgba(9,28,47,.12);
+  transition:width .46s cubic-bezier(.22,1,.36,1),box-shadow .35s ease;
+}
+.sidebar.sidebar:before{content:"";position:absolute;z-index:-1;left:0;top:0;bottom:0;width:100%;pointer-events:none;background:linear-gradient(110deg,rgba(255,255,255,.035),transparent 35%,rgba(255,255,255,.012));}
+.sidebar.sidebar.collapsed{width:76px}
+.sidebar .logo{
+  position:relative;isolation:isolate;display:flex;align-items:center;justify-content:flex-start;gap:13px;
+  min-height:132px;margin:0 0 13px;padding:22px 23px 20px;border:0;border-radius:0 0 20px 0;
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.018));
+  color:#fff;text-decoration:none;white-space:nowrap;overflow:hidden;
+}
+.sidebar .logo:before{content:"";position:absolute;z-index:-1;width:150px;height:150px;left:-55px;top:-82px;border:1px solid rgba(41,199,244,.17);border-radius:50%;box-shadow:0 0 0 17px rgba(41,199,244,.025),0 0 0 34px rgba(41,199,244,.018)}
+.sidebar .logo:after{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;background:linear-gradient(112deg,transparent 15%,rgba(255,255,255,.08) 48%,transparent 75%);transform:translateX(-130%);transition:transform .9s ease}
+.sidebar .logo:hover:after{transform:translateX(130%)}
+.sidebar .logo-mark{position:relative;display:grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:19px;background:linear-gradient(145deg,rgba(41,199,244,.16),rgba(41,199,244,.045));border:1px solid rgba(41,199,244,.2);box-shadow:inset 0 1px rgba(255,255,255,.1),0 9px 24px rgba(0,0,0,.13)}
+.sidebar .logo-mark:after{content:"";position:absolute;inset:-5px;border:1px solid rgba(41,199,244,.12);border-radius:23px;animation:geLogoRing 4.8s ease-in-out infinite}
+.sidebar .logo-mark svg{width:57px!important;height:57px!important;stroke-width:1.9;color:#35c9f4;filter:drop-shadow(0 4px 10px rgba(41,199,244,.28));animation:gereduLogoFloat 3.2s ease-in-out infinite,gereduLogoGlow 4.5s ease-in-out infinite!important;transform-origin:50% 55%}
+.sidebar .logo-copy{display:flex;flex-direction:column;gap:2px;min-width:0;transition:opacity .2s ease,transform .32s ease}
+.sidebar .logo-copy strong{font-size:1.42rem;line-height:1.1;letter-spacing:-.045em;font-weight:850;color:#35c9f4;text-shadow:0 3px 15px rgba(41,199,244,.13)}
+.sidebar .logo-copy small{font-size:.58rem;letter-spacing:.15em;font-weight:800;color:#9bb8cc}
+.sidebar .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:5px 11px 18px;scrollbar-width:thin;scrollbar-color:rgba(133,177,207,.35) transparent}
+.sidebar .sidebar-scroll::-webkit-scrollbar{width:5px}
+.sidebar .sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(133,177,207,.28);border-radius:10px}
+.sidebar .sidebar-scroll>a,.sidebar .sidebar-group>a{display:flex;align-items:center;gap:12px;min-height:43px;margin:3px 0;padding:10px 13px;border:1px solid transparent!important;border-radius:12px!important;color:#c7d8e6;font-size:.88rem;font-weight:560;white-space:nowrap;text-decoration:none;transition:background .24s ease,color .24s ease,transform .28s cubic-bezier(.22,1,.36,1),box-shadow .24s ease,border-color .24s ease}
+.sidebar .sidebar-scroll>a svg,.sidebar .sidebar-group>a svg{width:19px;height:19px;flex:0 0 19px;color:#8fb3cb;stroke-width:1.9;transition:transform .28s cubic-bezier(.22,1,.36,1),color .2s ease,filter .2s ease}
+.sidebar .sidebar-scroll>a:hover,.sidebar .sidebar-group>a:hover{background:linear-gradient(100deg,rgba(41,199,244,.16),rgba(41,199,244,.055));color:#fff;transform:translateX(3px);border-color:rgba(41,199,244,.1)!important;box-shadow:inset 3px 0 rgba(41,199,244,.45)}
+.sidebar .sidebar-scroll>a:hover svg,.sidebar .sidebar-group>a:hover svg{color:#35c9f4;transform:scale(1.12);filter:drop-shadow(0 2px 6px rgba(41,199,244,.25))}
+.sidebar .sidebar-scroll>a.active,.sidebar .sidebar-group>a.active{position:relative;background:linear-gradient(105deg,rgba(35,174,226,.27),rgba(35,174,226,.09));color:#5bd5fa;border:1px solid rgba(41,199,244,.16)!important;box-shadow:inset 3px 0 #29c7f4,0 5px 16px rgba(0,0,0,.08);font-weight:760}
+.sidebar .sidebar-scroll>a.active svg,.sidebar .sidebar-group>a.active svg{color:#39cafa}
+.sidebar .sidebar-group{margin:8px 0 10px;padding:3px 3px 5px;border:1px solid rgba(190,220,240,.075);border-radius:15px;background:rgba(255,255,255,.027);overflow:hidden;transition:background .25s ease,border-color .25s ease,box-shadow .25s ease}
+.sidebar .sidebar-group[open]{background:rgba(255,255,255,.047);border-color:rgba(41,199,244,.16);box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.sidebar .sidebar-group summary{display:flex;align-items:center;gap:10px;min-height:41px;padding:9px 11px;color:#9fb8cb;font-size:.69rem;font-weight:850;letter-spacing:.095em;text-transform:uppercase;cursor:pointer;list-style:none;border-radius:10px;transition:color .22s ease,background .22s ease}
+.sidebar .sidebar-group summary::-webkit-details-marker{display:none}
+.sidebar .sidebar-group summary>svg:first-child{width:18px;height:18px;color:#58c6ec;stroke-width:1.9}
+.sidebar .sidebar-group summary .group-chevron{width:14px;height:14px;margin-left:auto;color:#7897ae;transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.sidebar .sidebar-group[open] summary .group-chevron{transform:rotate(180deg);color:#45c9f2}
+.sidebar .sidebar-group summary:hover{color:#fff;background:rgba(41,199,244,.07)}
+.sidebar .sidebar-group>a{margin:2px 0;padding:9px 11px 9px 14px;min-height:40px;font-size:.84rem}
+.sidebar .sidebar-footer{margin-top:auto;padding:12px 11px 16px;border-top:1px solid rgba(190,220,240,.09);background:linear-gradient(180deg,transparent,rgba(0,0,0,.09))}
+.sidebar .toggle-btn{display:flex;align-items:center;gap:11px;min-height:42px;padding:10px 13px;border:1px solid rgba(190,220,240,.09);border-radius:12px;color:#b7ccdc;font-size:.83rem;font-weight:650;cursor:pointer;transition:all .25s ease}
+.sidebar .toggle-btn:hover{background:rgba(41,199,244,.1);border-color:rgba(41,199,244,.2);color:#fff;transform:translateY(-1px)}
+.sidebar .toggle-btn svg{width:18px;height:18px;color:#63c9ee}
+.sidebar .logout-link{display:flex;align-items:center;gap:11px;margin:5px 13px 9px;padding:10px 13px;border-radius:11px;color:#b8cbd9;text-decoration:none;font-size:.85rem;transition:all .22s ease}
+.sidebar .logout-link:hover{background:rgba(255,100,100,.1);color:#ffb3b3}
+.sidebar.collapsed .logo{justify-content:center;min-height:112px;padding:15px 5px;margin:0 0 10px;border-radius:0}
+.sidebar.collapsed .logo-mark{width:56px;height:56px;flex-basis:56px;border-radius:17px}
+.sidebar.collapsed .logo-mark svg{width:51px!important;height:51px!important}
+.sidebar.collapsed .logo-copy{display:none}
+.sidebar.collapsed .sidebar-scroll{padding:7px 9px 15px}
+.sidebar.collapsed .sidebar-scroll>a,.sidebar.collapsed .sidebar-group>a{justify-content:center;padding:10px 0;margin:4px 0;min-height:44px}
+.sidebar.collapsed .sidebar-scroll>a span,.sidebar.collapsed .sidebar-group>a span,.sidebar.collapsed .sidebar-group summary span,.sidebar.collapsed .toggle-btn span,.sidebar.collapsed .logout-link span{display:none}
+.sidebar.collapsed .sidebar-group{padding:2px;margin:7px 0;background:transparent;border-color:transparent}
+.sidebar.collapsed .sidebar-group summary{justify-content:center;padding:11px 0}
+.sidebar.collapsed .sidebar-group summary .group-chevron{display:none}
+.sidebar.collapsed .sidebar-group>a{display:none}
+.sidebar.collapsed .sidebar-footer{padding:10px 8px 14px}
+.sidebar.collapsed .toggle-btn{justify-content:center;padding:10px 0}
+.sidebar.collapsed .logout-link{justify-content:center;margin:5px 8px;padding:10px 0}
+.sidebar.collapsed .sidebar-scroll>a[title]:hover:after,.sidebar.collapsed .sidebar-group summary[title]:hover:after,.sidebar.collapsed .logout-link[title]:hover:after,.sidebar.collapsed .toggle-btn[title]:hover:after{content:attr(title);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);z-index:4000;white-space:nowrap;padding:8px 11px;border-radius:9px;color:#edf8ff;background:#102c49;border:1px solid rgba(91,213,250,.25);box-shadow:0 9px 25px rgba(4,18,32,.25);font-size:.78rem;font-weight:700;pointer-events:none}
+@keyframes geLogoRing{0%,100%{transform:scale(.97);opacity:.48}50%{transform:scale(1.06);opacity:.9}}
+@media(max-width:768px){
+ .sidebar.sidebar{position:fixed;left:0;top:0;bottom:0;height:100dvh;max-height:100dvh;width:270px;transform:translateX(-105%);transition:transform .34s cubic-bezier(.22,1,.36,1),box-shadow .3s ease;z-index:2500}
+ .sidebar.sidebar.mobile-open{transform:translateX(0);box-shadow:20px 0 55px rgba(6,22,38,.32)}
+ .sidebar.sidebar.collapsed{width:270px;transform:translateX(-105%)}
+ .sidebar.sidebar.mobile-open.collapsed{transform:translateX(0)}
+ .sidebar .logo{min-height:112px}
+ .sidebar .logo-copy{display:flex}
+ .sidebar .sidebar-scroll>a span,.sidebar .sidebar-group>a span,.sidebar .sidebar-group summary span,.sidebar .toggle-btn span,.sidebar .logout-link span{display:inline}
+ .sidebar .sidebar-group>a{display:flex}
+}
+@media(prefers-reduced-motion:reduce){.sidebar .logo-mark:after{animation:none}.sidebar .logo-mark svg{animation:none!important}}
+
+/* Polimento transversal dos módulos: cartões, formulários, tabelas e cabeçalhos. */
+.main{width:100%;min-width:0}
+.main .row>[class*="col"]{min-width:0}
+.main .card,.main .alert,.main .table-responsive,.main .list-group{max-width:100%}
+.main .card{overflow:hidden}
+.main .card-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.main .form-control,.main .form-select,.main textarea,.main input[type="file"]{max-width:100%}
+.main .form-control:focus,.main .form-select:focus,.main textarea:focus{outline:0;box-shadow:0 0 0 4px var(--ge-focus)}
+.main .btn{min-height:38px}
+.main .table-responsive{overscroll-behavior-x:contain}
+.main .table thead th{vertical-align:middle}
+.main .table tbody td{vertical-align:middle}
+.main .geredu-page-hero{min-width:0;gap:14px}
+.main .geredu-page-hero>*{min-width:0;max-width:100%}
+.main .geredu-page-hero h1,.main .geredu-page-hero h2,.main .geredu-page-hero h3,.main .geredu-page-hero h4{color:#fff!important;text-shadow:0 1px 1px rgba(0,0,0,.08)}
+.main .geredu-page-hero .btn{white-space:normal}
+@media(max-width:768px){
+ .main{padding:12px!important}
+ .main .geredu-page-hero{display:flex;align-items:flex-start;flex-direction:column;padding:17px;min-height:0}
+ .main .geredu-page-hero:before{margin:0 0 3px}
+ .main .geredu-page-hero>div,.main .geredu-page-hero .d-flex{width:100%;flex-wrap:wrap}
+ .main .row{--bs-gutter-x:1rem;--bs-gutter-y:1rem}
+ .main .table-responsive{border-radius:11px}
+}

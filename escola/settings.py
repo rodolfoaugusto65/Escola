@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'transferencias',
     "conselho",
     "busca_ativa",
+    "acompanhamento_avaliacoes",
 ]
 
 
@@ -218,39 +219,50 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # CLOUDFARE R2 STORAGE
 # ==================================================
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-
-AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-
-AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
-
-AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
+# Credenciais do Cloudflare R2. Em desenvolvimento local, quando o R2 não
+# estiver configurado, os uploads usam MEDIA_ROOT (armazenamento local). Em
+# produção, a ausência de qualquer variável obrigatória interrompe a inicialização
+# para evitar que arquivos sejam gravados silenciosamente em disco efêmero.
+AWS_ACCESS_KEY_ID = (os.getenv("AWS_ACCESS_KEY_ID") or "").strip()
+AWS_SECRET_ACCESS_KEY = (os.getenv("AWS_SECRET_ACCESS_KEY") or "").strip()
+AWS_STORAGE_BUCKET_NAME = (os.getenv("AWS_STORAGE_BUCKET_NAME") or "").strip()
+AWS_S3_ENDPOINT_URL = (os.getenv("AWS_S3_ENDPOINT_URL") or "").strip()
+AWS_S3_REGION_NAME = (os.getenv("AWS_S3_REGION_NAME") or "auto").strip()
 
 AWS_S3_SIGNATURE_VERSION = "s3v4"
-
 AWS_DEFAULT_ACL = None
-
 AWS_QUERYSTRING_AUTH = True
 AWS_QUERYSTRING_EXPIRE = 3600
-
 AWS_S3_FILE_OVERWRITE = False
-
-# IMPORTANTE para R2
 AWS_S3_ADDRESSING_STYLE = "path"
-
 AWS_S3_VERIFY = True
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+R2_CONFIGURADO = all((
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_STORAGE_BUCKET_NAME,
+    AWS_S3_ENDPOINT_URL,
+))
 
-# ==================================================
-# DJANGO 5+ STORAGE CONFIG
-# ==================================================
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+if R2_CONFIGURADO:
+    ARQUIVOS_BACKEND = "storages.backends.s3boto3.S3Boto3Storage"
+else:
+    if not DEBUG:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "Cloudflare R2 não configurado. Defina AWS_ACCESS_KEY_ID, "
+            "AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME e AWS_S3_ENDPOINT_URL."
+        )
+    # Fallback intencional apenas para desenvolvimento/testes locais.
+    ARQUIVOS_BACKEND = "django.core.files.storage.FileSystemStorage"
+
+DEFAULT_FILE_STORAGE = ARQUIVOS_BACKEND
 
 STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
+    "default": {"BACKEND": ARQUIVOS_BACKEND},
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

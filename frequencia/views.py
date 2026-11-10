@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -74,9 +75,11 @@ def frequencia_aluno(request, aluno_id):
     # CONTEXTO
     # =====================================================
 
+    pagina = Paginator(registros, 30).get_page(request.GET.get("page"))
     contexto = {
         "aluno": aluno,
-        "registros": registros,
+        "registros": pagina,
+        "pagina_registros": pagina,
         "total": total,
         "presencas": presencas,
         "faltas": faltas,
@@ -124,10 +127,10 @@ def lista_frequencias(request):
             Q(aluno__matricula__icontains=aluno_q)
         )
 
-    if data_ini and data_fim:
-        registros = registros.filter(
-            frequencia__data__range=[data_ini, data_fim]
-        )
+    if data_ini:
+        registros = registros.filter(frequencia__data__gte=data_ini)
+    if data_fim:
+        registros = registros.filter(frequencia__data__lte=data_fim)
 
     hoje = timezone.localdate()
 
@@ -172,15 +175,16 @@ def lista_frequencias(request):
         total=Count("id")
     ).order_by("-frequencia__data")
 
-    total_presencas = 0
-    total_faltas = 0
-
-    for r in resumo_turmas:
-
+    resumo_totais = registros.aggregate(
+        presencas=Count("id", filter=Q(presente=True)),
+        faltas=Count("id", filter=Q(presente=False)),
+    )
+    total_presencas = resumo_totais["presencas"] or 0
+    total_faltas = resumo_totais["faltas"] or 0
+    total_lancamentos = resumo_turmas.count()
+    pagina_resumo = Paginator(resumo_turmas, 40).get_page(request.GET.get("page"))
+    for r in pagina_resumo:
         r["percentual"] = (r["presencas"] / r["total"] * 100) if r["total"] else 0
-
-        total_presencas += r["presencas"]
-        total_faltas += r["faltas"]
 
     # =====================================================
     # GRAFICO DIA
@@ -252,7 +256,9 @@ def lista_frequencias(request):
 
     contexto = {
         "turmas": turmas,
-        "resumo_turmas": resumo_turmas,
+        "resumo_turmas": pagina_resumo,
+        "pagina_resumo": pagina_resumo,
+        "total_lancamentos": total_lancamentos,
         "resumo_dia": resumo_dia,
         "total_presencas": total_presencas,
         "total_faltas": total_faltas,
@@ -524,16 +530,17 @@ def frequencia_por_aluno(request):
         presencas=Count("id", filter=Q(presente=True)),
         faltas=Count("id", filter=Q(presente=False)),
         total=Count("id")
-    )
+    ).order_by("aluno__nome")
 
-    for r in resumo:
-        r["percentual"] = (
-            r["presencas"] / r["total"] * 100
-            if r["total"] else 0
-        )
+    # Não materializa toda a escola em memória: agrega no banco e entrega páginas pequenas.
+    pagina = Paginator(resumo, 50).get_page(request.GET.get("page"))
+    for r in pagina:
+        r["percentual"] = (r["presencas"] / r["total"] * 100) if r["total"] else 0
 
     contexto = {
-        "resumo": resumo,
+        "resumo": pagina,
+        "pagina_resumo": pagina,
+        "total_alunos_listados": resumo.count(),
         "turmas": Turma.objects.all(),
         "request": request
     }

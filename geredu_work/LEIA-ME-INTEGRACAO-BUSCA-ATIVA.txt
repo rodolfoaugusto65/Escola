@@ -1,0 +1,126 @@
+GEREDU - INTEGRACAO DA BUSCA ATIVA E CONSULTA PUBLICA DE FREQUENCIA
+====================================================================
+
+O que foi adicionado
+--------------------
+- Novo app Django `busca_ativa`, usando o banco central do GerEdu.
+- Consulta pública individual em /consulta-frequencia/<token>/.
+- Link individual com token aleatório (não usa matrícula/data de nascimento como senha).
+- Gestão de ações, prazos, responsáveis e status.
+- Importação da planilha oficial .xlsx.
+- Dashboard com faixas de atenção (10%+) e crítica (25%+).
+- Banner global de alertas para usuários gerenciais.
+- Campanha gráfica na consulta pública.
+- Registro de importações e contagem de registros sem vínculo.
+
+Preservação
+-----------
+Nenhum app ou modelo existente foi removido. As alterações nos arquivos atuais são aditivas:
+INSTALLED_APPS, URLs, context processor e navegação/banner do template base.
+
+Instalação local / Railway
+--------------------------
+1. Faça backup do banco de dados antes de atualizar.
+2. Atualize o código pelo GitHub.
+3. Execute:
+   python manage.py migrate
+4. Execute:
+   python manage.py collectstatic --noinput
+5. Reinicie a aplicação.
+6. Acesse Busca Ativa pelo menu (usuário gerencial).
+7. Importe a planilha oficial e confira o total vinculado / não vinculado.
+8. Abra a ficha do estudante e gere o link individual para compartilhar.
+
+Rotas
+-----
+- /busca-ativa/                         Painel de gestão
+- /busca-ativa/importar/                Importação Excel
+- /busca-ativa/relatorios/              Relatórios de providências
+- /consulta-frequencia/<token>/         Consulta pública individual
+
+Regras de privacidade
+---------------------
+- A consulta pública não permite pesquisa por nome ou matrícula.
+- O acesso é feito por token individual longo e aleatório.
+- O token pode ser revogado ou renovado na ficha do estudante.
+- O link deve ser enviado individualmente ao estudante/responsável.
+- A página pública não exibe nome de responsáveis, telefones ou histórico de ações internas.
+
+Regras de alertas
+-----------------
+- 10% a 24,9%: atenção.
+- 25% ou mais: crítico.
+- O percentual final da planilha é a referência oficial quando disponível.
+- O percentual calculado com os lançamentos diários é mostrado separadamente na consulta.
+- Ações com prazo ativo retiram o estudante da lista de pendências até o vencimento.
+- O histórico de providências não é apagado quando uma nova planilha é importada.
+
+ATENCAO - VALIDACAO NECESSARIA ANTES DE PRODUCAO
+------------------------------------------------
+O ambiente de execução desta sessão não possui Django instalado e não foi possível instalar
+dependências pela rede. Portanto, foi possível validar a sintaxe Python, a estrutura dos
+arquivos e os dados da planilha, mas NÃO executar `manage.py check`, migrações reais ou testes
+de integração.
+
+A vinculação da planilha foi implementada por correspondência exata da matrícula com CodAluno
+ou GedMatCod. Confira os números de registros vinculados e não vinculados antes de usar os
+alertas como base para providências oficiais. Os registros sem correspondência não são
+associados automaticamente a outro estudante.
+
+Recomenda-se validar em uma cópia do banco antes de publicar em produção.
+
+ATUALIZAÇÃO COMPLEMENTAR — CONSULTA POR CÓDIGO, ESTATÍSTICAS E AVISOS
+-----------------------------------------------------------------------
+- Página de entrada pública: /consulta-frequencia/ . O estudante digita o código individual aleatório gerado na ficha do aluno. Não utiliza matrícula como senha.
+- O código pode ser revogado ou renovado pela ficha da Busca Ativa. Ao renovar, o código anterior deixa de funcionar.
+- Estatísticas gerenciais: /busca-ativa/consultas/ . Exibe total de consultas, consultas no dia e quantidade por estudante. O registro ocorre quando uma consulta válida é aberta.
+- Importações: a tela aceita a base geral em Excel (.xlsx/.xlsm) e o relatório complementar 25%+ em CSV, mantendo percentuais de fontes diferentes separados.
+- Comunicado obrigatório: a atualização inicial é exibida a cada usuário autenticado até a leitura integral e confirmação. Novos comunicados podem ser cadastrados no Django Admin.
+- Contagem natalina: página /busca-ativa/calendario-letivo/ e assistente diário no sistema. O calendário 2026 é iniciado com encerramento em 18/12/2026; a gestão deve confirmar/ajustar a data e cadastrar feriados/dias não letivos no Django Admin → Calendário escolar.
+- As novas tabelas e campos são criados pela migração busca_ativa.0002_consultas_comunicados_calendario.
+
+SEGURANÇA E VALIDAÇÃO
+---------------------
+- Compartilhe o código individual diretamente com o estudante/responsável. Não publique códigos em grupos abertos.
+- As estatísticas de consultas exigem usuário gerencial.
+- Faça backup do banco antes da migração e teste primeiro em banco local/cópia.
+- A sintaxe dos arquivos Python foi validada; o ambiente de preparação não tinha Django instalado, portanto execute manage.py check, migrate e os testes funcionais no ambiente local antes de produção.
+
+
+ATUALIZACAO - PRIVACIDADE DA CONSULTA E BACKUP
+- A tela de resultado oculta os dados e retorna ao formulário após breve intervalo.
+- O botão de nova consulta aparece após a notificação de situação.
+- No painel da Busca Ativa, gestão pode importar o SQLite legado e baixar backup .db.
+- A importação associa estudantes pela matrícula/código GED, não exclui dados atuais e ignora providências duplicadas.
+- Faça backup do banco PostgreSQL antes de qualquer importação em produção.
+
+
+ATUALIZACAO - ACOMPANHAMENTOS E RELATORIOS INTEGRADOS AO GEREDU
+----------------------------------------------------------------
+- A tela "Alunos acompanhados" lista estudantes com providencias registradas, uma unica vez por estudante.
+- Filtros: nome/matricula/descricao/responsavel, tipo de acao, status, turno, PAED, faixa de infrequencia e periodo.
+- Relatorio de providencias apresenta todas as acoes individualmente e exporta CSV com os filtros aplicados.
+- Compensacao de ausencias apresenta um registro por estudante no periodo, usando o lancamento mais recente; permite imprimir/salvar PDF pelo navegador e exportar CSV.
+- Tipos de providencia ampliados para manter as opcoes do acompanhamento local.
+- Na importacao do banco SQLite, os dados sao integrados ao PostgreSQL do GerEdu, os estudantes sao associados por matricula/codigo GED, acoes duplicadas sao ignoradas e o responsavel original do banco local e preservado em campo proprio.
+- O painel separa alertas pendentes da tela de estudantes efetivamente acompanhados. A contagem de alertas considera prazos ativos.
+- Nova migracao: busca_ativa.0003_acoes_locais_e_tipos. Execute `python manage.py migrate` apos atualizar o codigo.
+
+A integracao e feita no GerEdu Django. O arquivo SQLite local e enviado pela tela Busca Ativa do proprio GerEdu; ele nao e executado como um segundo servidor Flask.
+
+
+SEGURANCA ADICIONAL DO PACOTE
+-----------------------------
+- O arquivo local que continha credenciais de acesso ao Cloudflare R2 nao foi incluido neste pacote. Configure as chaves por variaveis de ambiente no Railway.
+- A criacao automatica do administrador inicial agora depende de GEREDU_ROOT_CPF e GEREDU_ROOT_PASSWORD no ambiente. Usuarios ja existentes no banco nao sao removidos ou alterados.
+- Como havia credenciais em texto puro no arquivo original, recomenda-se rotacionar as chaves do Cloudflare R2 antes de continuar usando o ambiente de producao.
+
+
+ATUALIZAÇÃO DA IMPORTAÇÃO (VERSÃO COM LOTES)
+- A tela importar/ agora valida arquivos Excel/CSV e inicia um processamento em lotes de 250 registros.
+- A página de processamento exibe progresso, registros processados, vínculos e códigos não localizados.
+- As matrículas são cruzadas em consultas agrupadas; os registros são gravados com bulk_create/bulk_update.
+- Foi adicionada a migração busca_ativa.0004_importacao_lote.
+- Após publicar o código, executar: python manage.py migrate
+- Limite do upload: 15 MB e 20.000 registros por arquivo. Divida arquivos maiores.
+- O arquivo SQLite de backup do módulo continua sendo importado pela tela específica de restauração, não pela tela de planilhas.

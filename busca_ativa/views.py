@@ -3,6 +3,9 @@ import sqlite3
 import tempfile
 import os
 import io
+import hashlib
+import json
+import logging
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from urllib.parse import quote
@@ -16,12 +19,20 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from openpyxl import load_workbook
+from django.core.files.base import ContentFile
+from django.core.files import File
+from django.utils.text import get_valid_filename
+from django.core.paginator import Paginator
 
 from alunos.models import Aluno
 from frequencia.models import FrequenciaAluno
+from core.file_storage import salvar_arquivo_geredu
+from core.working_days import eh_dia_letivo, feriados_fixos_geredu
+logger = logging.getLogger(__name__)
+
 from .models import (
     AcaoBuscaAtiva, AcessoConsultaAluno, ImportacaoInfrequencia,
-    SituacaoInfrequencia, ConsultaFrequenciaLog, ComunicadoSistema,
+    SituacaoInfrequencia, HistoricoSituacaoInfrequencia, ConsultaFrequenciaLog, ComunicadoSistema,
     LeituraComunicado, CalendarioEscolar, DiaNaoLetivo, ImportacaoLote,
 )
 
@@ -43,6 +54,15 @@ def _percent(value):
     return n.quantize(Decimal("0.01"))
 
 
+
+
+def _sqlite_value(row, key, default=None):
+    """Lê coluna opcional de backups SQLite de versões diferentes."""
+    try:
+        return row[key] if key in row.keys() else default
+    except (AttributeError, IndexError, KeyError):
+        return default
+
 def _decimal_import(value):
     if value in (None, ""):
         return Decimal("0")
@@ -50,6 +70,16 @@ def _decimal_import(value):
         return Decimal(str(value).strip().replace(",", "."))
     except (InvalidOperation, ValueError):
         return Decimal("0")
+
+
+def _snapshot_situacao(situacao):
+    """Serializa somente valores primitivos para manter fotografia independente."""
+    campos = ("codigo_fonte", "codigo_ged", "percentual_geral", "percentual_geral_final",
+              "percentual_1_bim", "percentual_2_bim", "percentual_3_bim", "percentual_4_bim",
+              "percentual_relatorio_25", "consta_relatorio_25", "faltas_geral", "faltas_final",
+              "carga_horaria", "paed_na_fonte")
+    return {campo: (str(getattr(situacao, campo)) if isinstance(getattr(situacao, campo), Decimal)
+                    else getattr(situacao, campo)) for campo in campos}
 
 
 def _active_action_subquery():
@@ -79,13 +109,18 @@ def painel(request):
         base = base.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(
             Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25))
     base = base.filter(tem_prazo_ativo=False).order_by("-percentual_geral_final", "aluno__nome")
+    total_estudantes = base.count()
+    pagina_situacoes = Paginator(base, 50).get_page(request.GET.get("page"))
     context = {
-        "situacoes": base,
+        "situacoes": pagina_situacoes,
+        "pagina_situacoes": pagina_situacoes,
+        "total_estudantes": total_estudantes,
         "total_criticos": pendentes.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
         "total_atencao": pendentes.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
         "acoes_pendentes": ativos.count(),
         "q": q, "faixa": faixa,
-        "importacoes": ImportacaoInfrequencia.objects.all()[:5],
+        "importacoes": ImportacaoInfrequencia.objects.all()[:10],
+        "ultimos_repetidos": HistoricoSituacaoInfrequencia.objects.filter(apareceu_novamente=True).select_related("aluno", "importacao").order_by("-importado_em")[:12],
     }
     return render(request, "busca_ativa/painel.html", context)
 
@@ -94,12 +129,19 @@ def painel(request):
 @user_passes_test(gerencial)
 def ficha_aluno(request, aluno_id):
     aluno = get_object_or_404(Aluno.objects.select_related("turma"), pk=aluno_id)
-    situacao = SituacaoInfrequencia.objects.filter(aluno=aluno).order_by("-ano_letivo").first()
+    situacao = SituacaoInfrequencia.objects.select_related("importacao").filter(aluno=aluno).order_by("-ano_letivo").first()
     acoes = aluno.acoes_busca_ativa.select_related("responsavel").all()
+    historico_importacoes = HistoricoSituacaoInfrequencia.objects.filter(aluno=aluno).select_related("importacao").order_by("-importado_em")[:12]
+    resumo_diario = FrequenciaAluno.objects.filter(aluno=aluno).aggregate(
+        total=Count("id"), faltas=Count("id", filter=Q(presente=False)),
+        presencas=Count("id", filter=Q(presente=True))
+    )
+    resumo_diario["percentual"] = round((resumo_diario["presencas"] / resumo_diario["total"] * 100), 1) if resumo_diario["total"] else 0
     acesso = getattr(aluno, "acesso_consulta_frequencia", None)
     link = request.build_absolute_uri(f"/consulta-frequencia/{acesso.token}/") if acesso and acesso.ativo else ""
     return render(request, "busca_ativa/ficha.html", {
         "aluno": aluno, "situacao": situacao, "acoes": acoes,
+        "historico_importacoes": historico_importacoes, "resumo_diario": resumo_diario,
         "acesso": acesso, "link_consulta": link, "status_choices": AcaoBuscaAtiva.STATUS,
     })
 
@@ -202,10 +244,16 @@ def calendario_letivo(request):
     if calendario:
         feriados = list(calendario.dias_nao_letivos.all())
         datas = {item.data for item in feriados}
+        # Inclui também os dois dias definidos como não letivos pela gestão.
+        from types import SimpleNamespace
+        for data_fixa in sorted(feriados_fixos_geredu(calendario.data_fim_letivo.year)):
+            if not any(item.data == data_fixa for item in feriados):
+                feriados.append(SimpleNamespace(data=data_fixa, descricao="Feriado não letivo definido pelo GerEdu"))
+                datas.add(data_fixa)
         dia = hoje
         from datetime import timedelta
         while dia <= calendario.data_fim_letivo:
-            if dia.weekday() < 5 and dia not in datas:
+            if eh_dia_letivo(dia, datas):
                 dias += 1
             dia += timedelta(days=1)
     return render(request, "busca_ativa/calendario_letivo.html", {
@@ -295,22 +343,62 @@ def importar_backup_local(request):
         messages.error(request, "Selecione o arquivo de banco SQLite.")
         return redirect("busca_ativa:painel")
     uploaded = request.FILES["arquivo"]
-    if not uploaded.name.lower().endswith((".db", ".sqlite", ".sqlite3")):
+    nome_recebido = str(getattr(uploaded, "name", None) or "backup_busca_ativa.db").strip()
+    nome_seguro = get_valid_filename(os.path.basename(nome_recebido)) or "backup_busca_ativa.db"
+    if not nome_seguro.lower().endswith((".db", ".sqlite", ".sqlite3")):
         messages.error(request, "Envie um arquivo SQLite (.db, .sqlite ou .sqlite3).")
         return redirect("busca_ativa:painel")
+    if uploaded.size > 200 * 1024 * 1024:
+        messages.error(request, "O banco ultrapassa o limite de 200 MB. Gere um backup otimizado ou divida os dados antes de importar.")
+        return redirect("busca_ativa:painel")
     temp_path = None
+    conn = None
+    registro_backup = None
     try:
+        digest = hashlib.sha256()
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
-            for chunk in uploaded.chunks(): tmp.write(chunk)
+            for chunk in uploaded.chunks():
+                digest.update(chunk)
+                tmp.write(chunk)
             temp_path = tmp.name
+        checksum_backup = digest.hexdigest()
+        if ImportacaoInfrequencia.objects.filter(sha256=checksum_backup).exists():
+            messages.warning(request, "Este backup já foi integrado anteriormente. Nenhum dado foi duplicado.")
+            return redirect("busca_ativa:painel")
+        # Verifica integridade antes de iniciar qualquer gravação no PostgreSQL/R2.
         conn = sqlite3.connect(f"file:{temp_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
+        integrity = conn.execute("PRAGMA quick_check").fetchone()
+        if not integrity or integrity[0] != "ok":
+            raise ValueError("O arquivo recebido não é um banco SQLite íntegro ou está incompleto.")
         tables = {r["name"] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if not {"students", "actions"}.issubset(tables):
-            raise ValueError("Banco incompatível: não encontrei students e actions.")
+            raise ValueError("Banco incompatível: não encontrei as tabelas students e actions.")
+        colunas_students = {c[1] for c in conn.execute("PRAGMA table_info(students)")}
+        colunas_actions = {c[1] for c in conn.execute("PRAGMA table_info(actions)")}
+        if "id" not in colunas_students or not ({"cod_aluno", "ged_mat_cod"} & colunas_students):
+            raise ValueError("A tabela students não possui identificador e matrícula/código GED reconhecíveis.")
+        if not {"student_id", "data", "tipo", "descricao"}.issubset(colunas_actions):
+            raise ValueError("A tabela actions não possui as colunas mínimas para recuperar as providências.")
         vinculados = sem_vinculo = acoes_importadas = duplicadas = 0
         mapa = {}
+        snapshots_backup = []
+        historicos_anteriores = {}
+        ano_backup = timezone.localdate().year
+        for hist in HistoricoSituacaoInfrequencia.objects.filter(ano_letivo=ano_backup).values("aluno_id", "dados").order_by("aluno_id", "-importado_em"):
+            historicos_anteriores.setdefault(hist["aluno_id"], hist["dados"])
         with transaction.atomic():
+            registro_backup = ImportacaoInfrequencia.objects.create(
+                arquivo=nome_seguro[:255], ano_letivo=timezone.localdate().year,
+                importado_por=request.user, sha256=checksum_backup,
+                observacao="Importação de banco SQLite local; dados e providências integrados sem apagar o histórico anterior."
+            )
+            # Reabre o arquivo temporário já validado. Evita depender do cursor/nome
+            # do UploadedFile e impede que um nome nulo chegue ao backend de storage.
+            with open(temp_path, "rb") as backup_stream:
+                salvar_arquivo_geredu(registro_backup.arquivo_original, nome_seguro, File(backup_stream, name=nome_seguro), save=True)
+            if registro_backup.arquivo_original.size != os.path.getsize(temp_path):
+                raise IOError("O armazenamento não confirmou o tamanho integral do banco enviado. A integração foi cancelada.")
             for row in conn.execute("SELECT * FROM students"):
                 codigos = [str(row[k] or "").strip() for k in ("cod_aluno", "ged_mat_cod") if k in row.keys()]
                 aluno = next((Aluno.objects.filter(matricula=c).first() for c in codigos if c and Aluno.objects.filter(matricula=c).exists()), None)
@@ -319,19 +407,36 @@ def importar_backup_local(request):
                     continue
                 mapa[row["id"]] = aluno
                 ano = timezone.localdate().year
-                sit, _ = SituacaoInfrequencia.objects.get_or_create(aluno=aluno, ano_letivo=ano, defaults={"codigo_fonte": str(row["cod_aluno"] or aluno.matricula)[:30]})
+                sit, _ = SituacaoInfrequencia.objects.get_or_create(aluno=aluno, ano_letivo=ano, defaults={"codigo_fonte": str(_sqlite_value(row, "cod_aluno") or aluno.matricula)[:30]})
                 campos = {
-                    "codigo_fonte": str(row["cod_aluno"] or aluno.matricula)[:30],
-                    "codigo_ged": str(row["ged_mat_cod"] or "")[:30],
-                    "percentual_geral": _percent(row["perc_original"]), "percentual_geral_final": _percent(row["perc_final"]),
-                    "percentual_1_bim": _percent(row["perc_1b"]), "percentual_2_bim": _percent(row["perc_2b"]),
-                    "percentual_3_bim": _percent(row["perc_3b"]), "percentual_4_bim": _percent(row["perc_4b"]),
-                    "percentual_relatorio_25": _percent(row["perc_report25"]), "consta_relatorio_25": bool(row["report25"]),
-                    "faltas_geral": row["faltas_geral"] or 0, "faltas_final": row["faltas_final"] or 0,
-                    "carga_horaria": row["ch_anual"] or 0, "paed_na_fonte": str(row["paed"] or "")[:10]}
+                    "codigo_fonte": str(_sqlite_value(row, "cod_aluno") or aluno.matricula)[:30],
+                    "codigo_ged": str(_sqlite_value(row, "ged_mat_cod") or "")[:30],
+                    "percentual_geral": _percent(_sqlite_value(row, "perc_original")), "percentual_geral_final": _percent(_sqlite_value(row, "perc_final")),
+                    "percentual_1_bim": _percent(_sqlite_value(row, "perc_1b")), "percentual_2_bim": _percent(_sqlite_value(row, "perc_2b")),
+                    "percentual_3_bim": _percent(_sqlite_value(row, "perc_3b")), "percentual_4_bim": _percent(_sqlite_value(row, "perc_4b")),
+                    "percentual_relatorio_25": _percent(_sqlite_value(row, "perc_report25")), "consta_relatorio_25": bool(_sqlite_value(row, "report25")),
+                    "faltas_geral": _sqlite_value(row, "faltas_geral") or 0, "faltas_final": _sqlite_value(row, "faltas_final") or 0,
+                    "carga_horaria": _sqlite_value(row, "ch_anual") or 0, "paed_na_fonte": str(_sqlite_value(row, "paed") or "")[:10]}
                 for k,val in campos.items(): setattr(sit,k,val)
                 sit.save()
+                dados_snapshot = _snapshot_situacao(sit)
+                dados_anteriores = historicos_anteriores.get(aluno.pk)
+                percentual_atual = max(sit.percentual_geral_final or 0, sit.percentual_geral or 0, sit.percentual_relatorio_25 or 0)
+                snapshots_backup.append(HistoricoSituacaoInfrequencia(
+                    importacao=registro_backup, aluno=aluno, matricula=str(aluno.matricula), ano_letivo=ano,
+                    dados=dados_snapshot, percentual_considerado=percentual_atual,
+                    faixa_alerta="critico" if percentual_atual >= 25 else "atencao" if percentual_atual >= 10 else "regular",
+                    apareceu_novamente=dados_anteriores is not None,
+                    mudou_desde_anterior=bool(dados_anteriores is not None and dados_anteriores != dados_snapshot),
+                ))
                 vinculados += 1
+            if snapshots_backup:
+                HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots_backup, batch_size=250)
+            registro_backup.estudantes_repetidos = sum(1 for h in snapshots_backup if h.apareceu_novamente)
+            registro_backup.vinculados = vinculados
+            registro_backup.nao_vinculados = sem_vinculo
+            registro_backup.total_registros = vinculados + sem_vinculo
+            registro_backup.save(update_fields=["estudantes_repetidos", "vinculados", "nao_vinculados", "total_registros"])
             for row in conn.execute("SELECT * FROM actions ORDER BY id"):
                 aluno = mapa.get(row["student_id"])
                 if not aluno: continue
@@ -346,32 +451,77 @@ def importar_backup_local(request):
                     duplicadas += 1
                     continue
                 AcaoBuscaAtiva.objects.create(aluno=aluno,data=data,tipo=tipo,descricao=descricao,
-                    resultado=str(row["resultado"] or ""),proxima_acao=str(row["proxima_acao"] or ""),
-                    prazo=row["prazo"] or None,status=row["status"] or "Em andamento",responsavel=request.user,
-                    responsavel_origem=str(row["responsavel"] or "")[:150])
+                    resultado=str(_sqlite_value(row, "resultado", '') or ""),proxima_acao=str(_sqlite_value(row, "proxima_acao", '') or ""),
+                    prazo=_sqlite_value(row, "prazo", None) or None,status=_sqlite_value(row, "status", 'Em andamento') or "Em andamento",responsavel=request.user,
+                    responsavel_origem=str(_sqlite_value(row, "responsavel", '') or "")[:150])
                 acoes_importadas += 1
-            if "imports" in tables:
+            # Restaura também os históricos antigos incluídos nos backups GerEdu mais recentes.
+            if "imports" in tables and "history" in tables:
+                mapa_importacoes = {}
+                colunas_imports = {c[1] for c in conn.execute("PRAGMA table_info(imports)")}
+                for imp_row in conn.execute("SELECT * FROM imports"):
+                    nome_arquivo = str(imp_row["arquivo"] or "Importação recuperada")[:255]
+                    ano_imp = int(imp_row["ano_letivo"] or timezone.localdate().year) if "ano_letivo" in colunas_imports else timezone.localdate().year
+                    imp_novo = ImportacaoInfrequencia.objects.create(
+                        arquivo=nome_arquivo, ano_letivo=ano_imp, importado_por=request.user,
+                        total_registros=(imp_row["total_registros"] or 0) if "total_registros" in colunas_imports else 0,
+                        vinculados=(imp_row["vinculados"] or 0) if "vinculados" in colunas_imports else 0,
+                        nao_vinculados=(imp_row["nao_vinculados"] or 0) if "nao_vinculados" in colunas_imports else 0,
+                        estudantes_repetidos=(imp_row["estudantes_repetidos"] or 0) if "estudantes_repetidos" in colunas_imports else 0,
+                        observacao="Histórico de importação recuperado de backup anterior."
+                    )
+                    mapa_importacoes[imp_row["id"]] = imp_novo.id
+                matriculas_arquivo = {str(r["matricula"] or "") for r in conn.execute("SELECT DISTINCT matricula FROM history")}
+                matriculas_historicas = {str(a.matricula): a.id for a in Aluno.objects.filter(matricula__in=matriculas_arquivo)}
+                snapshots_recuperados = []
+                for hrow in conn.execute("SELECT * FROM history"):
+                    aluno_id = matriculas_historicas.get(str(hrow["matricula"] or ""))
+                    importacao_id = mapa_importacoes.get(hrow["importacao_id"])
+                    if not importacao_id:
+                        continue
+                    try:
+                        dados_hist = json.loads(hrow["dados"] or "{}")
+                    except (TypeError, ValueError):
+                        dados_hist = {}
+                    snapshots_recuperados.append(HistoricoSituacaoInfrequencia(
+                        importacao_id=importacao_id, aluno_id=aluno_id,
+                        matricula=str(hrow["matricula"]), ano_letivo=int(hrow["ano_letivo"] or timezone.localdate().year),
+                        dados=dados_hist, percentual_considerado=_decimal_import(hrow["percentual_considerado"]),
+                        faixa_alerta=str(hrow["faixa_alerta"] or ""),
+                        apareceu_novamente=bool(hrow["apareceu_novamente"]),
+                        mudou_desde_anterior=bool(hrow["mudou_desde_anterior"]),
+                    ))
+                    if len(snapshots_recuperados) >= 500:
+                        HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots_recuperados, batch_size=500)
+                        snapshots_recuperados = []
+                if snapshots_recuperados:
+                    HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots_recuperados, batch_size=500)
+            elif "imports" in tables:
+                # Compatibilidade com bancos SQLite antigos que não possuíam a tabela de snapshots.
                 for imp_row in conn.execute("SELECT * FROM imports"):
                     nome_arquivo = str(imp_row["arquivo"] or "Backup da Busca Ativa")[:255]
-                    data_import = str(imp_row["data"] or "")
-                    # Mantém o registro histórico sem substituir os lançamentos atuais.
                     if not ImportacaoInfrequencia.objects.filter(arquivo=nome_arquivo, observacao__contains="backup local").exists():
-                        ImportacaoInfrequencia.objects.create(
-                            arquivo=nome_arquivo, ano_letivo=timezone.localdate().year,
+                        ImportacaoInfrequencia.objects.create(arquivo=nome_arquivo, ano_letivo=timezone.localdate().year,
                             importado_por=request.user, total_registros=imp_row["quantidade"] or 0,
-                            observacao=f"Registro histórico recuperado do backup local ({data_import})."
-                        )
-            ImportacaoInfrequencia.objects.create(
-                arquivo=uploaded.name[:255], ano_letivo=timezone.localdate().year,
-                importado_por=request.user, total_registros=vinculados + sem_vinculo,
-                vinculados=vinculados, nao_vinculados=sem_vinculo,
-                observacao=f"Integração do banco local: {acoes_importadas} ações recuperadas; {duplicadas} duplicadas ignoradas."
-            )
+                            observacao="Registro histórico recuperado de backup SQLite antigo.")
+            registro_backup.observacao = f"Backup integrado: {acoes_importadas} ações recuperadas; {duplicadas} duplicadas ignoradas. Arquivo original mantido para auditoria."
+            registro_backup.save(update_fields=["observacao"])
         conn.close()
         messages.success(request, f"Backup importado: {vinculados} estudantes vinculados, {acoes_importadas} providências recuperadas, {duplicadas} duplicadas ignoradas e {sem_vinculo} estudantes sem correspondência.")
     except Exception as exc:
-        messages.error(request, f"Falha ao importar backup: {exc}")
+        logger.exception("Falha ao importar backup SQLite da Busca Ativa (arquivo=%r)", nome_recebido)
+        if registro_backup and registro_backup.arquivo_original:
+            try:
+                registro_backup.arquivo_original.storage.delete(registro_backup.arquivo_original.name)
+            except Exception:
+                pass
+        messages.error(request, f"Falha ao importar backup ({type(exc).__name__}). Consulte os logs do servidor para o diagnóstico completo. Nenhum histórico anterior foi removido.")
     finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
         if temp_path and os.path.exists(temp_path): os.remove(temp_path)
     return redirect("busca_ativa:painel")
 
@@ -386,6 +536,8 @@ def baixar_backup_busca_ativa(request):
         conn.executescript("""
         CREATE TABLE students (id INTEGER PRIMARY KEY,cod_aluno TEXT,ged_mat_cod TEXT,nome TEXT,turma TEXT,paed TEXT,ch_anual REAL,faltas_geral REAL,faltas_final REAL,perc_original REAL,perc_final REAL,perc_1b REAL,perc_2b REAL,perc_3b REAL,perc_4b REAL,report25 INTEGER,perc_report25 REAL);
         CREATE TABLE actions (id INTEGER PRIMARY KEY,student_id INTEGER,data TEXT,tipo TEXT,descricao TEXT,resultado TEXT,proxima_acao TEXT,prazo TEXT,responsavel TEXT,criado_em TEXT,status TEXT);
+        CREATE TABLE imports (id INTEGER PRIMARY KEY,arquivo TEXT,ano_letivo INTEGER,total_registros INTEGER,vinculados INTEGER,nao_vinculados INTEGER,estudantes_repetidos INTEGER,observacao TEXT);
+        CREATE TABLE history (id INTEGER PRIMARY KEY,importacao_id INTEGER,matricula TEXT,ano_letivo INTEGER,dados TEXT,percentual_considerado REAL,faixa_alerta TEXT,apareceu_novamente INTEGER,mudou_desde_anterior INTEGER);
         """)
         for s in SituacaoInfrequencia.objects.select_related("aluno").all():
             a=s.aluno
@@ -396,6 +548,10 @@ def baixar_backup_busca_ativa(request):
                  float(s.percentual_3_bim),float(s.percentual_4_bim),int(s.consta_relatorio_25),float(s.percentual_relatorio_25)))
         for a in AcaoBuscaAtiva.objects.select_related("aluno","responsavel").all():
             conn.execute("INSERT INTO actions VALUES (?,?,?,?,?,?,?,?,?,?,?)",(a.id,a.aluno_id,a.data.isoformat(),a.tipo,a.descricao,a.resultado,a.proxima_acao,a.prazo.isoformat() if a.prazo else None,(a.responsavel_origem or a.responsavel.get_username()),a.criado_em.isoformat(),a.status))
+        for imp in ImportacaoInfrequencia.objects.all():
+            conn.execute("INSERT INTO imports VALUES (?,?,?,?,?,?,?,?)", (imp.id, imp.arquivo, imp.ano_letivo, imp.total_registros, imp.vinculados, imp.nao_vinculados, imp.estudantes_repetidos, imp.observacao))
+        for h in HistoricoSituacaoInfrequencia.objects.all():
+            conn.execute("INSERT INTO history VALUES (?,?,?,?,?,?,?,?,?)", (h.id, h.importacao_id, h.matricula, h.ano_letivo, json.dumps(h.dados, ensure_ascii=False), float(h.percentual_considerado), h.faixa_alerta, int(h.apareceu_novamente), int(h.mudou_desde_anterior)))
         conn.commit(); conn.close()
         with open(path,"rb") as f: payload=f.read()
         resp=HttpResponse(payload,content_type="application/vnd.sqlite3")
@@ -421,7 +577,15 @@ def importar_planilha(request):
         messages.error(request, "O arquivo ultrapassa o limite de 15 MB. Divida a planilha em arquivos menores.")
         return redirect("busca_ativa:importar")
 
+    registro = None
     try:
+        arquivo.seek(0)
+        conteudo_arquivo = arquivo.read()
+        checksum = hashlib.sha256(conteudo_arquivo).hexdigest()
+        if ImportacaoInfrequencia.objects.filter(sha256=checksum).exists():
+            messages.warning(request, "Este arquivo já foi importado anteriormente. O histórico foi preservado e nenhuma duplicação foi criada.")
+            return redirect("busca_ativa:importar")
+        arquivo.seek(0)
         dados = []
         ano = timezone.localdate().year
         if tipo == "25mais":
@@ -498,14 +662,22 @@ def importar_planilha(request):
 
         with transaction.atomic():
             registro = ImportacaoInfrequencia.objects.create(
-                arquivo=arquivo.name, ano_letivo=ano, importado_por=request.user
+                arquivo=arquivo.name, ano_letivo=ano, importado_por=request.user, sha256=checksum
             )
+            salvar_arquivo_geredu(registro.arquivo_original, get_valid_filename(os.path.basename(str(getattr(arquivo, "name", None) or "importacao.xlsx"))), ContentFile(conteudo_arquivo), save=True)
+            if registro.arquivo_original.size != len(conteudo_arquivo):
+                raise IOError("O armazenamento não confirmou o tamanho integral do arquivo enviado. A importação foi cancelada.")
             job = ImportacaoLote.objects.create(
                 arquivo=arquivo.name, tipo=tipo, ano_letivo=ano, usuario=request.user,
                 importacao=registro, dados=dados, total=len(dados), status="pendente"
             )
         return redirect("busca_ativa:processar_importacao", job_id=job.pk)
     except Exception as exc:
+        if registro and registro.arquivo_original:
+            try:
+                registro.arquivo_original.storage.delete(registro.arquivo_original.name)
+            except Exception:
+                pass
         messages.error(request, f"Não foi possível preparar o arquivo: {exc}")
         return redirect("busca_ativa:importar")
 
@@ -527,6 +699,7 @@ def processar_importacao(request, job_id):
                 return JsonResponse({"status": job.status, "percentual": job.percentual,
                                      "processados": job.processados, "total": job.total,
                                      "vinculados": job.vinculados, "nao_vinculados": job.nao_vinculados,
+                                     "repetidos": job.importacao.estudantes_repetidos if job.importacao_id else 0,
                                      "erro": job.erro})
             job.status = "processando"
             inicio = job.processados
@@ -560,8 +733,16 @@ def processar_importacao(request, job_id):
                 )}
                 criar, atualizar = [], []
                 agora = timezone.now()
+                anteriores = {}
+                for hist in HistoricoSituacaoInfrequencia.objects.filter(
+                    aluno_id__in=alunos_lote.keys(), ano_letivo=job.ano_letivo
+                ).exclude(importacao_id=job.importacao_id).order_by("aluno_id", "-importado_em"):
+                    anteriores.setdefault(hist.aluno_id, hist)
+                snapshots = []
+                repetidos_lote = 0
                 for aluno_id, row in registros.items():
                     situacao = existentes.get(aluno_id)
+                    dados_atuais_anteriores = _snapshot_situacao(situacao) if situacao is not None else None
                     if situacao is None:
                         situacao = SituacaoInfrequencia(
                             aluno_id=aluno_id, ano_letivo=job.ano_letivo,
@@ -586,8 +767,27 @@ def processar_importacao(request, job_id):
                         situacao.carga_horaria = _decimal_import(row.get("carga_horaria"))
                         situacao.paed_na_fonte = (row.get("paed") or "")[:10]
                     situacao.atualizado_em = agora
+                    anterior = anteriores.get(aluno_id)
+                    dados_snapshot = _snapshot_situacao(situacao)
+                    dados_anteriores = anterior.dados if anterior is not None else dados_atuais_anteriores
+                    repetido = anterior is not None or dados_atuais_anteriores is not None
+                    mudou = bool(dados_anteriores is not None and dados_anteriores != dados_snapshot)
+                    snapshots.append(HistoricoSituacaoInfrequencia(
+                        importacao_id=job.importacao_id, aluno_id=aluno_id,
+                        matricula=str(alunos_lote[aluno_id].matricula), ano_letivo=job.ano_letivo,
+                        dados=dados_snapshot, percentual_considerado=Decimal(str(max(
+                            situacao.percentual_geral_final or 0, situacao.percentual_geral or 0,
+                            situacao.percentual_relatorio_25 or 0))),
+                        faixa_alerta=("critico" if max(situacao.percentual_geral_final or 0, situacao.percentual_geral or 0, situacao.percentual_relatorio_25 or 0) >= 25 else
+                                      "atencao" if max(situacao.percentual_geral_final or 0, situacao.percentual_geral or 0, situacao.percentual_relatorio_25 or 0) >= 10 else "regular"),
+                        apareceu_novamente=repetido, mudou_desde_anterior=mudou
+                    ))
+                    if repetido:
+                        repetidos_lote += 1
                     if aluno_id in existentes:
                         atualizar.append(situacao)
+                if snapshots:
+                    HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots, batch_size=200)
                 if criar:
                     SituacaoInfrequencia.objects.bulk_create(criar, batch_size=200)
                 if atualizar:
@@ -597,6 +797,8 @@ def processar_importacao(request, job_id):
                               "faltas_final", "carga_horaria", "paed_na_fonte", "atualizado_em"]
                     SituacaoInfrequencia.objects.bulk_update(atualizar, campos, batch_size=200)
                 job.vinculados += len(registros)
+                job.importacao.estudantes_repetidos = (job.importacao.estudantes_repetidos or 0) + repetidos_lote
+                job.importacao.save(update_fields=["estudantes_repetidos"])
                 job.processados = min(job.total, inicio + len(lote))
                 if job.processados >= job.total:
                     job.status = "concluida"
@@ -611,10 +813,24 @@ def processar_importacao(request, job_id):
         return JsonResponse({"status": job.status, "percentual": job.percentual,
                              "processados": job.processados, "total": job.total,
                              "vinculados": job.vinculados, "nao_vinculados": job.nao_vinculados,
+                             "repetidos": job.importacao.estudantes_repetidos if job.importacao_id else 0,
                              "erro": job.erro})
     except Exception as exc:
         ImportacaoLote.objects.filter(pk=job_id, usuario=request.user).update(status="erro", erro=str(exc)[:2000])
         return JsonResponse({"status": "erro", "erro": str(exc)[:2000]}, status=500)
+
+
+@login_required
+@user_passes_test(gerencial)
+def historico_importacao(request, importacao_id):
+    importacao = get_object_or_404(ImportacaoInfrequencia, pk=importacao_id)
+    historico = HistoricoSituacaoInfrequencia.objects.filter(importacao=importacao).select_related("aluno", "aluno__turma")
+    repetidos = historico.filter(apareceu_novamente=True).order_by("-percentual_considerado", "aluno__nome")
+    return render(request, "busca_ativa/historico_importacao.html", {
+        "importacao": importacao, "historico": historico.order_by("aluno__nome"),
+        "repetidos": repetidos, "total_repetidos": repetidos.count(),
+        "total_historico": historico.count(),
+    })
 
 
 @login_required

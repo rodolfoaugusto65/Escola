@@ -1,4 +1,5 @@
 from alunos.models import Aluno
+from core.working_days import eh_dia_letivo
 
 
 def estatisticas_alunos(request):
@@ -53,7 +54,7 @@ def avisos_e_calendario(request):
             dias = 0
             dia = hoje
             while dia <= calendario.data_fim_letivo:
-                if dia.weekday() < 5 and dia not in feriados:
+                if eh_dia_letivo(dia, feriados):
                     dias += 1
                 dia += timedelta(days=1)
             context["dias_letivos_restantes"] = dias

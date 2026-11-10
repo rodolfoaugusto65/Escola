@@ -9,7 +9,7 @@ class Frequencia(models.Model):
         on_delete=models.CASCADE,
         related_name='frequencias'
     )
-    data = models.DateField()
+    data = models.DateField(db_index=True)
 
     class Meta:
         unique_together = ('turma', 'data')
@@ -33,6 +33,7 @@ class FrequenciaAluno(models.Model):
 
     class Meta:
         unique_together = ('frequencia', 'aluno')
+        indexes = [models.Index(fields=['frequencia', 'presente'], name='freq_frequencia_pres_idx'), models.Index(fields=['aluno', 'presente'], name='freq_aluno_pres_idx')]
 
     def __str__(self):
         return f'{self.aluno} - {"P" if self.presente else "F"}'

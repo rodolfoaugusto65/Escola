@@ -1,0 +1,46 @@
+{% extends "core/base.html" %}
+
+{% block title %}Detalhe da Frequência{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <h4 class="mb-3">📋 Frequência</h4>
+
+    <p><strong>Data:</strong> {{ frequencia.data|date:"d/m/Y" }}</p>
+    <p><strong>Turma:</strong> {{ frequencia.turma }}</p>
+    <p><strong>Professor:</strong> {{ frequencia.professor }}</p>
+
+    <hr>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Matrícula</th>
+                <th>Aluno</th>
+                <th class="text-center">Situação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in frequencia.itens.all %}
+            <tr>
+                <td>{{ item.aluno.matricula }}</td>
+                <td>{{ item.aluno.nome }}</td>
+                <td class="text-center">
+                    {% if item.presente %}
+                        <span class="badge bg-success">Presente</span>
+                    {% else %}
+                        <span class="badge bg-danger">Falta</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'imprimir_frequencia' frequencia.id %}" class="btn btn-outline-secondary">
+        <i class="bi bi-printer"></i> Imprimir
+    </a>
+
+</div>
+{% endblock %}

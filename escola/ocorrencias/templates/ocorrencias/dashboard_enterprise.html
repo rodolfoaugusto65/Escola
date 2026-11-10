@@ -1,0 +1,47 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h3>📊 Dashboard Enterprise</h3>
+
+<div class="row">
+
+<div class="col-md-6">
+<canvas id="status-chart"></canvas>
+</div>
+
+<div class="col-md-6">
+<canvas id="tipo-chart"></canvas>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let statusData = {{ status_data|safe }};
+let tipoData = {{ tipo_data|safe }};
+
+new Chart(document.getElementById('status-chart'), {
+    type: 'pie',
+    data: {
+        labels: statusData.labels,
+        datasets: [{
+            data: statusData.values,
+            backgroundColor: ['#d9534f','#f0ad4e','#5cb85c']
+        }]
+    }
+});
+
+new Chart(document.getElementById('tipo-chart'), {
+    type: 'bar',
+    data: {
+        labels: tipoData.labels,
+        datasets: [{
+            label: 'Ocorrências por Tipo',
+            data: tipoData.values,
+            backgroundColor: '#0275d8'
+        }]
+    }
+});
+</script>
+
+{% endblock %}

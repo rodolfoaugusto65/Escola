@@ -1,0 +1,53 @@
+from django.db.models import Q, Count
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Ocorrencia
+from turmas.models import Turma
+
+
+@login_required
+def lista_ocorrencias(request):
+
+    ocorrencias = Ocorrencia.objects.select_related(
+        "aluno", "turma"
+    ).order_by("-data")
+
+    # ====================
+    # FILTROS
+    # ====================
+
+    busca = request.GET.get("busca")
+    turma = request.GET.get("turma")
+    data = request.GET.get("data")
+
+    if busca:
+        ocorrencias = ocorrencias.filter(
+            Q(codigo__icontains=busca) |
+            Q(aluno__nome__icontains=busca) |
+            Q(aluno__matricula__icontains=busca)
+        )
+
+    if turma:
+        ocorrencias = ocorrencias.filter(turma_id=turma)
+
+    if data:
+        ocorrencias = ocorrencias.filter(data=data)
+
+    # ====================
+    # DASHBOARD CARDS
+    # ====================
+
+    total = Ocorrencia.objects.count()
+    abertas = Ocorrencia.objects.filter(status="ABERTA").count()
+    andamento = Ocorrencia.objects.filter(status="ANDAMENTO").count()
+    resolvidas = Ocorrencia.objects.filter(status="RESOLVIDA").count()
+
+    return render(request, "ocorrencias/lista.html", {
+        "ocorrencias": ocorrencias,
+        "turmas": Turma.objects.all(),
+
+        "total": total,
+        "abertas": abertas,
+        "andamento": andamento,
+        "resolvidas": resolvidas,
+    })

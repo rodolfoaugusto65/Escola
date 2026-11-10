@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h4>Frequências Lançadas</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Turma</th>
+            <th>Data</th>
+            <th>Total Alunos</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for f in lancamentos %}
+        <tr>
+            <td>{{ f.turma }}</td>
+            <td>{{ f.data|date:"d/m/Y" }}</td>
+            <td>{{ f.itens.count }}</td>
+            <td>
+                <a href="{% url 'frequencia_editar' f.id %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'frequencia_excluir' f.id %}" class="btn btn-sm btn-danger">Excluir</a>
+                <a href="{% url 'imprimir_frequencia' %}?frequencia={{ f.id }}" class="btn btn-sm btn-secondary">Imprimir</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhuma frequência lançada</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

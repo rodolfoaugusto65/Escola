@@ -65,6 +65,15 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if pagina_registros.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <small class="text-muted">Página {{ pagina_registros.number }} de {{ pagina_registros.paginator.num_pages }}</small>
+          <div class="btn-group btn-group-sm">
+            {% if pagina_registros.has_previous %}<a class="btn btn-outline-secondary" href="?page={{ pagina_registros.previous_page_number }}&{{ filtros.urlencode }}">Anterior</a>{% endif %}
+            {% if pagina_registros.has_next %}<a class="btn btn-outline-secondary" href="?page={{ pagina_registros.next_page_number }}&{{ filtros.urlencode }}">Próxima</a>{% endif %}
+          </div>
+        </div>
+        {% endif %}
 
         <a href="{% url 'lista_frequencia' %}" class="btn btn-link mt-3">
             ← Voltar ao relatório geral

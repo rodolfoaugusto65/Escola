@@ -9,7 +9,6 @@
 
 <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -20,7 +19,7 @@ body{
     overflow-x:hidden;
 }
 
-/* ================= SIDEBAR (INALTERADA) ================= */
+/* ================= SIDEBAR GEREDU ================= */
 .sidebar{
     width:240px;
     min-height:100vh;
@@ -29,7 +28,7 @@ body{
     display:flex;
     flex-direction:column;
     padding:1rem 0;
-    transition:width .35s cubic-bezier(.4,0,.2,1);
+    transition:width .42s cubic-bezier(.22,1,.36,1), box-shadow .3s ease;
     position:relative;
     z-index:2000;
 }
@@ -45,11 +44,23 @@ body{
 .logo svg{
     width:60px !important;
     height:60px !important;
-    animation:floatLogo 3s ease-in-out infinite;
+    animation:floatLogo 3.2s ease-in-out infinite, logoGlow 4.5s ease-in-out infinite;
+    transform-origin:50% 55%;
+    filter:drop-shadow(0 4px 9px rgba(56,189,248,.22));
 }
 @keyframes floatLogo{
-    0%,100%{ transform:translateY(0px);}
-    50%{ transform:translateY(-6px);}
+    0%,100%{ transform:translateY(0) rotate(0deg) scale(1); }
+    25%{ transform:translateY(-3px) rotate(-3deg) scale(1.025); }
+    50%{ transform:translateY(-6px) rotate(0deg) scale(1.05); }
+    75%{ transform:translateY(-3px) rotate(3deg) scale(1.025); }
+}
+@keyframes logoGlow{
+    0%,100%{filter:drop-shadow(0 3px 7px rgba(56,189,248,.16));}
+    50%{filter:drop-shadow(0 5px 14px rgba(56,189,248,.48));}
+}
+@keyframes sidebarItemIn{
+    from{opacity:0;transform:translateX(-7px)}
+    to{opacity:1;transform:translateX(0)}
 }
 .sidebar.collapsed .logo span{ display:none; }
 
@@ -60,7 +71,7 @@ body{
     align-items:center;
     gap:12px;
     padding:.85rem 1.5rem;
-    transition:all .25s ease;
+    transition:background .24s ease,color .24s ease,transform .24s cubic-bezier(.22,1,.36,1),padding .3s ease,box-shadow .24s ease;
     border-left:3px solid transparent;
 }
 .sidebar a svg{
@@ -73,9 +84,32 @@ body{
     height:28px;
 }
 .sidebar a:hover svg{
-    transform:translateX(4px) scale(1.1);
+    transform:translateX(3px) scale(1.08);
+    filter:drop-shadow(0 2px 5px rgba(56,189,248,.25));
 }
 .sidebar.collapsed a span{ display:none; }
+.sidebar-scroll{overflow-y:auto;overflow-x:hidden;flex:1;padding:0 .55rem;scrollbar-width:thin;scrollbar-color:#475569 transparent}
+.sidebar-scroll>a,.sidebar-group>a{margin:3px 0;border:0!important;border-radius:11px;padding:.72rem .9rem;gap:12px;font-size:.91rem}
+.sidebar-group{margin:7px 0;border-radius:13px;background:rgba(255,255,255,.035);overflow:hidden}
+.sidebar-group summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;padding:.78rem .9rem;color:#94a3b8;font-size:.73rem;font-weight:800;text-transform:uppercase;letter-spacing:.075em;user-select:none}
+.sidebar-group summary::-webkit-details-marker{display:none}
+.sidebar-group summary>svg:first-child{width:17px;height:17px;color:#7dd3fc}
+.sidebar-group summary .group-chevron{width:14px;height:14px;margin-left:auto;transition:transform .32s cubic-bezier(.22,1,.36,1)}
+.sidebar-group[open] summary .group-chevron{transform:rotate(180deg)}
+.sidebar-group>a{margin:2px 6px;padding:.65rem .75rem;font-size:.87rem;animation:sidebarItemIn .24s both}
+.sidebar-group>a svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-group summary:hover{color:#e2e8f0;background:rgba(255,255,255,.045)}
+.sidebar a.active{background:linear-gradient(90deg,rgba(14,165,233,.23),rgba(14,165,233,.08));color:#7dd3fc;border-left:0;box-shadow:inset 3px 0 #38bdf8}
+.sidebar.collapsed .sidebar-scroll{padding:0 7px;overflow:visible}
+.sidebar.collapsed .sidebar-group{background:transparent;overflow:visible}
+.sidebar.collapsed .sidebar-group summary{justify-content:center;padding:.75rem 0}
+.sidebar.collapsed .sidebar-group summary span,.sidebar.collapsed .sidebar-group summary .group-chevron{display:none}
+.sidebar.collapsed .sidebar-group>a{justify-content:center;padding:.72rem 0}
+.sidebar.collapsed .sidebar-group[open]>a{display:flex}
+.sidebar.collapsed .sidebar-group:not([open])>a{display:none}
+.sidebar.collapsed .sidebar-group summary>svg:first-child{width:21px;height:21px}
+@media(max-width:768px){.sidebar-scroll{padding:0 .55rem}.sidebar-group summary{font-size:.72rem}}
+
 .sidebar a:hover{
     background:rgba(56,189,248,.12);
     color:#38bdf8;
@@ -291,100 +325,57 @@ transition:left .3s ease;
 <!-- SIDEBAR SPA -->
 <nav class="sidebar" id="sidebar">
 
-<div class="logo">
-    <i data-lucide="graduation-cap"></i>
-    <span>GerEdu</span>
-</div>
+<a class="logo" href="{% url 'home' %}" aria-label="GerEdu — Início">
+    <span class="logo-mark" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+    <span class="logo-copy"><strong>GerEdu</strong><small>GESTÃO ESCOLAR</small></span>
+    <span class="logo-orbit" aria-hidden="true"></span>
+</a>
 
-<a hx-get="{% url 'home' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'home' %}">
+<div class="sidebar-scroll">
+<a hx-get="{% url 'home' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'home' %}">
     <i data-lucide="home"></i><span>Início</span>
 </a>
 
-<a hx-get="{% url 'lista_alunos' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'lista_alunos' %}">
-    <i data-lucide="users"></i><span>Alunos</span>
-</a>
+<details class="sidebar-group">
+ <summary><i data-lucide="school"></i><span>Cadastros</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a hx-get="{% url 'lista_alunos' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_alunos' %}"><i data-lucide="users"></i><span>Alunos</span></a>
+ <a hx-get="{% url 'lista_turmas' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_turmas' %}"><i data-lucide="network"></i><span>Turmas</span></a>
+ <a hx-get="{% url 'relatorio_alunos' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'relatorio_alunos' %}"><i data-lucide="bar-chart-3"></i><span>Relatórios de alunos</span></a>
+ <a href="{% url 'lista_ocorrencias' %}" class="sidebar-link btn-ocorrencias" data-permissao="{{ user.pode_gerenciar_usuarios }}" data-tipo="{{ user.get_perfil_display }}" data-usuario="{{ user.get_full_name|default:user.username }}" hx-get="{% url 'lista_ocorrencias' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true"><i data-lucide="alert-triangle"></i><span>Ocorrências</span></a>
+</details>
 
-<a hx-get="{% url 'lista_turmas' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'lista_turmas' %}">
-    <i data-lucide="network"></i><span>Turmas</span>
-</a>
+<details class="sidebar-group">
+ <summary><i data-lucide="calendar-check"></i><span>Frequência</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a hx-get="{% url 'lista_frequencia' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_frequencia' %}"><i data-lucide="clipboard-check"></i><span>Diário de frequência</span></a>
+ <a href="{% url 'consulta_frequencia_codigo' %}" target="_blank"><i data-lucide="search-check"></i><span>Consulta do estudante</span></a>
+ <a href="{% url 'busca_ativa:calendario_letivo' %}"><i data-lucide="calendar-days"></i><span>Calendário letivo</span></a>
+</details>
 
-<a hx-get="{% url 'relatorio_alunos' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'relatorio_alunos' %}">
-    <i data-lucide="bar-chart-3"></i><span>Relatório</span>
-</a>
-
-<a href="{% url 'lista_ocorrencias' %}"
-class="sidebar-link btn-ocorrencias"
-data-permissao="{{ user.pode_gerenciar_usuarios }}"
-data-tipo="{{ user.get_perfil_display }}"
-data-usuario="{{ user.get_full_name|default:user.username }}"
-hx-get="{% url 'lista_ocorrencias' %}"
-hx-target="#mainContent"
-hx-swap="innerHTML"
-hx-push-url="true">
-
-<i data-lucide="alert-triangle"></i>
-<span>Ocorrências</span>
-
-</a>
-
-<a hx-get="{% url 'lista_frequencia' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'lista_frequencia' %}">
-    <i data-lucide="calendar-check"></i><span>Frequência</span>
-</a>
-
-<a href="{% url 'consulta_frequencia_codigo' %}" target="_blank"><i data-lucide="search-check"></i><span>Consulta do estudante</span></a>
-<a href="{% url 'busca_ativa:calendario_letivo' %}"><i data-lucide="calendar-days"></i><span>Contagem do ano letivo</span></a>
-
-{% if user.is_authenticated and user.pode_gerenciar_usuarios %}
-<a href="{% url 'busca_ativa:painel' %}">
-    <i data-lucide="clipboard-check"></i><span>Busca Ativa</span>
-    {% if total_alertas_infrequencia %}<span class="badge bg-danger ms-auto">{{ total_alertas_infrequencia }}</span>{% endif %}
-</a>
-<a href="{% url 'busca_ativa:acompanhamentos' %}"><i data-lucide="users-round"></i><span>Alunos acompanhados</span></a>
-<a href="{% url 'busca_ativa:relatorio' %}"><i data-lucide="list-checks"></i><span>Relatório de providências</span></a>
-<a href="{% url 'busca_ativa:compensacao' %}"><i data-lucide="clipboard-list"></i><span>Compensação de ausências</span></a>
-<a href="{% url 'busca_ativa:relatorios_personalizados' %}"><i data-lucide="file-chart-column"></i><span>Relatórios personalizados</span></a>
+{% if user.is_authenticated and user.is_superuser or user.pode_gerenciar_usuarios %}
+<details class="sidebar-group">
+ <summary><i data-lucide="clipboard-list"></i><span>Busca ativa</span><i data-lucide="chevron-down" class="group-chevron"></i>{% if total_alertas_infrequencia %}<span class="badge bg-danger ms-auto">{{ total_alertas_infrequencia }}</span>{% endif %}</summary>
+ <a href="{% url 'busca_ativa:painel' %}"><i data-lucide="layout-dashboard"></i><span>Painel de acompanhamento</span></a>
+ <a href="{% url 'busca_ativa:importar' %}"><i data-lucide="file-up"></i><span>Importar dados</span></a>
+ <a href="{% url 'busca_ativa:acompanhamentos' %}"><i data-lucide="users-round"></i><span>Alunos acompanhados</span></a>
+ <a href="{% url 'busca_ativa:relatorio' %}"><i data-lucide="list-checks"></i><span>Providências</span></a>
+ <a href="{% url 'busca_ativa:compensacao' %}"><i data-lucide="clipboard-list"></i><span>Compensação de ausências</span></a>
+ <a href="{% url 'busca_ativa:relatorios_personalizados' %}"><i data-lucide="file-chart-column"></i><span>Relatórios personalizados</span></a>
+ <a href="{% url 'busca_ativa:estatisticas_consultas' %}"><i data-lucide="chart-no-axes-combined"></i><span>Estatísticas de consultas</span></a>
+</details>
+<details class="sidebar-group">
+ <summary><i data-lucide="chart-no-axes-combined"></i><span>Avaliações</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><i data-lucide="chart-column-increasing"></i><span>Avaliações e participação</span></a>
+</details>
 {% endif %}
 
 {% if user.pode_gerenciar_usuarios %}
-<a hx-get="{% url 'lista_usuarios' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'lista_usuarios' %}">
-    <i data-lucide="settings"></i><span>Usuários</span>
-</a>
+<details class="sidebar-group">
+ <summary><i data-lucide="settings"></i><span>Administração</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a hx-get="{% url 'lista_usuarios' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_usuarios' %}"><i data-lucide="users-cog"></i><span>Usuários</span></a>
+ <a hx-get="{% url 'conselho:lista' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'conselho:lista' %}"><i data-lucide="clipboard-signature"></i><span>Conselho de Classe</span></a>
+</details>
 {% endif %}
-
-{% if user.pode_gerenciar_usuarios %}
-<a hx-get="{% url 'conselho:lista' %}"
-   hx-target="#mainContent"
-   hx-swap="innerHTML"
-   hx-push-url="true"
-   href="{% url 'conselho:lista' %}">
-    <i data-lucide="clipboard-list"></i>
-    <span>Conselho de Classe</span>
-</a>
-{% endif %}
+</div>
 
 {% if user.is_authenticated %}
 <a href="{% url 'logout' %}" class="logout-link">
@@ -393,7 +384,7 @@ hx-push-url="true">
 {% endif %}
 
 <div class="sidebar-footer">
-    <div class="toggle-btn" id="toggleSidebar">
+    <div class="toggle-btn" id="toggleSidebar" role="button" tabindex="0" aria-label="Fixar ou desafixar menu" title="Fixar ou desafixar menu">
         <i data-lucide="lock-open" id="lockIcon"></i>
         <span id="lockText">Fixar menu</span>
     </div>
@@ -535,9 +526,11 @@ const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 
 let locked = localStorage.getItem("sidebar-locked");
 
+// No desktop, o menu inicia recolhido e expande ao passar o mouse.
+// O usuário pode fixá-lo aberto pelo cadeado; a escolha fica salva.
 if (locked === null) {
-    locked = true; // padrão fixado
-    localStorage.setItem("sidebar-locked", "true");
+    locked = false;
+    localStorage.setItem("sidebar-locked", "false");
 } else {
     locked = locked === "true";
 }
@@ -549,22 +542,31 @@ function applySidebarState() {
 
     if (!sidebar || !lockIcon) return;
 
-    if (locked) {
+    if (window.innerWidth <= 768 || locked) {
         sidebar.classList.remove("collapsed");
-        lockIcon.setAttribute("data-lucide", "lock");
-        lockIcon.classList.add("locked");
-        if (lockText) lockText.textContent = "Desafixar menu";
     } else {
         sidebar.classList.add("collapsed");
-        lockIcon.setAttribute("data-lucide", "lock-open");
-        lockIcon.classList.remove("locked");
-        if (lockText) lockText.textContent = "Fixar menu";
     }
 
+    lockIcon.setAttribute("data-lucide", locked ? "lock" : "lock-open");
+    lockIcon.classList.toggle("locked", locked);
+    if (lockText) lockText.textContent = locked ? "Desafixar menu" : "Fixar menu";
+
     lucide.createIcons();
+    refreshSidebarTitles();
 }
 
 applySidebarState();
+
+/* Tooltips acessíveis no menu recolhido; mantém rótulos e atalhos originais. */
+function refreshSidebarTitles(){
+    if(!sidebar) return;
+    sidebar.querySelectorAll("a, summary, .toggle-btn").forEach(item => {
+        const label = item.querySelector("span")?.textContent?.trim() || item.textContent.trim();
+        if(label && !item.getAttribute("title")) item.setAttribute("title", label);
+    });
+}
+refreshSidebarTitles();
 
 /* Hover só funciona se NÃO estiver fixada */
 if (sidebar) {
@@ -583,19 +585,50 @@ if (sidebar) {
 
 /* Botão fixar/desafixar */
 if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
+    const toggleLock = () => {
         locked = !locked;
-        localStorage.setItem("sidebar-locked", locked);
+        localStorage.setItem("sidebar-locked", String(locked));
         applySidebarState();
+    };
+    toggleBtn.addEventListener("click", toggleLock);
+    toggleBtn.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleLock();
+        }
     });
 }
 
 /* Mobile */
 if (mobileMenuBtn) {
+    mobileMenuBtn.setAttribute("aria-expanded", "false");
     mobileMenuBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("mobile-open");
+        const opened = sidebar.classList.toggle("mobile-open");
+        mobileMenuBtn.setAttribute("aria-expanded", String(opened));
     });
 }
+
+document.addEventListener("click", (event) => {
+    if (window.innerWidth <= 768 && sidebar?.classList.contains("mobile-open") &&
+        !sidebar.contains(event.target) && !mobileMenuBtn?.contains(event.target)) {
+        sidebar.classList.remove("mobile-open");
+        mobileMenuBtn?.setAttribute("aria-expanded", "false");
+    }
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && sidebar?.classList.contains("mobile-open")) {
+        sidebar.classList.remove("mobile-open");
+        mobileMenuBtn?.setAttribute("aria-expanded", "false");
+    }
+});
+window.addEventListener("resize", () => {
+    if (window.innerWidth > 768) {
+        sidebar?.classList.remove("mobile-open");
+        applySidebarState();
+    } else {
+        sidebar?.classList.remove("collapsed");
+    }
+});
  /* ================= ABA ATIVA + SPA ESTÁVEL ================= */
 
 function updateActivePageInfo(){
@@ -627,6 +660,8 @@ function updateActivePageInfo(){
         ){
 
             link.classList.add("active");
+            const group = link.closest("details.sidebar-group");
+            if(group) group.open = true;
             activeFound = true;
 
             const text = link.textContent.trim();
@@ -1814,5 +1849,9 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 </div>
 {% endif %}
 
+<script>
+/* Mantém a estrutura original dos cabeçalhos. A identidade visual global é aplicada
+   por CSS sem mover títulos, botões ou filtros entre contêineres. */
+</script>
 </body>
 </html>

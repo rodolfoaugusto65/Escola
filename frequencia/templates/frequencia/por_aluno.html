@@ -166,6 +166,14 @@ Nenhum registro encontrado
 </table>
 
 </div>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border-top">
+ <small class="text-muted">{{ total_alunos_listados }} estudante(s) · Página {{ pagina_resumo.number }} de {{ pagina_resumo.paginator.num_pages }}</small>
+ <nav aria-label="Paginação dos estudantes"><ul class="pagination pagination-sm mb-0">
+ {% if pagina_resumo.has_previous %}<li class="page-item"><a class="page-link" href="?{% if request.GET.turma %}turma={{ request.GET.turma }}&{% endif %}{% if request.GET.aluno %}aluno={{ request.GET.aluno|urlencode }}&{% endif %}page={{ pagina_resumo.previous_page_number }}">Anterior</a></li>{% endif %}
+ <li class="page-item active"><span class="page-link">{{ pagina_resumo.number }}</span></li>
+ {% if pagina_resumo.has_next %}<li class="page-item"><a class="page-link" href="?{% if request.GET.turma %}turma={{ request.GET.turma }}&{% endif %}{% if request.GET.aluno %}aluno={{ request.GET.aluno|urlencode }}&{% endif %}page={{ pagina_resumo.next_page_number }}">Próxima</a></li>{% endif %}
+ </ul></nav>
+</div>
 
 </div>
 

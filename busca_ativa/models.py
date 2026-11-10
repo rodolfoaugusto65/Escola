@@ -11,6 +11,9 @@ def ano_letivo_atual():
 
 class ImportacaoInfrequencia(models.Model):
     arquivo = models.CharField(max_length=255)
+    arquivo_original = models.FileField(upload_to="busca_ativa/importacoes/%Y/%m/", null=True, blank=True)
+    sha256 = models.CharField(max_length=64, blank=True, db_index=True)
+    estudantes_repetidos = models.PositiveIntegerField(default=0)
     ano_letivo = models.PositiveSmallIntegerField(default=ano_letivo_atual)
     importado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -90,6 +93,26 @@ class SituacaoInfrequencia(models.Model):
     def faixa_alerta(self):
         p = self.percentual_considerado
         return "critico" if p >= 25 else ("atencao" if p >= 10 else "regular")
+
+
+class HistoricoSituacaoInfrequencia(models.Model):
+    """Fotografia imutável da situação do estudante em cada arquivo importado."""
+    importacao = models.ForeignKey(ImportacaoInfrequencia, on_delete=models.PROTECT, related_name="historico_estudantes")
+    aluno = models.ForeignKey(Aluno, null=True, blank=True, on_delete=models.SET_NULL, related_name="historico_infrequencia_importada")
+    matricula = models.CharField(max_length=30, db_index=True)
+    ano_letivo = models.PositiveSmallIntegerField(db_index=True)
+    dados = models.JSONField(default=dict, blank=True)
+    percentual_considerado = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    faixa_alerta = models.CharField(max_length=15, blank=True)
+    apareceu_novamente = models.BooleanField(default=False, db_index=True)
+    mudou_desde_anterior = models.BooleanField(default=False)
+    importado_em = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-importado_em"]
+        indexes = [models.Index(fields=["aluno", "ano_letivo", "-importado_em"], name="busca_hist_aluno__7d8d10_idx"), models.Index(fields=["importacao", "apareceu_novamente"], name="busca_hist_import_5d8e25_idx")]
+        verbose_name = "Histórico de infrequência importada"
+        verbose_name_plural = "Históricos de infrequência importada"
 
 
 class AcessoConsultaAluno(models.Model):

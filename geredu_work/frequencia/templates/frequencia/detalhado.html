@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h4>Frequência Detalhada</h4>
+
+<a href="{% url 'lista_frequencia' %}?{{ request.GET.urlencode }}"
+   class="btn btn-secondary mb-3">Voltar</a>
+
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>Aluno</th>
+            <th>Matrícula</th>
+            <th>Turma</th>
+            <th>Data</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in registros %}
+        <tr>
+            <td>{{ r.aluno.nome }}</td>
+            <td>{{ r.aluno.matricula }}</td>
+            <td>{{ r.frequencia.turma }}</td>
+            <td>{{ r.frequencia.data|date:"d/m/Y" }}</td>
+            <td>
+                {% if r.presente %}
+                    <span class="text-success">Presente</span>
+                {% else %}
+                    <span class="text-danger">Falta</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">Nenhum registro encontrado</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'imprimir_frequencia' %}?{{ request.GET.urlencode }}"
+   class="btn btn-outline-dark">Imprimir</a>
+
+{% endblock %}

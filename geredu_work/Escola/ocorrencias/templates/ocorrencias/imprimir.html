@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+body { font-family: Arial; margin:40px; }
+.box { border:1px solid #000; padding:15px; margin-bottom:12px; }
+h2 { text-align:center; }
+.ass { margin-top:70px; text-align:center; }
+</style>
+
+</head>
+<body>
+
+<h2>REGISTRO DE OCORRÊNCIA DISCIPLINAR</h2>
+
+<div class="box">
+<b>Aluno:</b> {{ o.aluno.nome }}<br>
+<b>Turma:</b> {{ o.turma }}<br>
+<b>Código:</b> {{ o.codigo }}<br>
+<b>Data:</b> {{ o.data }}<br>
+<b>Tipo:</b> {{ o.get_tipo_ocorrencia_display }}<br>
+<b>Status:</b> {{ o.get_status_display }}<br>
+<b>FICAI:</b> {{ o.ficai_aberta|yesno:"Sim,Não" }}<br>
+{% if o.ficai_numero %}
+<b>Nº FICAI:</b> {{ o.ficai_numero }}<br>
+<b>Data FICAI:</b> {{ o.ficai_data }}<br>
+{% endif %}
+</div>
+
+<div class="box">
+<b>Descrição</b><br>
+{{ o.descricao|linebreaks }}
+</div>
+
+<div class="box">
+<b>Providências</b><br>
+{{ o.providencias|linebreaks }}
+</div>
+
+<div class="ass">
+______________________________<br>
+Coordenação Escolar
+</div>
+
+<script>window.print()</script>
+
+</body>
+</html>
