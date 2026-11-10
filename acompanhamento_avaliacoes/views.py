@@ -5,7 +5,7 @@ import hashlib
 import logging
 import re
 import unicodedata
-from datetime import datetime
+from datetime import datetime, date, time
 
 from django.contrib import messages
 from django.core.files.base import ContentFile
@@ -13,6 +13,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
+from django.utils.dateparse import parse_datetime, parse_date
+from django.utils.timezone import make_aware, is_naive
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.text import get_valid_filename
@@ -107,6 +110,58 @@ def _ler_planilha(upload):
     return headers, linhas[1:]
 
 
+
+def _parse_data_realizacao(valor):
+    """Normaliza datas Excel, ISO-8601 (inclusive sufixo Z) e datas brasileiras."""
+    if valor in (None, ''):
+        return None
+    if isinstance(valor, datetime):
+        dt = valor
+    elif isinstance(valor, date):
+        dt = datetime.combine(valor, time.min)
+    else:
+        texto = _string(valor)
+        if not texto:
+            return None
+        # Exportações Plurall podem gerar ISO-8601 em minúsculas (t/z).
+        iso_normalizado = texto.replace('t', 'T').replace('z', 'Z')
+        try:
+            dt = parse_datetime(iso_normalizado)
+        except ValueError:
+            dt = None
+        if dt is None:
+            for fmt in ('%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y', '%Y-%m-%d %H:%M:%S'):
+                try:
+                    dt = datetime.strptime(texto, fmt)
+                    break
+                except ValueError:
+                    continue
+        if dt is None:
+            try:
+                somente_data = parse_date(texto[:10])
+            except ValueError:
+                somente_data = None
+            if somente_data:
+                dt = datetime.combine(somente_data, time.min)
+    if dt is None:
+        return None
+    if is_naive(dt):
+        dt = make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
+def _mapear_alunos_em_lote(matriculas, tamanho_lote=1000):
+    """Resolve matrículas com poucas consultas, sem N+1 por estudante."""
+    unicas = {str(m).strip() for m in matriculas if str(m or '').strip()}
+    mapa = {}
+    lista = list(unicas)
+    for inicio in range(0, len(lista), tamanho_lote):
+        lote = lista[inicio:inicio + tamanho_lote]
+        for aluno in Aluno.objects.filter(matricula__in=lote).only('id', 'matricula', 'nome'):
+            mapa[str(aluno.matricula).strip()] = aluno
+    return mapa
+
+
 def _classificar(status):
     s = _norm(status)
     if any(x in s for x in ('aguardando', 'pendente', 'naorealizou', 'naoentregue', 'naoparticipou', 'naoconcluido')):
@@ -159,6 +214,14 @@ def painel(request):
         .exclude(ano_serie='').values_list('ano_serie', flat=True).distinct().order_by('ano_serie')) if ultima else []
     pendentes_lista = registros.filter(situacao__in=['pendente', 'ausente', 'outro']).order_by('ano_serie', 'turma', 'nome_aluno')[:250]
 
+    # Datas reais em que as avaliações foram concluídas, no recorte atual.
+    realizados_base = registros.filter(situacao='realizado', realizado_em__isnull=False)
+    realizacoes_por_dia = list(realizados_base.annotate(dia=TruncDate('realizado_em')).values('dia').annotate(total=Count('id')).order_by('dia'))
+    realizacoes_por_turma_dia = list(realizados_base.annotate(dia=TruncDate('realizado_em')).values('ano_serie', 'turma', 'dia').annotate(total=Count('id')).order_by('ano_serie', 'turma', 'dia'))
+    # Série temporal diária consolidada para o gráfico geral.
+    datas_labels = [item['dia'].strftime('%d/%m/%Y') for item in realizacoes_por_dia if item['dia']]
+    datas_valores = [item['total'] for item in realizacoes_por_dia if item['dia']]
+
     historico = list(importacoes.order_by('-criado_em')[:30])
     historico.reverse()
     grafico_labels = [i.criado_em.strftime('%d/%m %H:%M') for i in historico]
@@ -169,6 +232,8 @@ def painel(request):
         'por_turma': por_turma, 'turmas_disponiveis': turmas_disponiveis,
         'anos_disponiveis': anos_disponiveis, 'pendentes_lista': pendentes_lista,
         'grafico_labels': json.dumps(grafico_labels), 'grafico_percentuais': json.dumps(grafico_percentuais),
+        'realizacoes_por_dia': realizacoes_por_dia, 'realizacoes_por_turma_dia': realizacoes_por_turma_dia,
+        'datas_labels': json.dumps(datas_labels), 'datas_valores': json.dumps(datas_valores),
         'filtro_avaliacao': avaliacao_id, 'filtro_ano': ano, 'filtro_turma': turma, 'busca': busca,
     }
     return _render(request, 'acompanhamento_avaliacoes/painel.html', contexto)
@@ -243,6 +308,10 @@ def importar(request):
                         arquivos_salvos.append((arquivo_guardado.arquivo_original.storage, arquivo_guardado.arquivo_original.name))
                     objetos = []
                     realizados = pendentes = nao_vinculados = 0
+                    matriculas_arquivo = []
+                    for _upload, headers, linhas, _nome in planilhas:
+                        matriculas_arquivo.extend(_string(_valor(row, headers, 'Matrícula', 'Matricula', 'RA', 'Registro Acadêmico')) for row in linhas)
+                    alunos_por_matricula = _mapear_alunos_em_lote(matriculas_arquivo)
                     for upload, headers, linhas, nome_original in planilhas:
                         for row in linhas:
                             matricula = _string(_valor(row, headers, 'Matrícula', 'Matricula', 'RA', 'Registro Acadêmico'))
@@ -251,7 +320,7 @@ def importar(request):
                                 continue
                             status = _string(_valor(row, headers, 'Participação', 'Participacao', 'Situação', 'Situacao', 'Status'))
                             situacao = _classificar(status)
-                            aluno = Aluno.objects.filter(matricula=matricula).first() if matricula else None
+                            aluno = alunos_por_matricula.get(matricula) if matricula else None
                             if not aluno:
                                 nao_vinculados += 1
                             if situacao == 'realizado':
@@ -267,6 +336,7 @@ def importar(request):
                                 prova=_string(_valor(row, headers, 'Prova', 'Nome da prova')) or prova_padrao,
                                 participacao=status, situacao=situacao,
                                 entregue_em=_string(_valor(row, headers, 'Entregue Em', 'Data de entrega', 'Data')),
+                                realizado_em=(_parse_data_realizacao(_valor(row, headers, 'Data de realização', 'Data da realização', 'Realizado em', 'Data realização', 'Data de conclusão', 'Data de conclusão da avaliação', 'Data de entrega', 'Entregue em', 'Data')) if situacao == 'realizado' else None),
                                 tempo_prova=_string(_valor(row, headers, 'Tempo de Prova', 'Tempo')),
                                 dados_originais=originais,
                             ))
@@ -296,7 +366,7 @@ def importar(request):
 @login_required
 def historico(request):
     _somente_gestao(request.user)
-    registros = ImportacaoAvaliacao.objects.select_related('avaliacao', 'usuario').all()
+    registros = ImportacaoAvaliacao.objects.select_related('avaliacao', 'usuario').prefetch_related('arquivos_originais').all()
     return _render(request, 'acompanhamento_avaliacoes/historico.html', {'importacoes': registros})
 
 
@@ -314,4 +384,7 @@ def detalhe_importacao(request, pk):
         registros = registros.filter(turma__icontains=turma)
     if q:
         registros = registros.filter(Q(nome_aluno__icontains=q) | Q(matricula__icontains=q))
-    return _render(request, 'acompanhamento_avaliacoes/detalhe.html', {'importacao': importacao, 'registros': registros, 'arquivos_originais': importacao.arquivos_originais.all(), 'situacao_filtro': situacao, 'turma_filtro': turma, 'busca': q})
+    base_realizados = importacao.registros.filter(situacao='realizado', realizado_em__isnull=False)
+    datas_realizacao = list(base_realizados.annotate(dia=TruncDate('realizado_em')).values('dia').annotate(total=Count('id')).order_by('dia'))
+    turmas_datas = list(base_realizados.annotate(dia=TruncDate('realizado_em')).values('ano_serie', 'turma', 'dia').annotate(total=Count('id')).order_by('ano_serie', 'turma', 'dia'))
+    return _render(request, 'acompanhamento_avaliacoes/detalhe.html', {'importacao': importacao, 'registros': registros, 'arquivos_originais': importacao.arquivos_originais.all(), 'situacao_filtro': situacao, 'turma_filtro': turma, 'busca': q, 'datas_realizacao': datas_realizacao, 'turmas_datas': turmas_datas})

@@ -67,6 +67,7 @@ class RegistroParticipacao(models.Model):
     participacao = models.CharField(max_length=80, blank=True)
     situacao = models.CharField(max_length=20, choices=SITUACOES, default='outro', db_index=True)
     entregue_em = models.CharField(max_length=80, blank=True)
+    realizado_em = models.DateTimeField(null=True, blank=True, db_index=True, verbose_name='Data e hora da realização')
     tempo_prova = models.CharField(max_length=50, blank=True)
     dados_originais = models.JSONField(default=dict, blank=True)
 

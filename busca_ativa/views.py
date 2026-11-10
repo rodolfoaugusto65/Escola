@@ -399,15 +399,43 @@ def importar_backup_local(request):
                 salvar_arquivo_geredu(registro_backup.arquivo_original, nome_seguro, File(backup_stream, name=nome_seguro), save=True)
             if registro_backup.arquivo_original.size != os.path.getsize(temp_path):
                 raise IOError("O armazenamento não confirmou o tamanho integral do banco enviado. A integração foi cancelada.")
-            for row in conn.execute("SELECT * FROM students"):
+            # Resolve todas as matrículas de uma vez (em blocos) antes de percorrer
+            # os estudantes. Evita duas consultas SQL por estudante e o WORKER TIMEOUT.
+            students_rows = list(conn.execute("SELECT * FROM students"))
+            codigos_arquivo = set()
+            for student_row in students_rows:
+                for campo in ("cod_aluno", "ged_mat_cod"):
+                    if campo in student_row.keys():
+                        codigo = str(student_row[campo] or "").strip()
+                        if codigo:
+                            codigos_arquivo.add(codigo)
+            alunos_por_matricula = {}
+            lista_codigos = list(codigos_arquivo)
+            for inicio in range(0, len(lista_codigos), 1000):
+                lote = lista_codigos[inicio:inicio + 1000]
+                alunos_por_matricula.update({str(a.matricula).strip(): a for a in Aluno.objects.filter(matricula__in=lote).only("id", "matricula", "nome")})
+            alunos_ids_lote = [a.id for a in alunos_por_matricula.values()]
+            situacoes_existentes = {}
+            for inicio in range(0, len(alunos_ids_lote), 1000):
+                lote_ids = alunos_ids_lote[inicio:inicio + 1000]
+                situacoes_existentes.update({s.aluno_id: s for s in SituacaoInfrequencia.objects.filter(ano_letivo=ano_backup, aluno_id__in=lote_ids)})
+            situacoes_novas = []
+            situacoes_atualizar = []
+            for row in students_rows:
                 codigos = [str(row[k] or "").strip() for k in ("cod_aluno", "ged_mat_cod") if k in row.keys()]
-                aluno = next((Aluno.objects.filter(matricula=c).first() for c in codigos if c and Aluno.objects.filter(matricula=c).exists()), None)
+                aluno = next((alunos_por_matricula.get(c) for c in codigos if c and alunos_por_matricula.get(c)), None)
                 if not aluno:
                     sem_vinculo += 1
                     continue
                 mapa[row["id"]] = aluno
                 ano = timezone.localdate().year
-                sit, _ = SituacaoInfrequencia.objects.get_or_create(aluno=aluno, ano_letivo=ano, defaults={"codigo_fonte": str(_sqlite_value(row, "cod_aluno") or aluno.matricula)[:30]})
+                sit = situacoes_existentes.get(aluno.pk)
+                if sit is None:
+                    sit = SituacaoInfrequencia(aluno=aluno, ano_letivo=ano, importacao=registro_backup)
+                    situacoes_novas.append(sit)
+                else:
+                    sit.importacao = registro_backup
+                    situacoes_atualizar.append(sit)
                 campos = {
                     "codigo_fonte": str(_sqlite_value(row, "cod_aluno") or aluno.matricula)[:30],
                     "codigo_ged": str(_sqlite_value(row, "ged_mat_cod") or "")[:30],
@@ -418,7 +446,7 @@ def importar_backup_local(request):
                     "faltas_geral": _sqlite_value(row, "faltas_geral") or 0, "faltas_final": _sqlite_value(row, "faltas_final") or 0,
                     "carga_horaria": _sqlite_value(row, "ch_anual") or 0, "paed_na_fonte": str(_sqlite_value(row, "paed") or "")[:10]}
                 for k,val in campos.items(): setattr(sit,k,val)
-                sit.save()
+                sit.atualizado_em = timezone.now()
                 dados_snapshot = _snapshot_situacao(sit)
                 dados_anteriores = historicos_anteriores.get(aluno.pk)
                 percentual_atual = max(sit.percentual_geral_final or 0, sit.percentual_geral or 0, sit.percentual_relatorio_25 or 0)
@@ -430,6 +458,11 @@ def importar_backup_local(request):
                     mudou_desde_anterior=bool(dados_anteriores is not None and dados_anteriores != dados_snapshot),
                 ))
                 vinculados += 1
+            if situacoes_novas:
+                SituacaoInfrequencia.objects.bulk_create(situacoes_novas, batch_size=500)
+            if situacoes_atualizar:
+                campos_atualizacao = ["codigo_fonte", "codigo_ged", "importacao", "percentual_geral", "percentual_geral_final", "percentual_1_bim", "percentual_2_bim", "percentual_3_bim", "percentual_4_bim", "percentual_relatorio_25", "consta_relatorio_25", "faltas_geral", "faltas_final", "carga_horaria", "paed_na_fonte", "atualizado_em"]
+                SituacaoInfrequencia.objects.bulk_update(situacoes_atualizar, campos_atualizacao, batch_size=500)
             if snapshots_backup:
                 HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots_backup, batch_size=250)
             registro_backup.estudantes_repetidos = sum(1 for h in snapshots_backup if h.apareceu_novamente)
@@ -437,24 +470,50 @@ def importar_backup_local(request):
             registro_backup.nao_vinculados = sem_vinculo
             registro_backup.total_registros = vinculados + sem_vinculo
             registro_backup.save(update_fields=["estudantes_repetidos", "vinculados", "nao_vinculados", "total_registros"])
+            # Ações também são comparadas em memória: nenhuma consulta exists() por linha.
+            alunos_ids = [a.id for a in mapa.values()]
+            chaves_acoes_existentes = set()
+            for inicio in range(0, len(alunos_ids), 1000):
+                lote_ids = alunos_ids[inicio:inicio + 1000]
+                chaves_acoes_existentes.update(
+                    (aluno_id, str(data), tipo, descricao)
+                    for aluno_id, data, tipo, descricao in AcaoBuscaAtiva.objects.filter(aluno_id__in=lote_ids).values_list("aluno_id", "data", "tipo", "descricao")
+                )
+            acoes_novas = []
+            alunos_para_marcar = {}
             for row in conn.execute("SELECT * FROM actions ORDER BY id"):
                 aluno = mapa.get(row["student_id"])
                 if not aluno: continue
-                data = str(row["data"] or "")[:10]
+                data_texto = str(row["data"] or "")[:10]
+                try:
+                    from datetime import date as _date
+                    data = _date.fromisoformat(data_texto)
+                except (TypeError, ValueError):
+                    continue
                 tipo = str(row["tipo"] or "Outra providência")[:60]
                 descricao = str(row["descricao"] or "").strip()
-                if not data or not descricao: continue
-                if not aluno.aluno_busca_ativa:
-                    aluno.aluno_busca_ativa = True
-                    aluno.save(update_fields=["aluno_busca_ativa"])
-                if AcaoBuscaAtiva.objects.filter(aluno=aluno,data=data,tipo=tipo,descricao=descricao).exists():
+                if not descricao: continue
+                chave = (aluno.id, str(data), tipo, descricao)
+                if chave in chaves_acoes_existentes:
                     duplicadas += 1
                     continue
-                AcaoBuscaAtiva.objects.create(aluno=aluno,data=data,tipo=tipo,descricao=descricao,
-                    resultado=str(_sqlite_value(row, "resultado", '') or ""),proxima_acao=str(_sqlite_value(row, "proxima_acao", '') or ""),
-                    prazo=_sqlite_value(row, "prazo", None) or None,status=_sqlite_value(row, "status", 'Em andamento') or "Em andamento",responsavel=request.user,
-                    responsavel_origem=str(_sqlite_value(row, "responsavel", '') or "")[:150])
-                acoes_importadas += 1
+                chaves_acoes_existentes.add(chave)
+                acoes_novas.append(AcaoBuscaAtiva(
+                    aluno=aluno, data=data, tipo=tipo, descricao=descricao,
+                    resultado=str(_sqlite_value(row, "resultado", '') or ""),
+                    proxima_acao=str(_sqlite_value(row, "proxima_acao", '') or ""),
+                    prazo=_sqlite_value(row, "prazo", None) or None,
+                    status=_sqlite_value(row, "status", 'Em andamento') or "Em andamento",
+                    responsavel=request.user, responsavel_origem=str(_sqlite_value(row, "responsavel", '') or "")[:150]
+                ))
+                if not aluno.aluno_busca_ativa:
+                    aluno.aluno_busca_ativa = True
+                    alunos_para_marcar[aluno.id] = aluno
+            if acoes_novas:
+                AcaoBuscaAtiva.objects.bulk_create(acoes_novas, batch_size=500)
+            if alunos_para_marcar:
+                Aluno.objects.bulk_update(list(alunos_para_marcar.values()), ["aluno_busca_ativa"], batch_size=500)
+            acoes_importadas = len(acoes_novas)
             # Restaura também os históricos antigos incluídos nos backups GerEdu mais recentes.
             if "imports" in tables and "history" in tables:
                 mapa_importacoes = {}
