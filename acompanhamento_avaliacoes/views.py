@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.timezone import make_aware, is_naive
 from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.text import get_valid_filename
 from openpyxl import load_workbook
@@ -165,13 +166,30 @@ def _mapear_alunos_em_lote(matriculas, tamanho_lote=1000):
 
 
 def _classificar(status):
+    """Classifica status da planilha priorizando negações antes de palavras positivas.
+
+    Ex.: 'Não realizado' contém a palavra 'realizado', mas deve continuar pendente.
+    """
     s = _norm(status)
-    if any(x in s for x in ('aguardando', 'pendente', 'naorealizou', 'naoentregue', 'naoparticipou', 'naoconcluido')):
+    if not s:
+        return 'outro'
+
+    negativos = (
+        'naorealizado', 'naorealizada', 'naorealizou', 'naofoirealizado',
+        'naoentregue', 'naoentregou', 'naoparticipou', 'naoparticipacao',
+        'naoconcluido', 'naoconcluida', 'naoexecutado',
+        'naoexecutada', 'naoiniciado', 'naoiniciada', 'naofinalizado',
+        'naofinalizada', 'naofez', 'naorealizacao',
+    )
+    if any(x in s for x in negativos):
         return 'pendente'
-    if any(x in s for x in ('presente', 'realizado', 'concluido', 'entregue', 'participou', 'finalizado')):
-        return 'realizado'
-    if any(x in s for x in ('ausente', 'falta', 'faltou')):
+    if any(x in s for x in ('ausente', 'falta', 'faltou', 'naocompareceu', 'naocomparecimento')):
         return 'ausente'
+    if any(x in s for x in ('aguardando', 'pendente', 'emaberto', 'naoavaliado')):
+        return 'pendente'
+    if any(x in s for x in ('presente', 'realizado', 'realizada', 'concluido', 'concluida',
+                            'entregue', 'entregou', 'participou', 'finalizado', 'finalizada')):
+        return 'realizado'
     return 'outro'
 
 
@@ -238,6 +256,22 @@ def painel(request):
 
     pendentes_qs = registros.filter(situacao__in=['pendente', 'ausente', 'outro']).order_by('ano_serie', 'turma', 'nome_aluno')
     pendentes_total = pendentes_qs.count()
+
+    if request.GET.get('exportar') == 'csv':
+        resposta = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        resposta['Content-Disposition'] = 'attachment; filename="geredu_relatorio_avaliacao.csv"'
+        writer = csv.writer(resposta, delimiter=';')
+        writer.writerow(['Avaliação', 'Ano letivo', 'Ano/Série', 'Turma', 'Matrícula', 'Aluno',
+                         'Situação', 'Participação', 'Data de realização', 'Tempo de prova'])
+        for item in registros.order_by('ano_serie', 'turma', 'nome_aluno').iterator(chunk_size=1000):
+            writer.writerow([
+                ultima.avaliacao.nome if ultima else '', ultima.avaliacao.ano_letivo if ultima else '',
+                item.ano_serie, item.turma, item.matricula, item.nome_aluno,
+                item.get_situacao_display(), item.participacao,
+                timezone.localtime(item.realizado_em).strftime('%d/%m/%Y %H:%M:%S') if item.realizado_em else '',
+                item.tempo_prova,
+            ])
+        return resposta
     pendentes_pagina = Paginator(pendentes_qs, 50).get_page(request.GET.get('pagina'))
 
     realizados_base = registros.filter(situacao='realizado', realizado_em__isnull=False)
@@ -255,7 +289,7 @@ def painel(request):
     contexto = {
         'avaliacoes': Avaliacao.objects.order_by('-ano_letivo', 'nome'),
         'importacoes': importacoes[:12], 'historico': historico, 'ultima': ultima, 'resumo': resumo,
-        'total': total, 'percentual': percentual, 'por_turma': por_turma,
+        'total': total, 'percentual': percentual, 'nao_realizados': max(total - (resumo['realizados'] or 0), 0), 'por_turma': por_turma,
         'turmas_disponiveis': turmas_disponiveis, 'anos_disponiveis': anos_disponiveis,
         'pendentes_lista': pendentes_pagina, 'pendentes_total': pendentes_total,
         'grafico_labels': json.dumps(grafico_labels), 'grafico_percentuais': json.dumps(grafico_percentuais),
