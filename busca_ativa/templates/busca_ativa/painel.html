@@ -23,10 +23,40 @@
    <button class="ba-btn">Filtrar</button><a class="ba-btn light" href="{% url 'busca_ativa:painel' %}">Limpar</a>
   </form>
   <div style="overflow:auto"><table class="ba-table"><thead><tr><th>Estudante</th><th>Turma</th><th>Infrequência oficial</th><th>Faixa</th><th>Acompanhamento</th><th></th></tr></thead><tbody>
-  {% for s in situacoes %}<tr><td><b>{{ s.aluno.nome }}</b><br><small>{{ s.aluno.matricula }}</small></td><td>{{ s.aluno.turma|default:"—" }}</td><td>{{ s.percentual_considerado }}%</td><td>{% if s.percentual_considerado >= 25 %}<span class="ba-pill ba-red">Crítico</span>{% elif s.percentual_considerado >= 10 %}<span class="ba-pill ba-amber">Atenção</span>{% else %}<span class="ba-pill ba-green">Regular</span>{% endif %}</td><td><span class="text-muted">Requer análise</span></td><td><a class="ba-btn light" href="{% url 'busca_ativa:ficha' s.aluno_id %}">Abrir ficha</a></td></tr>
+  {% for s in situacoes %}<tr><td><b>{{ s.aluno.nome }}</b><br><small>{{ s.aluno.matricula }}</small></td><td>{{ s.aluno.turma|default:"—" }}</td><td>{{ s.percentual_considerado }}%</td><td>{% if s.percentual_considerado >= 25 %}<span class="ba-pill ba-red">Crítico</span>{% elif s.percentual_considerado >= 10 %}<span class="ba-pill ba-amber">Atenção</span>{% else %}<span class="ba-pill ba-green">Regular</span>{% endif %}</td><td>{% if s.tem_prazo_ativo %}<span class="ba-pill ba-green">Prazo ativo</span>{% else %}<span class="text-muted">Requer análise</span>{% endif %}</td><td><a class="ba-btn light" href="{% url 'busca_ativa:ficha' s.aluno_id %}">Abrir ficha</a></td></tr>
   {% empty %}<tr><td colspan="6">Nenhum estudante encontrado. Importe a planilha oficial para iniciar o acompanhamento.</td></tr>{% endfor %}
   </tbody></table></div>
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3"><small class="text-muted">{{ total_estudantes }} estudante(s) · Página {{ pagina_situacoes.number }} de {{ pagina_situacoes.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if pagina_situacoes.has_previous %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}page={{ pagina_situacoes.previous_page_number }}">Anterior</a>{% endif %}{% if pagina_situacoes.has_next %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}page={{ pagina_situacoes.next_page_number }}">Próxima</a>{% endif %}</div></div>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3"><small class="text-muted">{{ total_estudantes }} estudante(s) · Página {{ pagina_situacoes.number }} de {{ pagina_situacoes.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if pagina_situacoes.has_previous %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}{% if turno %}turno={{ turno|urlencode }}&{% endif %}{% if turma %}turma={{ turma|urlencode }}&{% endif %}{% if percentual_min %}percentual_min={{ percentual_min|urlencode }}&{% endif %}{% if percentual_max %}percentual_max={{ percentual_max|urlencode }}&{% endif %}page={{ pagina_situacoes.previous_page_number }}">Anterior</a>{% endif %}{% if pagina_situacoes.has_next %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}{% if turno %}turno={{ turno|urlencode }}&{% endif %}{% if turma %}turma={{ turma|urlencode }}&{% endif %}{% if percentual_min %}percentual_min={{ percentual_min|urlencode }}&{% endif %}{% if percentual_max %}percentual_max={{ percentual_max|urlencode }}&{% endif %}page={{ pagina_situacoes.next_page_number }}">Próxima</a>{% endif %}</div></div>
+ </section>
+ <section class="ba-panel">
+  <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-alarm"></i></span><h5 class="mb-0">Prazos vencidos — exigem revisão</h5></div>
+  <p class="small text-muted">Ações ainda abertas cujo prazo de retorno já passou. O histórico permanece disponível na ficha do estudante.</p>
+  {% for a in acoes_vencidas %}
+   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-2">
+    <div><b>{{ a.aluno.nome }}</b> <small class="text-muted">· {{ a.aluno.turma|default:"Sem turma" }} · {{ a.tipo }}</small><div class="small text-danger">Prazo: {{ a.prazo|date:"d/m/Y" }} · {{ a.get_status_display }}</div></div>
+    <a class="ba-btn light" href="{% url 'busca_ativa:ficha' a.aluno_id %}">Abrir ficha</a>
+   </div>
+  {% empty %}<p class="text-muted mb-0">Nenhum prazo vencido.</p>{% endfor %}
+ </section>
+ <section class="ba-panel">
+  <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-clipboard-check"></i></span><h5 class="mb-0">Estudantes com acompanhamento em andamento</h5></div>
+  <p class="small text-muted">Estudantes que já possuem providências abertas ou dentro do prazo. Eles não são duplicados na fila de novas ações.</p>
+  {% for a in acoes_ativas %}
+   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-2">
+    <div><b>{{ a.aluno.nome }}</b> <small class="text-muted">· {{ a.aluno.turma|default:"Sem turma" }} · {{ a.tipo }}</small><div class="small text-muted">{{ a.get_status_display }}{% if a.prazo %} · Retorno até {{ a.prazo|date:"d/m/Y" }}{% else %} · Sem prazo definido{% endif %}</div></div>
+    <a class="ba-btn light" href="{% url 'busca_ativa:ficha' a.aluno_id %}">Abrir ficha</a>
+   </div>
+  {% empty %}<p class="text-muted mb-0">Nenhum acompanhamento ativo.</p>{% endfor %}
+ </section>
+ <section class="ba-panel">
+  <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-flag"></i></span><h5 class="mb-0">Prioridade de atendimento — 25% ou mais</h5></div>
+  <p class="small text-muted">Fila de estudantes com infrequência crítica que ainda precisam de uma nova providência.</p>
+  {% for s in alunos_prioridade %}
+   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-2">
+    <div><b>{{ s.aluno.nome }}</b> <small class="text-muted">· {{ s.aluno.turma|default:"Sem turma" }} · {{ s.percentual_considerado }}%</small></div>
+    <a class="ba-btn light" href="{% url 'busca_ativa:ficha' s.aluno_id %}">Atender</a>
+   </div>
+  {% empty %}<p class="text-muted mb-0">Nenhum estudante na fila crítica no momento.</p>{% endfor %}
  </section>
  <section class="ba-panel">
   <div class="ba-head"><div><h5>Backup e recuperação da Busca Ativa</h5><small class="text-muted">Recupere o banco do sistema local ou baixe uma cópia dos dados integrados ao GerEdu.</small></div>

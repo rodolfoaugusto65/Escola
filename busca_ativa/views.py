@@ -111,6 +111,7 @@ def painel(request):
         ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
         concluida_em=Subquery(acao_concluida.values("criado_em")[:1]),
         tem_acao_vigente=Exists(acao_vigente),
+        tem_prazo_ativo=Exists(acao_vigente),
     ).annotate(
         concluido_apos_integracao=Q(concluida_em__isnull=False) &
             Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
@@ -146,7 +147,25 @@ def painel(request):
     from turmas.models import Turma
     turmas = Turma.objects.all().order_by("nome")
     turnos = getattr(Turma, "TURNOS", [])
+    # Painéis complementares: não misturam ações em curso com a fila de novas ações.
+    acoes_vencidas = AcaoBuscaAtiva.objects.filter(
+        prazo__lt=today
+    ).exclude(status__in=["Concluída", "Cancelada"]).select_related(
+        "aluno", "aluno__turma", "responsavel"
+    ).order_by("prazo", "aluno__nome")[:100]
+    acoes_ativas = AcaoBuscaAtiva.objects.filter(
+        Q(prazo__gte=today) | Q(prazo__isnull=True),
+    ).exclude(status__in=["Concluída", "Cancelada"]).select_related(
+        "aluno", "aluno__turma", "responsavel"
+    ).order_by("prazo", "aluno__nome")[:100]
+    alunos_prioridade = base.filter(
+        Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)
+    ).order_by("-percentual_geral_final", "aluno__nome")[:30]
     context = {
+        "acoes_vencidas": acoes_vencidas,
+        "total_acoes_vencidas": AcaoBuscaAtiva.objects.filter(prazo__lt=today).exclude(status__in=["Concluída", "Cancelada"]).count(),
+        "acoes_ativas": acoes_ativas,
+        "alunos_prioridade": alunos_prioridade,
         "situacoes": pagina_situacoes, "pagina_situacoes": pagina_situacoes,
         "total_estudantes": total_estudantes,
         "total_criticos": pendentes.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
