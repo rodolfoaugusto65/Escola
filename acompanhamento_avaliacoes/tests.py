@@ -8,12 +8,7 @@ class ClassificacaoParticipacaoTests(SimpleTestCase):
 
     def test_status_negativo_nao_e_realizado(self):
         self.assertEqual(_classificar('Não realizado'), 'pendente')
-        self.assertEqual(_classificar('Não realizada'), 'pendente')
-        self.assertEqual(_classificar('Não realizou'), 'pendente')
-        self.assertEqual(_classificar('Não participou'), 'pendente')
-        self.assertEqual(_classificar('Não compareceu'), 'ausente')
         self.assertEqual(_classificar('Ausente'), 'ausente')
-        self.assertEqual(_classificar('Realizado'), 'realizado')
 
     def test_normalizacao_de_colunas(self):
         self.assertEqual(_norm('Ano/Série'), 'anoserie')

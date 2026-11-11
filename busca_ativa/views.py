@@ -7,7 +7,6 @@ import hashlib
 import json
 import logging
 import uuid
-from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from urllib.parse import quote
@@ -15,11 +14,12 @@ from urllib.parse import quote
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
-from django.db.models import Count, Q, Exists, OuterRef, Subquery, DecimalField, Value
+from django.db.models import Count, Q, Exists, OuterRef, Subquery, DecimalField, Value, F
 from django.db.models.functions import Coalesce, Greatest
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from openpyxl import load_workbook
 from django.core.files.base import ContentFile
 from django.core.files import File
@@ -94,118 +94,71 @@ def _active_action_subquery():
 @login_required
 @user_passes_test(gerencial)
 def painel(request):
-    """Fila de trabalho da Busca Ativa: sem ação, vencidos, em acompanhamento e prioridade."""
-    hoje = timezone.localdate()
-    situacoes_base = SituacaoInfrequencia.objects.select_related(
-        "aluno", "aluno__turma"
-    ).filter(ano_letivo=hoje.year)
-
-    acoes_aluno = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"))
-    acoes_ativas = acoes_aluno.filter(prazo__gte=hoje).exclude(
-        status__in=["Concluída", "Cancelada"]
+    """Fila de atendimento: só mostra sem ação vigente; concluídos reaparecem
+    apenas quando uma importação posterior volta a sinalizar o estudante."""
+    today = timezone.localdate()
+    situacoes = SituacaoInfrequencia.objects.select_related("aluno", "aluno__turma").filter(ano_letivo=today.year)
+    ultima_importacao = HistoricoSituacaoInfrequencia.objects.filter(
+        aluno_id=OuterRef("aluno_id"), ano_letivo=today.year
+    ).order_by("-importado_em")
+    acao_concluida = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), status="Concluída"
+    ).order_by("-criado_em")
+    acao_vigente = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__gte=today
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    base = situacoes.annotate(
+        ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
+        concluida_em=Subquery(acao_concluida.values("criado_em")[:1]),
+        tem_acao_vigente=Exists(acao_vigente),
+    ).annotate(
+        concluido_apos_integracao=Q(concluida_em__isnull=False) &
+            Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
     )
-    base = situacoes_base.annotate(
-        tem_acao=Exists(acoes_aluno),
-        tem_prazo_ativo=Exists(acoes_ativas),
-    )
-
     q = request.GET.get("q", "").strip()
     faixa = request.GET.get("faixa", "")
-    visao = request.GET.get("visao", "pendentes")
-    if visao not in {"pendentes", "sem_acao", "vencidos", "em_acompanhamento", "prioridade"}:
-        visao = "pendentes"
-
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    percentual_min = request.GET.get("percentual_min", "").strip()
+    percentual_max = request.GET.get("percentual_max", "").strip()
+    base = base.filter(tem_acao_vigente=False).exclude(concluido_apos_integracao=True)
     if q:
         base = base.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q))
+    if turno:
+        base = base.filter(aluno__turma__turno=turno)
+    if turma:
+        base = base.filter(aluno__turma_id=turma)
+    if percentual_min:
+        try: base = base.filter(percentual_geral_final__gte=Decimal(percentual_min))
+        except InvalidOperation: pass
+    if percentual_max:
+        try: base = base.filter(percentual_geral_final__lte=Decimal(percentual_max))
+        except InvalidOperation: pass
     if faixa == "critico":
         base = base.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25))
     elif faixa == "atencao":
-        base = base.filter(
-            Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)
-        ).exclude(
-            Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)
-        )
-
-    ultima_importacao = ImportacaoInfrequencia.objects.order_by("-criado_em").first()
-    historico_recorrente = HistoricoSituacaoInfrequencia.objects.none()
-    prioridade_ids = []
-    if ultima_importacao:
-        historico_recorrente = HistoricoSituacaoInfrequencia.objects.filter(
-            importacao_id=ultima_importacao.pk, apareceu_novamente=True, aluno__isnull=False
-        )
-        if q:
-            historico_recorrente = historico_recorrente.filter(
-                Q(aluno__nome__icontains=q) | Q(matricula__icontains=q)
-            )
-        if faixa == "critico":
-            historico_recorrente = historico_recorrente.filter(percentual_considerado__gte=25)
-        elif faixa == "atencao":
-            historico_recorrente = historico_recorrente.filter(
-                percentual_considerado__gte=10, percentual_considerado__lt=25
-            )
-        historico_recorrente = historico_recorrente.select_related(
-            "aluno", "aluno__turma", "importacao"
-        ).order_by("-importado_em", "aluno__nome")
-        prioridade_ids = list(historico_recorrente.values_list("aluno_id", flat=True).distinct())
-
-    # Contagens das abas respeitam os filtros de nome e faixa.
-    total_sem_acao = base.filter(tem_acao=False, tem_prazo_ativo=False).count()
-    total_vencidos = base.filter(tem_acao=True, tem_prazo_ativo=False).count()
-    total_em_acompanhamento = base.filter(tem_prazo_ativo=True).count()
-    total_prioridade = base.filter(aluno_id__in=prioridade_ids, tem_prazo_ativo=False).count()
-
-    if visao == "sem_acao":
-        base = base.filter(tem_acao=False, tem_prazo_ativo=False)
-    elif visao == "vencidos":
-        base = base.filter(tem_acao=True, tem_prazo_ativo=False)
-    elif visao == "em_acompanhamento":
-        base = base.filter(tem_prazo_ativo=True)
-    elif visao == "prioridade":
-        base = base.filter(aluno_id__in=prioridade_ids, tem_prazo_ativo=False)
-    else:
-        # Fila padrão: quem ainda precisa de ação ou já venceu o prazo.
-        base = base.filter(tem_prazo_ativo=False)
-
+        base = base.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(
+            Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25))
     base = base.order_by("-percentual_geral_final", "aluno__nome")
+    pendentes = base
     total_estudantes = base.count()
     pagina_situacoes = Paginator(base, 50).get_page(request.GET.get("page"))
-
-    # Prioridade: reapareceu na integração mais recente e ainda não tem providência
-    # dentro do prazo. O histórico de importações permanece imutável.
-    prioridade_sem_acao = historico_recorrente.annotate(
-        acompanhamento_ativo=Exists(
-            AcaoBuscaAtiva.objects.filter(
-                aluno_id=OuterRef("aluno_id"), prazo__gte=hoje
-            ).exclude(status__in=["Concluída", "Cancelada"])
-        )
-    ).filter(acompanhamento_ativo=False).distinct()[:30]
-
-    contexto = {
-        "situacoes": pagina_situacoes,
-        "pagina_situacoes": pagina_situacoes,
+    from turmas.models import Turma
+    turmas = Turma.objects.all().order_by("nome")
+    turnos = getattr(Turma, "TURNOS", [])
+    context = {
+        "situacoes": pagina_situacoes, "pagina_situacoes": pagina_situacoes,
         "total_estudantes": total_estudantes,
-        "total_criticos": situacoes_base.filter(
-            Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)
-        ).count(),
-        "total_atencao": situacoes_base.filter(
-            Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)
-        ).exclude(
-            Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)
-        ).count(),
-        "acoes_pendentes": AcaoBuscaAtiva.objects.filter(
-            prazo__gte=hoje
-        ).exclude(status__in=["Concluída", "Cancelada"]).values("aluno_id").distinct().count(),
-        "total_sem_acao": total_sem_acao,
-        "total_vencidos": total_vencidos,
-        "total_em_acompanhamento": total_em_acompanhamento,
-        "total_prioridade": total_prioridade,
-        "visao": visao,
-        "q": q, "faixa": faixa,
+        "total_criticos": pendentes.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
+        "total_atencao": pendentes.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
+        "acoes_pendentes": AcaoBuscaAtiva.objects.filter(prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"]).count(),
+        "q": q, "faixa": faixa, "turno": turno, "turma": turma,
+        "percentual_min": percentual_min, "percentual_max": percentual_max,
+        "turmas": turmas, "turnos": turnos,
         "importacoes": ImportacaoInfrequencia.objects.all()[:10],
-        "ultimos_repetidos": prioridade_sem_acao,
-        "ultima_importacao": ultima_importacao,
+        "ultimos_repetidos": HistoricoSituacaoInfrequencia.objects.filter(apareceu_novamente=True).select_related("aluno", "importacao").order_by("-importado_em")[:12],
     }
-    return render(request, "busca_ativa/painel.html", contexto)
+    return render(request, "busca_ativa/painel.html", context)
 
 
 @login_required
@@ -226,7 +179,6 @@ def ficha_aluno(request, aluno_id):
         "aluno": aluno, "situacao": situacao, "acoes": acoes,
         "historico_importacoes": historico_importacoes, "resumo_diario": resumo_diario,
         "acesso": acesso, "link_consulta": link, "status_choices": AcaoBuscaAtiva.STATUS,
-        "hoje": timezone.localdate(),
     })
 
 
@@ -238,18 +190,19 @@ def registrar_acao(request, aluno_id):
         data = request.POST.get("data") or timezone.localdate().isoformat()
         tipo = request.POST.get("tipo", "")
         descricao = request.POST.get("descricao", "").strip()
-        prazo_txt = request.POST.get("prazo") or ""
-        prazo = prazo_txt or (timezone.localdate() + timedelta(days=7)).isoformat()
+        prazo = request.POST.get("prazo") or None
         resultado = request.POST.get("resultado", "").strip()
         proxima = request.POST.get("proxima_acao", "").strip()
         situacao_atual = SituacaoInfrequencia.objects.filter(aluno=aluno).order_by("-ano_letivo").first()
-        exige_prazo = bool(situacao_atual and situacao_atual.percentual_considerado >= 10)
+        exige_prazo = True
         if not descricao:
             messages.error(request, "Descreva a providência realizada.")
         elif not tipo:
             messages.error(request, "Selecione o tipo de ação.")
-        elif exige_prazo and not prazo:
-            messages.error(request, "Para estudantes em faixa de atenção ou crítica, informe o prazo da próxima ação.")
+        elif not prazo:
+            messages.error(request, "Informe a data de retorno/reavaliação para manter o estudante em acompanhamento até o vencimento.")
+        elif prazo and parse_date(prazo) and parse_date(prazo) < timezone.localdate():
+            messages.error(request, "O prazo de acompanhamento não pode ser anterior à data de hoje.")
         else:
             # Impede repetição idêntica no mesmo dia, sem apagar ou sobrescrever histórico.
             duplicada = AcaoBuscaAtiva.objects.filter(
@@ -264,14 +217,12 @@ def registrar_acao(request, aluno_id):
                     responsavel=request.user,
                 )
                 messages.success(request, "Providência registrada no histórico do estudante.")
-                return redirect("busca_ativa:ficha", aluno_id=aluno.id)
+                return redirect("busca_ativa:acompanhamentos")
     situacao_atual = SituacaoInfrequencia.objects.filter(aluno=aluno).order_by("-ano_letivo").first()
     exige_prazo = bool(situacao_atual and situacao_atual.percentual_considerado >= 10)
     return render(request, "busca_ativa/acao_form.html", {
         "aluno": aluno, "tipos": AcaoBuscaAtiva.TIPOS,
-        "hoje": timezone.localdate().isoformat(),
-        "prazo_sugerido": (timezone.localdate() + timedelta(days=7)).isoformat(),
-        "exige_prazo": exige_prazo,
+        "hoje": timezone.localdate().isoformat(), "exige_prazo": exige_prazo,
     })
 
 

@@ -1,6 +1,21 @@
 {% extends "core/base.html" %}
 {% block content %}
 <style>
+@media print {
+  nav, aside, .sidebar, .navbar, form, .btn, button, a.btn, .no-print {display:none!important}
+  body, main, .container, .container-fluid {background:#fff!important;color:#111!important}
+  .card,.ba-panel {box-shadow:none!important;border:1px solid #bbb!important;break-inside:avoid}
+  table {font-size:10pt!important}
+  th,td {padding:5px!important}
+  h1,h2,h3,h4,h5 {color:#111!important}
+}
+</style>
+<div class="d-flex justify-content-end gap-2 mb-3 no-print">
+ <button type="button" class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i> Imprimir relatório</button>
+ <a class="btn btn-outline-secondary" href="?{% for key,value in request.GET.items %}{% if key != 'csv' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}csv=1"><i class="bi bi-filetype-csv me-1"></i> Exportar CSV</a>
+</div>
+
+<style>
 .ba-page{max-width:1600px;margin:auto}.ba-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.ba-box{background:#fff;border:1px solid #e6ebf2;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 5px 18px #1d35570a}.ba-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.ba-metric{background:#fff;border:1px solid #e6ebf2;border-radius:13px;padding:16px}.ba-metric small{color:#6b7788}.ba-metric strong{display:block;font-size:28px}.ba-filters{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px}.ba-filters label{font-size:12px;font-weight:700;color:#596579;margin-bottom:4px}.ba-filters input,.ba-filters select{width:100%;border:1px solid #d9e0ea;border-radius:8px;padding:9px;background:#fff}.ba-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.ba-table{width:100%;border-collapse:collapse;min-width:1050px}.ba-table th,.ba-table td{padding:11px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:middle}.ba-table th{font-size:11px;color:#667386;text-transform:uppercase;white-space:nowrap}.ba-pill{display:inline-block;border-radius:30px;padding:4px 8px;background:#edf2f8;font-size:11px;font-weight:700}.ba-btn{display:inline-block;border:0;border-radius:8px;padding:9px 12px;background:#315be8;color:white;text-decoration:none;font-weight:600}.ba-btn.secondary{background:#eef2f7;color:#334155}.ba-muted{color:#6b7788;font-size:12px}@media(max-width:900px){.ba-metrics{grid-template-columns:1fr}.ba-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.ba-filters{grid-template-columns:1fr}}
 </style>
 <div class="container-fluid ba-page py-2">
