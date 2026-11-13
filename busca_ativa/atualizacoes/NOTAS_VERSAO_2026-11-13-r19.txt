@@ -1,0 +1,11 @@
+VERSAO: 2026.11.13.19
+TITULO: Mascote GerEdu em animação 3D, dança e interação com mouse
+
+TEXTO:
+- Substituído o desenho vetorial estático por um personagem original renderizado em estilo 3D, com animação GIF real de 16 quadros em loop contínuo.
+- Personagem dança com passos, pulos, balanço do corpo, gestos e expressões.
+- Interação com mouse: inclinação em perspectiva 3D conforme a posição do cursor, resposta visual ao clique e suporte a arrastar.
+- Mantidos os efeitos do portal mágico e das moedas durante o desaparecimento e o retorno.
+- Portal acompanha as dimensões visuais do personagem.
+- Mantidas as opções de tempo para desaparecer, boas-vindas personalizadas, diálogos fecháveis e informações do calendário letivo.
+- Novo arquivo de mídia em core/static/img/duende_geredu_danca.gif.

@@ -53,3 +53,10 @@
 - Preferência salva localmente por usuário/navegador.
 - Calendário apresenta dias letivos restantes e dias corridos até a data final cadastrada.
 - Nota TXT `NOTAS_VERSAO_2026-11-13-r18.txt` e migration `0016_comunicado_duende_danca_r18`.
+
+## r19 — 13/11/2026
+- Substituído o desenho vetorial anterior por GIF animado original de 16 quadros, em estilo 3D, com dança em loop.
+- Adicionada reação ao cursor com inclinação em perspectiva 3D, resposta ao clique e suporte a arrastar.
+- Mantidos portal e moedas douradas, preferências de visibilidade, boas-vindas e calendário.
+- Mídia: `core/static/img/duende_geredu_danca.gif`.
+- Nota TXT `NOTAS_VERSAO_2026-11-13-r19.txt` e migration `0017_comunicado_duende_3d_r19`.
