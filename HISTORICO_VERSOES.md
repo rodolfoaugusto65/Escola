@@ -60,3 +60,12 @@
 - Mantidos portal e moedas douradas, preferências de visibilidade, boas-vindas e calendário.
 - Mídia: `core/static/img/duende_geredu_danca.gif`.
 - Nota TXT `NOTAS_VERSAO_2026-11-13-r19.txt` e migration `0017_comunicado_duende_3d_r19`.
+
+## r20 — 13/11/2026
+- Substituído GIF por modelo 3D GLB/GLTF renderizado com Three.js.
+- Modelo dividido em partes para animação procedural articulada de cabeça, braços, pernas e pés.
+- Interação com cursor, inclinação em perspectiva, olhar direcionado, clique e arraste.
+- Rotinas manhã/tarde/noite com iluminação e ritmos de movimento distintos.
+- Após inatividade, o mascote passeia pela parte inferior da tela, muda de posição gradualmente e depois descansa/deita; desperta com interação.
+- Mantidos portal, moedas, temporizador, boas-vindas, diálogos e calendário.
+- Incluídos `core/static/models/duende_geredu.glb`, nota TXT r20 e migration `0018_comunicado_duende_3d_rotinas_r20`.

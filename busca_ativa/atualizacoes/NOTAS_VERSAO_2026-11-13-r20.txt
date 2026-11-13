@@ -1,0 +1,15 @@
+VERSAO: 2026.11.13.20
+TITULO: Mascote 3D interativo com rotinas por período do dia
+
+TEXTO:
+- Substituído o GIF do mascote por modelo 3D em formato GLB/GLTF, renderizado no navegador com Three.js.
+- Modelo original do Duende GerEdu com chapéu verde, orelhas grandes, túnica clara, capa e medalhão dourado.
+- Partes do corpo são controladas separadamente para movimentos articulados de cabeça, braços, pernas e pés.
+- Interação com mouse: acompanha o cursor com olhos e cabeça, inclina o corpo em perspectiva, reage ao clique e pode ser arrastado.
+- Rotina da manhã: iluminação quente e comportamento mais animado.
+- Rotina da tarde: comportamento brincalhão e atento.
+- Rotina da noite: iluminação fria, movimentos mais lentos e descanso.
+- Após período sem interação, o duende passeia pela parte inferior da tela, mudando de posição gradualmente, e depois senta/deita para descansar; acorda quando o usuário retorna.
+- Preservados portal, moedas, temporizador de visibilidade, botão de retorno, boas-vindas personalizadas, diálogos fecháveis e informações do calendário letivo.
+- Modelo incluído em core/static/models/duende_geredu.glb.
+- Renderizador Three.js e GLTFLoader são carregados sob demanda pelo navegador.

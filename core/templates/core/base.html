@@ -1907,6 +1907,14 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende{position:fixed;right:24px;bottom:18px;z-index:4200;font-family:inherit;touch-action:none;user-select:none}
 #gereduDuende .gd-launcher{width:118px;height:166px;padding:0;border:0;background:transparent;cursor:grab;position:relative;filter:drop-shadow(0 9px 12px #102b4730);transform-origin:50% 85%}
 #gereduDuende .gd-launcher:active{cursor:grabbing}
+
+#gereduDuende .gd-dancer-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 7px #142b3b35);transform:translateZ(12px)}
+#gereduDuende .gd-3d-fallback{position:absolute;inset:12px 4px 4px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#e7f8e8,#b9d9b8);color:#28553a;font-weight:800;font-size:12px;text-align:center}
+#gereduDuende .gd-launcher{overflow:visible}
+#gereduDuende .gd-launcher:hover .gd-dancer-img{filter:drop-shadow(0 13px 12px #142b3b55)}
+#gereduDuende .gd-dialog-body .gd-routine{font-size:11px;color:#52687a;margin-top:6px}
+#gereduDuende .gd-portal{pointer-events:none}
+
 #gereduDuende .gd-launcher:hover{filter:drop-shadow(0 12px 16px #102b4750)}
 #gereduDuende .gd-launcher{animation:none;transform-style:preserve-3d;transition:transform .18s cubic-bezier(.2,.7,.2,1),filter .2s}
 #gereduDuende .gd-dancer-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 7px #142b3b35);transform:translateZ(12px)}
@@ -1993,6 +2001,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
       <div style="font-size:13px;color:#52687a">Cadastre ou ative o calendário escolar para acompanhar o encerramento do ano letivo.</div>
     {% endif %}
    </div>
+   <div class="gd-routine" id="gdRoutineStatus">Rotina do duende: preparando o dia...</div>
    {% if comunicado_pendente %}
    <div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff5e6;border:1px solid #f3d39b;color:#875314;font-size:12px">🔔 Há uma atualização do GerEdu aguardando sua confirmação de leitura.</div>
    {% endif %}
@@ -2022,7 +2031,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  <div class="gd-coins" aria-hidden="true">{% for coin in "12345678" %}<i class="gd-coin"></i>{% endfor %}</div>
  <button type="button" class="gd-summon" id="gdSummon" aria-label="Trazer o duende de volta">✦</button>
  <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
-  <img class="gd-character gd-dancer-img" src="{% static 'img/duende_geredu_danca.gif' %}" alt="Duende 3D do GerEdu dançando" draggable="false">
+  <canvas id="gd3dCanvas" class="gd-character gd-dancer-img" aria-label="Mascote 3D interativo do GerEdu"></canvas><span id="gd3dFallback" class="gd-3d-fallback" hidden>Duende do GerEdu</span>
  </button>
 </div>
 <script>
@@ -2137,6 +2146,168 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
    setTimeout(()=>launcher.classList.remove('gd-flee-left','gd-flee-right'),550);
   }
  });
+})();
+</script>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+(async function(){
+ const canvas=document.getElementById('gd3dCanvas');
+ const launcher=document.getElementById('gdLauncher');
+ const root=document.getElementById('gereduDuende');
+ const fallback=document.getElementById('gd3dFallback');
+ const routineLabel=document.getElementById('gdRoutineStatus');
+ if(!canvas||!launcher||!root||canvas.dataset.ready==='1')return;
+ canvas.dataset.ready='1';
+ try{
+  const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+  const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setSize(launcher.clientWidth,launcher.clientHeight,false);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.12;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(32,launcher.clientWidth/launcher.clientHeight,.1,30);
+  camera.position.set(0,1.55,7.3);
+  camera.lookAt(0,1.48,0);
+  scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
+  const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
+  const fill=new THREE.DirectionalLight(0x9fd9ff,1.15);fill.position.set(3,2,2);scene.add(fill);
+  const rim=new THREE.PointLight(0xffd16a,1.0,9);rim.position.set(0,3,-2);scene.add(rim);
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(1.0,40),new THREE.MeshBasicMaterial({color:0x203c2b,transparent:true,opacity:.13}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=.01;floor.scale.set(.68,.22,1);scene.add(floor);
+  const loader=new GLTFLoader();
+  const gltf=await loader.loadAsync("{% static 'models/duende_geredu.glb' %}");
+  const model=gltf.scene;
+  model.scale.setScalar(.84);
+  model.position.set(0,-.02,0);
+  scene.add(model);
+  const get=n=>model.getObjectByName(n);
+  const pivot=(name,point)=>{
+    const obj=get(name);if(!obj)return null;
+    const p=new THREE.Group();p.position.set(...point);model.add(p);p.attach(obj);return p;
+  };
+  const headPivot=pivot('head',[0,1.95,0]);
+  const leftArm=pivot('left_arm',[-.30,1.45,0]);
+  const rightArm=pivot('right_arm',[.30,1.45,0]);
+  const leftLeg=pivot('left_leg',[-.18,.42,0]);
+  const rightLeg=pivot('right_leg',[.18,.42,0]);
+  const leftBoot=pivot('left_boot',[-.19,.25,0]);
+  const rightBoot=pivot('right_boot',[.19,.25,0]);
+  const eyeParts=['left_iris','right_iris','left_pupil','right_pupil'].map(n=>get(n)).filter(Boolean);
+  const eyeBase=eyeParts.map(o=>({o,x:o.position.x,y:o.position.y}));
+  const modelRoot=new THREE.Group();modelRoot.add(model);scene.add(modelRoot);
+  let mouseX=0,mouseY=0,targetX=0,targetY=0,lastActivity=Date.now(),lastWander=0,wanderUntil=0,wanderTarget=0,lastScreenWander=0;
+  let mode='idle',modeSince=Date.now(),dragging=false,lookAtMouse=false,night=false;
+  const clock=new THREE.Clock();
+  const dayMode=()=>{
+    const h=new Date().getHours();
+    if(h>=5&&h<12)return 'morning';
+    if(h>=12&&h<18)return 'afternoon';
+    return 'night';
+  };
+  function setRoutine(){
+    const d=dayMode();
+    night=d==='night';
+    scene.background=null;
+    key.color.set(night?0x9ab8ff:d==='morning'?0xffd49a:0xfff0d4);
+    key.intensity=night?1.45:d==='morning'?2.6:2.25;
+    fill.color.set(night?0x668bd8:0xa5dcff);
+    fill.intensity=night?1.35:1.0;
+    rim.color.set(night?0x8eabff:0xffd16a);
+    if(routineLabel)routineLabel.textContent=d==='morning'?'Rotina da manhã · acordado e animado':d==='afternoon'?'Rotina da tarde · brincalhão e atento':'Rotina da noite · movimentos tranquilos e descanso';
+  }
+  setRoutine();
+  function wake(){
+    lastActivity=Date.now();lookAtMouse=true;
+    if(mode==='sleep'||mode==='rest'){mode='wake';modeSince=Date.now();}
+    if(mode==='wander'){mode='dance';modeSince=Date.now();}
+  }
+  window.addEventListener('pointermove',e=>{
+    const r=launcher.getBoundingClientRect();
+    if(e.clientX>=r.left-80&&e.clientX<=r.right+80&&e.clientY>=r.top-80&&e.clientY<=r.bottom+80){
+      targetX=((e.clientX-r.left)/Math.max(1,r.width)-.5)*1.4;
+      targetY=((e.clientY-r.top)/Math.max(1,r.height)-.5)*-.9;
+      wake();
+    }
+  },{passive:true});
+  launcher.addEventListener('pointerdown',()=>{wake();mode='dance';modeSince=Date.now();root.style.transition='left .2s ease, top .2s ease';});
+  launcher.addEventListener('dblclick',()=>{mode='dance';modeSince=Date.now();});
+  window.addEventListener('pointerdown',e=>{
+    if(!root.contains(e.target)){lastActivity=Date.now();}
+  },{passive:true});
+  const resize=()=>{
+    const w=Math.max(1,launcher.clientWidth),h=Math.max(1,launcher.clientHeight);
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  };
+  new ResizeObserver(resize).observe(launcher);
+  const smooth=(a,b,t)=>a+(b-a)*Math.min(1,t);
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime,now=Date.now();
+    const idle=(now-lastActivity)/1000;
+    if(now-modeSince>60000&&dayMode()!== (window._gdDay||'')){window._gdDay=dayMode();setRoutine();}
+    if(idle>22&&mode!=='wander'&&mode!=='sleep'&&mode!=='rest'){
+      mode='wander';modeSince=now;wanderUntil=now+18000;wanderTarget=(Math.random()-.5)*.75;
+      root.style.transition='left 3.2s ease, top 3.2s ease';
+      root.style.right='auto';root.style.bottom='auto';
+      root.style.top=Math.max(8,window.innerHeight-root.offsetHeight-14)+'px';
+      root.style.left=Math.max(8,Math.min(window.innerWidth-root.offsetWidth-8,Math.random()*(window.innerWidth-root.offsetWidth)))+'px';
+      lastScreenWander=now;
+    }
+    if(mode==='wander'&&now-lastScreenWander>4200){
+      root.style.left=Math.max(8,Math.min(window.innerWidth-root.offsetWidth-8,Math.random()*(window.innerWidth-root.offsetWidth)))+'px';
+      lastScreenWander=now;
+    }
+    if(mode==='wander'&&now>wanderUntil){mode=night?'sleep':'rest';modeSince=now;}
+    if(mode==='wake'&&now-modeSince>2200){mode='dance';modeSince=now;}
+    if(mode==='rest'&&idle<5){mode='wake';modeSince=now;}
+    if(mode==='sleep'&&idle<5){mode='wake';modeSince=now;}
+    const dance=mode==='dance'||mode==='wake';
+    const walking=mode==='wander';
+    const resting=mode==='rest'||mode==='sleep';
+    const amp=dance?1:walking?.62:resting?.12:.25;
+    const speed=night?.7:1.0;
+    const wave=Math.sin(t*5.5*speed),bounce=Math.abs(Math.sin(t*3.3*speed));
+    modelRoot.position.x=smooth(modelRoot.position.x,walking?wanderTarget:0,dt*(walking?.7:1.8));
+    modelRoot.position.y=smooth(modelRoot.position.y,resting?-.22:0,dt*1.8)+ (walking?Math.abs(wave)*.055:dance?bounce*.10:Math.sin(t*1.2)*.018);
+    modelRoot.rotation.y=smooth(modelRoot.rotation.y,targetX*.24+(walking?Math.sin(t*1.1)*.22:0),dt*3);
+    if(headPivot){
+      headPivot.rotation.y=smooth(headPivot.rotation.y,targetX*.32+Math.sin(t*1.1)*.035,dt*4);
+      headPivot.rotation.x=smooth(headPivot.rotation.x,targetY*.18+(resting?.13:Math.sin(t*2)*.018),dt*4);
+      headPivot.rotation.z=Math.sin(t*1.8)*.035+(walking?Math.sin(t*5)*.04:0);
+    }
+    if(leftArm){leftArm.rotation.z=dance?Math.sin(t*5)*.75:walking?Math.sin(t*7)*.48:resting?.20:Math.sin(t*1.7)*.12;}
+    if(rightArm){rightArm.rotation.z=dance?-Math.sin(t*5+.8)*.75:walking?-Math.sin(t*7)*.48:resting?-.20:-Math.sin(t*1.7)*.12;}
+    if(leftLeg)leftLeg.rotation.x=walking?Math.sin(t*7)*.62:dance?Math.sin(t*5)*.25:0;
+    if(rightLeg)rightLeg.rotation.x=walking?-Math.sin(t*7)*.62:dance?-Math.sin(t*5)*.25:0;
+    if(leftBoot)leftBoot.rotation.x=walking?Math.sin(t*7)*.35:0;
+    if(rightBoot)rightBoot.rotation.x=walking?-Math.sin(t*7)*.35:0;
+    const eyeX=targetX*.045,eyeY=targetY*.035;
+    for(const p of eyeBase){p.o.position.x=p.x+eyeX;p.o.position.y=p.y+eyeY;}
+    if(resting){modelRoot.rotation.z=smooth(modelRoot.rotation.z,mode==='sleep'?-1.18:-.88,dt*.8);}
+    else{modelRoot.rotation.z=smooth(modelRoot.rotation.z,0,dt*2.2);}
+    if(mode==='sleep'&&headPivot)headPivot.rotation.z=Math.sin(t*.5)*.025;
+    if(routineLabel){
+      const period=dayMode();
+      const phase=mode==='wander'?'passeando pela tela':mode==='sleep'?'dormindo':mode==='rest'?'descansando':mode==='wake'?'acordando':mode==='dance'?'dançando':'observando o movimento';
+      const timeLabel=period==='morning'?'Manhã':period==='afternoon'?'Tarde':'Noite';
+      routineLabel.textContent=timeLabel+' · '+phase;
+    }
+    renderer.render(scene,camera);
+  }
+  animate();
+  root.dataset.model3d='ready';
+ }catch(err){
+  console.error('Duende 3D não carregou:',err);
+  if(fallback){fallback.hidden=false;fallback.textContent='Duende indisponível · verifique a conexão 3D';}
+  if(routineLabel)routineLabel.textContent='Não foi possível carregar o modelo 3D.';
+ }
 })();
 </script>
 {% endif %}
