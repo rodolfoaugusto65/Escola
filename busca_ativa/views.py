@@ -20,6 +20,7 @@ from django.db.models import Count, Q, Exists, OuterRef, Subquery, DecimalField,
 from django.db.models.functions import Coalesce, Greatest
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from openpyxl import load_workbook
@@ -458,11 +459,22 @@ def estatisticas_consultas(request):
 
 
 @login_required
+@require_POST
 def confirmar_comunicado(request, comunicado_id):
     comunicado = get_object_or_404(ComunicadoSistema, pk=comunicado_id, ativo=True)
-    if request.method == "POST" and request.POST.get("confirmacao") == "lido":
-        LeituraComunicado.objects.get_or_create(comunicado=comunicado, usuario=request.user)
-    return redirect(request.POST.get("next") or "home")
+    if request.POST.get("confirmacao") == "lido":
+        LeituraComunicado.objects.get_or_create(
+            comunicado=comunicado, usuario=request.user
+        )
+        messages.success(request, f"Leitura da atualização {comunicado.versao} confirmada.")
+    destino = request.POST.get("next") or "home"
+    # Evita redirecionamento para domínios externos.
+    from django.utils.http import url_has_allowed_host_and_scheme
+    if not url_has_allowed_host_and_scheme(
+        destino, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        destino = "home"
+    return redirect(destino)
 
 
 def dispensar_assistente_natalino(request):
@@ -1390,10 +1402,27 @@ def importar_comunicado_txt(request):
             versao, titulo, texto = campos.get('VERSAO', ''), campos.get('TITULO', ''), '\n'.join(corpo).strip()
             if not versao or not titulo or not texto:
                 raise ValueError('O TXT precisa conter VERSAO:, TITULO: e TEXTO:, seguido da descrição da atualização.')
-            comunicado, criado = ComunicadoSistema.objects.update_or_create(
-                versao=versao,
-                defaults={'titulo': titulo[:180], 'texto': texto, 'ativo': True},
-            )
+            # Uma versão nova gera um comunicado novo. Se a mesma versão for
+            # republicada com conteúdo diferente, as confirmações anteriores
+            # deixam de valer e todos os usuários precisam ler novamente.
+            comunicado = ComunicadoSistema.objects.filter(versao=versao).first()
+            criado = comunicado is None
+            if comunicado is None:
+                comunicado = ComunicadoSistema.objects.create(
+                    versao=versao, titulo=titulo[:180], texto=texto, ativo=True
+                )
+            else:
+                mudou_conteudo = (
+                    comunicado.titulo != titulo[:180]
+                    or comunicado.texto != texto
+                    or not comunicado.ativo
+                )
+                if mudou_conteudo:
+                    LeituraComunicado.objects.filter(comunicado=comunicado).delete()
+                    comunicado.titulo = titulo[:180]
+                    comunicado.texto = texto
+                    comunicado.ativo = True
+                    comunicado.save(update_fields=["titulo", "texto", "ativo"])
             # Arquiva o TXT original em uma pasta única de notas de versão.
             pasta_notas = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
             pasta_notas.mkdir(parents=True, exist_ok=True)

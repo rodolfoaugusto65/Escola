@@ -45,8 +45,13 @@ def avisos_e_calendario(request):
     context = {"comunicado_pendente": None, "dias_letivos_restantes": None, "data_fim_letivo": None, "mostrar_assistente_natalino": False}
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
-        comunicado = ComunicadoSistema.objects.filter(ativo=True).exclude(leituras__usuario=user).order_by("-criado_em").first()
-        context["comunicado_pendente"] = comunicado
+        pendentes = (
+            ComunicadoSistema.objects.filter(ativo=True)
+            .exclude(leituras__usuario=user)
+            .order_by("criado_em", "pk")
+        )
+        context["comunicado_pendente"] = pendentes.first()
+        context["total_comunicados_pendentes"] = pendentes.count()
         hoje = timezone.localdate()
         calendario = CalendarioEscolar.objects.filter(ativo=True).order_by("-data_fim_letivo").first()
         if calendario:
