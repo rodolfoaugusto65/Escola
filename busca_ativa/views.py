@@ -459,6 +459,38 @@ def estatisticas_consultas(request):
 
 
 @login_required
+def comunicado_pendente_api(request):
+    """API consultada globalmente para exibir atualizações sem trocar de página."""
+    from django.views.decorators.http import require_http_methods
+    if request.method == "POST":
+        comunicado_id = request.POST.get("comunicado_id")
+        if comunicado_id:
+            comunicado = get_object_or_404(ComunicadoSistema, pk=comunicado_id, ativo=True)
+            LeituraComunicado.objects.get_or_create(comunicado=comunicado, usuario=request.user)
+    comunicado = (
+        ComunicadoSistema.objects.filter(ativo=True)
+        .exclude(leituras__usuario=request.user)
+        .order_by("criado_em", "pk")
+        .first()
+    )
+    total = (
+        ComunicadoSistema.objects.filter(ativo=True)
+        .exclude(leituras__usuario=request.user)
+        .count()
+    )
+    if not comunicado:
+        return JsonResponse({"pending": False, "total": 0})
+    return JsonResponse({
+        "pending": True,
+        "id": comunicado.pk,
+        "versao": comunicado.versao,
+        "titulo": comunicado.titulo,
+        "texto": comunicado.texto,
+        "total": total,
+    })
+
+
+@login_required
 @require_POST
 def confirmar_comunicado(request, comunicado_id):
     comunicado = get_object_or_404(ComunicadoSistema, pk=comunicado_id, ativo=True)

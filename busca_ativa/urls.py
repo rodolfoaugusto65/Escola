@@ -24,6 +24,7 @@ urlpatterns = [
     path("consultas/", views.estatisticas_consultas, name="estatisticas_consultas"),
     path("calendario-letivo/", views.calendario_letivo, name="calendario_letivo"),
     path("consulta/<str:token>/", views.consulta_publica, name="consulta_publica"),
+    path("comunicado/pendente-api/", views.comunicado_pendente_api, name="comunicado_pendente_api"),
     path("comunicado/<int:comunicado_id>/lido/", views.confirmar_comunicado, name="confirmar_comunicado"),
     path("atualizacao-txt/", views.importar_comunicado_txt, name="atualizacao_txt"),
     path("atualizacao-txt/nota/<str:nome>/", views.baixar_nota_versao, name="baixar_nota_versao"),

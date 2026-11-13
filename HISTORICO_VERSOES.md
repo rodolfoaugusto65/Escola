@@ -18,3 +18,12 @@
 - Substituído o assistente sazonal por um Duende GerEdu permanente com corpo ilustrado, gestos animados, janela de diálogo e atalhos contextuais.
 - Movimento discreto de esquiva do cursor; respeita `prefers-reduced-motion`.
 - Incluída a nota `NOTAS_VERSAO_2026-11-13-r14.txt` na pasta `busca_ativa/atualizacoes`.
+
+## r15 — 13/11/2026
+- Adicionada consulta automática de comunicados pendentes por endpoint JSON, com verificação imediata e a cada 10 segundos em todas as telas autenticadas.
+- Confirmação assíncrona de leitura; após confirmar, a próxima atualização pendente aparece sem trocar de página.
+- Mantida a exigência de rolar até o final e marcar ciência.
+- Mascote redesenhado como super-herói original do GerEdu, com corpo, capa, uniforme e gestos.
+- Mascote pode ser arrastado e sua posição fica salva no navegador.
+- Diálogo do assistente exibe dias letivos restantes e data de encerramento do calendário ativo.
+- Incluída nota TXT `2026.11.13.15.txt` e migration `0013_comunicado_global_mascote_r15`.

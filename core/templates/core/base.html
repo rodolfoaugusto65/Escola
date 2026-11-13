@@ -1833,18 +1833,79 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 </script>
 
 
-{% if user.is_authenticated and comunicado_pendente %}
-<div class="modal fade show" id="comunicadoObrigatorio" tabindex="-1" style="display:block;background:rgba(15,23,42,.72);z-index:5000" aria-modal="true" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
- <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg rounded-4"><div class="modal-header text-white" style="background:linear-gradient(120deg,#312e81,#6d28d9)"><h5 class="modal-title">{{ comunicado_pendente.titulo }}</h5><span class="badge bg-light text-dark">Atualização {{ comunicado_pendente.versao }}</span></div><div class="modal-body"><p class="text-muted mb-2">Há uma atualização pendente de leitura. Leia o comunicado e confirme para continuar.</p>
- {% if total_comunicados_pendentes|default:0 > 1 %}<div class="alert alert-info py-2 small">Você possui {{ total_comunicados_pendentes }} atualizações aguardando confirmação. Elas serão apresentadas uma de cada vez.</div>{% endif %}<div id="textoComunicado" class="border rounded-3 p-3" style="white-space:pre-wrap;max-height:48vh;overflow-y:auto;line-height:1.7">{{ comunicado_pendente.texto }}</div><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="confirmouLeitura" disabled required><label class="form-check-label" for="confirmouLeitura">Li todo o comunicado e estou ciente das atualizações.</label></div></div><div class="modal-footer"><form method="post" action="{% url 'busca_ativa:confirmar_comunicado' comunicado_pendente.id %}">{% csrf_token %}<input type="hidden" name="confirmacao" value="lido"><input type="hidden" name="next" value="{{ request.path }}"><button id="btnComunicadoLido" class="btn btn-primary" disabled>Confirmar leitura e continuar</button></form></div></div></div>
-</div>
-<script>(function(){const box=document.getElementById('textoComunicado'),check=document.getElementById('confirmouLeitura'),btn=document.getElementById('btnComunicadoLido');function bottom(){if(box && check && btn && box.scrollTop+box.clientHeight>=box.scrollHeight-8){check.disabled=false;}}if(box&&check&&btn){box.addEventListener('scroll',bottom);bottom();check.addEventListener('change',()=>btn.disabled=!check.checked);if(box.scrollHeight<=box.clientHeight+8)check.disabled=false;}})();</script>
-{% endif %}
-
 {% if user.is_authenticated %}
 <style>
-#gereduDuende{position:fixed;right:22px;bottom:20px;z-index:4200;font-family:inherit}
-#gereduDuende .gd-launcher{width:94px;height:124px;border:0;background:transparent;cursor:pointer;position:relative;transition:transform .28s ease;filter:drop-shadow(0 8px 9px #102b4730)}
+#gereduUpdateOverlay{position:fixed;inset:0;z-index:10050;background:rgba(8,20,35,.76);display:none;align-items:center;justify-content:center;padding:16px}
+#gereduUpdateOverlay .gu-card{width:min(680px,96vw);max-height:88vh;background:#fff;border-radius:20px;box-shadow:0 25px 80px #0007;overflow:hidden;display:flex;flex-direction:column}
+#gereduUpdateOverlay .gu-head{background:linear-gradient(120deg,#102d50,#176b9b);color:white;padding:18px 22px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+#gereduUpdateOverlay .gu-body{padding:20px 22px;overflow:auto;white-space:pre-wrap;line-height:1.65;color:#243449}
+#gereduUpdateOverlay .gu-foot{padding:15px 22px;border-top:1px solid #e5edf3;display:flex;justify-content:flex-end;align-items:center;gap:12px}
+#gereduUpdateOverlay button{border:0;border-radius:10px;padding:10px 16px;font-weight:700}
+#gereduUpdateOverlay .gu-confirm{background:#1768a0;color:white}
+#gereduUpdateOverlay .gu-confirm:disabled{opacity:.45;cursor:not-allowed}
+</style>
+<div id="gereduUpdateOverlay" role="dialog" aria-modal="true" aria-labelledby="guTitle">
+ <div class="gu-card">
+  <div class="gu-head"><div><strong id="guTitle">Atualização do GerEdu</strong><div id="guVersion" style="font-size:12px;opacity:.85"></div></div><span>🔔</span></div>
+  <div class="gu-body" id="guText"></div>
+  <div class="gu-foot"><label style="margin-right:auto;font-size:13px"><input type="checkbox" id="guRead" disabled> Li e estou ciente desta atualização.</label><button class="gu-confirm" id="guConfirm" disabled>Confirmar leitura</button></div>
+ </div>
+</div>
+<script>
+(function(){
+ const overlay=document.getElementById('gereduUpdateOverlay');
+ if(!overlay || window.gereduUpdateWatcherStarted) return;
+ window.gereduUpdateWatcherStarted=true;
+ const title=document.getElementById('guTitle'),version=document.getElementById('guVersion'),
+       text=document.getElementById('guText'),read=document.getElementById('guRead'),
+       confirm=document.getElementById('guConfirm');
+ let activeId=null,locked=false;
+ function cookie(name){const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+ function show(data){
+   if(activeId===data.id) return;
+   activeId=data.id; locked=true;
+   title.textContent=data.titulo||'Atualização do GerEdu';
+   version.textContent='Versão '+(data.versao||'')+(data.total>1?' · '+data.total+' atualizações pendentes':'');
+   text.textContent=data.texto||'';
+   read.checked=false;read.disabled=true;confirm.disabled=true;
+   overlay.style.display='flex';document.body.style.overflow='hidden';
+   text.scrollTop=0;
+   text.onscroll=()=>{if(text.scrollTop+text.clientHeight>=text.scrollHeight-8)read.disabled=false;};
+   if(text.scrollHeight<=text.clientHeight+8)read.disabled=false;
+ }
+ function hide(){overlay.style.display='none';document.body.style.overflow='';activeId=null;locked=false;}
+ read.addEventListener('change',()=>confirm.disabled=!read.checked);
+ confirm.addEventListener('click',async()=>{
+   if(!activeId||!read.checked) return;
+   confirm.disabled=true;confirm.textContent='Registrando...';
+   try{
+    const body=new URLSearchParams({comunicado_id:String(activeId)});
+    const response=await fetch("{% url 'busca_ativa:comunicado_pendente_api' %}",{
+      method:'POST',credentials:'same-origin',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','X-CSRFToken':cookie('csrftoken'),'X-Requested-With':'XMLHttpRequest'},
+      body:body.toString()
+    });
+    if(!response.ok) throw new Error('Falha ao confirmar');
+    const data=await response.json();hide();
+    if(data.pending) show(data);
+   }catch(e){confirm.disabled=false;confirm.textContent='Tentar novamente';}
+   finally{confirm.textContent='Confirmar leitura';}
+ });
+ async function poll(){
+  if(locked) return;
+  try{const response=await fetch("{% url 'busca_ativa:comunicado_pendente_api' %}",{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});
+   if(response.ok){const data=await response.json();if(data.pending)show(data);}
+  }catch(e){}
+ }
+ poll();setInterval(poll,10000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+})();
+</script>
+{% endif %}
+{% if user.is_authenticated %}
+<style>
+#gereduDuende{position:fixed;right:22px;bottom:20px;z-index:4200;font-family:inherit;touch-action:none;user-select:none}
+#gereduDuende .gd-launcher{width:108px;height:145px;border:0;background:transparent;cursor:pointer;position:relative;transition:transform .28s ease;filter:drop-shadow(0 8px 9px #102b4730)}
 #gereduDuende .gd-launcher:hover{transform:translateY(-5px) scale(1.04)}
 #gereduDuende .gd-launcher:focus-visible{outline:3px solid #38bdf8;outline-offset:5px;border-radius:22px}
 #gereduDuende .gd-character{width:100%;height:100%;overflow:visible}
@@ -1853,7 +1914,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-arm-right{transform-origin:82px 93px;animation:gdArm 3.4s ease-in-out infinite}
 #gereduDuende .gd-body{transform-origin:68px 95px;animation:gdBreathe 2.6s ease-in-out infinite}
 #gereduDuende .gd-shadow{animation:gdShadow 2.6s ease-in-out infinite}
-#gereduDuende .gd-dialog{position:absolute;right:0;bottom:132px;width:min(365px,calc(100vw - 32px));background:#fff;border:1px solid #dbe5ef;border-radius:18px;box-shadow:0 18px 55px #0f274733;overflow:hidden;display:none}
+#gereduDuende .gd-dialog{position:absolute;right:0;bottom:150px;width:min(365px,calc(100vw - 32px));background:#fff;border:1px solid #dbe5ef;border-radius:18px;box-shadow:0 18px 55px #0f274733;overflow:hidden;display:none}
 #gereduDuende.gd-open .gd-dialog{display:block;animation:gdDialogIn .22s ease-out}
 #gereduDuende .gd-dialog-head{padding:13px 16px;background:linear-gradient(120deg,#12314d,#17628a);color:#fff;display:flex;align-items:center;justify-content:space-between}
 #gereduDuende .gd-dialog-body{padding:15px;color:#25364a;font-size:14px;line-height:1.5}
@@ -1865,6 +1926,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-speech:after{content:"";position:absolute;right:-6px;bottom:12px;width:10px;height:10px;background:#fff;border-right:1px solid #dce7f0;border-bottom:1px solid #dce7f0;transform:rotate(-45deg)}
 #gereduDuende .gd-launcher.gd-flee-left{transform:translateX(-54px) rotate(-5deg)}
 #gereduDuende .gd-launcher.gd-flee-right{transform:translateX(54px) rotate(5deg)}
+#gereduDuende .gd-launcher{cursor:grab}
+#gereduDuende .gd-launcher:active{cursor:grabbing}
 @keyframes gdNod{0%,88%,100%{transform:rotate(0)}92%{transform:rotate(5deg)}96%{transform:rotate(-4deg)}}
 @keyframes gdWave{0%,68%,100%{transform:rotate(0)}75%{transform:rotate(-23deg)}82%{transform:rotate(12deg)}89%{transform:rotate(-16deg)}}
 @keyframes gdArm{0%,100%{transform:rotate(0)}50%{transform:rotate(-8deg)}}
@@ -1878,7 +1941,16 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
   <div class="gd-dialog-head"><div><strong>Duende do GerEdu</strong><div style="font-size:11px;opacity:.85">Ajuda e suporte do sistema</div></div><button type="button" class="gd-close" id="gdClose" aria-label="Fechar ajuda">×</button></div>
   <div class="gd-dialog-body">
-   <div id="gdHelpText">Olá! Sou o duende do GerEdu. Posso orientar você pelas principais áreas do sistema. Escolha o assunto e eu mostro o caminho!</div>
+   <div id="gdHelpText">Olá! Sou o herói do GerEdu. Posso orientar você pelas principais áreas do sistema. Escolha o assunto e eu mostro o caminho!</div>
+   <div style="margin-top:12px;padding:12px;border-radius:12px;background:#eff7fc;border:1px solid #d8e9f4">
+    <div style="font-size:11px;font-weight:800;color:#17608c;text-transform:uppercase;letter-spacing:.06em">Calendário letivo</div>
+    {% if data_fim_letivo %}
+      <div style="font-size:25px;font-weight:900;color:#123b5b;line-height:1.2">{{ dias_letivos_restantes|default:"—" }} dias letivos</div>
+      <div style="font-size:12px;color:#52687a">Restantes até {{ data_fim_letivo|date:"d/m/Y" }}</div>
+    {% else %}
+      <div style="font-size:13px;color:#52687a">Cadastre ou ative o calendário escolar para acompanhar o encerramento do ano letivo.</div>
+    {% endif %}
+   </div>
    <div class="gd-actions">
     <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><span>📊</span> Avaliações e participação</a>
     <a href="{% url 'busca_ativa:painel' %}"><span>🎒</span> Busca Ativa e acompanhamentos</a>
@@ -1887,33 +1959,32 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
    <p class="mb-0 mt-3" style="font-size:12px;color:#64748b">Dica: clique em uma opção para abrir a área correspondente. O duende permanece disponível durante a navegação.</p>
   </div>
  </div>
- <div class="gd-speech" id="gdSpeech">Precisa de ajuda? Clique em mim!</div>
+ <div class="gd-speech" id="gdSpeech">{% if data_fim_letivo %}{{ dias_letivos_restantes|default:"—" }} dias letivos até o fim do ano!{% else %}Precisa de ajuda? Clique em mim!{% endif %}</div>
  <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
-  <svg class="gd-character" viewBox="0 0 140 170" role="img" aria-label="Duende verde do GerEdu com corpo, braços e chapéu">
-   <ellipse class="gd-shadow" cx="70" cy="158" rx="35" ry="6" fill="#17334a"/>
-   <path d="M34 64 Q8 49 12 25 Q33 34 47 51Z" fill="#15945a" stroke="#0d6842" stroke-width="3"/>
-   <path d="M106 64 Q132 49 128 25 Q107 34 93 51Z" fill="#15945a" stroke="#0d6842" stroke-width="3"/>
-   <path d="M42 57 Q70 42 98 57 L109 124 Q70 143 31 124Z" fill="#20a56a" stroke="#0d6842" stroke-width="4"/>
+  <svg class="gd-character" viewBox="0 0 140 170" role="img" aria-label="Mascote super-herói original do GerEdu">
+   <ellipse class="gd-shadow" cx="70" cy="159" rx="35" ry="6" fill="#102b45"/>
+   <path d="M48 58 Q13 61 18 139 Q38 132 55 126Z" fill="#9d1f37" stroke="#64172a" stroke-width="3"/>
+   <path d="M92 58 Q127 61 122 139 Q102 132 85 126Z" fill="#c52d42" stroke="#64172a" stroke-width="3"/>
    <g class="gd-body">
-    <path d="M42 75 Q70 60 98 75 L103 126 Q70 143 37 126Z" fill="#20a56a" stroke="#0d6842" stroke-width="3"/>
-    <path d="M49 82 L70 105 L91 82 L96 128 Q70 139 44 128Z" fill="#f3c84b" stroke="#b8871d" stroke-width="2"/>
-    <path d="M70 105 L70 137" stroke="#b8871d" stroke-width="2"/>
-    <circle cx="70" cy="117" r="4" fill="#fff4c2"/>
+    <path d="M42 69 Q70 54 98 69 L108 126 Q70 145 32 126Z" fill="#1769aa" stroke="#103e70" stroke-width="4"/>
+    <path d="M49 76 L70 101 L91 76 L97 130 Q70 142 43 130Z" fill="#2386ca"/>
+    <path d="M70 91 L77 103 L91 105 L80 115 L83 130 L70 122 L57 130 L60 115 L49 105 L63 103Z" fill="#f4c542" stroke="#b27a17" stroke-width="2"/>
+    <path d="M45 83 L35 124 M95 83 L105 124" stroke="#a9d9f5" stroke-width="3" opacity=".7"/>
    </g>
-   <g class="gd-arm-left"><path d="M42 83 Q23 87 22 111" fill="none" stroke="#15945a" stroke-width="12" stroke-linecap="round"/><circle cx="21" cy="113" r="8" fill="#f2c7a5"/><path d="M15 111 l-4 -7 M20 106 l0 -8 M25 109 l4 -7" stroke="#f2c7a5" stroke-width="4" stroke-linecap="round"/></g>
-   <g class="gd-arm-right"><path d="M98 83 Q118 76 119 55" fill="none" stroke="#15945a" stroke-width="12" stroke-linecap="round"/><circle cx="120" cy="52" r="8" fill="#f2c7a5"/></g>
-   <path d="M49 126 L45 148" stroke="#174a39" stroke-width="11" stroke-linecap="round"/><path d="M89 126 L95 148" stroke="#174a39" stroke-width="11" stroke-linecap="round"/>
-   <path d="M34 150 Q45 143 55 151 L55 158 L31 158Z M85 151 Q96 143 107 150 L111 158 L85 158Z" fill="#70452e"/>
+   <g class="gd-arm-left"><path d="M42 83 Q23 88 22 111" fill="none" stroke="#1769aa" stroke-width="13" stroke-linecap="round"/><path d="M16 112 Q21 103 28 110 L31 119 Q22 127 15 119Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/></g>
+   <g class="gd-arm-right"><path d="M98 83 Q118 76 119 55" fill="none" stroke="#1769aa" stroke-width="13" stroke-linecap="round"/><path d="M112 52 Q120 43 127 51 L127 61 Q119 68 111 60Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/></g>
+   <path d="M49 127 L45 149 M89 127 L95 149" stroke="#153f68" stroke-width="12" stroke-linecap="round"/>
+   <path d="M32 150 Q44 142 56 151 L57 159 L29 159Z M84 151 Q97 142 109 150 L112 159 L84 159Z" fill="#b62b42" stroke="#721c31" stroke-width="2"/>
    <g class="gd-head">
-    <path d="M37 50 Q40 15 70 15 Q100 15 103 50 Q100 83 70 86 Q40 83 37 50Z" fill="#f2c7a5" stroke="#9b654b" stroke-width="3"/>
-    <path d="M32 38 Q39 7 77 5 Q106 5 111 38 Q86 28 70 34 Q48 27 32 38Z" fill="#168653" stroke="#0d6842" stroke-width="3"/>
-    <path d="M31 38 Q70 27 112 38 L108 47 Q70 39 34 48Z" fill="#f0c84d" stroke="#b8871d" stroke-width="2"/>
-    <path d="M51 53 Q58 47 64 53 M77 53 Q84 47 90 53" fill="none" stroke="#3a332c" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="58" cy="55" r="2" fill="#243b32"/><circle cx="83" cy="55" r="2" fill="#243b32"/>
-    <path d="M64 68 Q70 74 77 68" fill="none" stroke="#a34f45" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="48" cy="65" r="5" fill="#e99d88" opacity=".55"/><circle cx="92" cy="65" r="5" fill="#e99d88" opacity=".55"/>
+    <path d="M37 49 Q40 15 70 15 Q100 15 103 49 Q100 83 70 86 Q40 83 37 49Z" fill="#f1c6a4" stroke="#9a654d" stroke-width="3"/>
+    <path d="M31 42 Q35 8 70 6 Q105 8 109 42 L100 36 L91 42 L81 35 L70 42 L58 35 L47 43Z" fill="#173d66" stroke="#0b2949" stroke-width="3"/>
+    <path d="M31 42 Q70 32 109 42 L106 50 Q70 43 34 50Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/>
+    <path d="M51 54 Q58 48 64 54 M77 54 Q84 48 90 54" fill="none" stroke="#263747" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="58" cy="56" r="2" fill="#152d42"/><circle cx="83" cy="56" r="2" fill="#152d42"/>
+    <path d="M64 69 Q70 75 77 69" fill="none" stroke="#a34f45" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M47 66 Q54 61 61 66 M79 66 Q86 61 93 66" fill="none" stroke="#e99d88" stroke-width="4" opacity=".5"/>
    </g>
-   <path d="M104 17 l5 -10 l5 10 l10 5 l-10 5 l-5 10 l-5 -10 l-10 -5Z" fill="#f5ce4f"/>
+   <path d="M108 15 L114 4 L120 15 L132 21 L120 27 L114 39 L108 27 L96 21Z" fill="#f4c542" stroke="#b27a17" stroke-width="1.5"/>
   </svg>
  </button>
 </div>
@@ -1936,8 +2007,34 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  document.addEventListener('keydown',e=>{if(e.key==='Escape') setOpen(false);});
  // Movimento discreto: o personagem se esquiva uma vez quando o cursor chega muito perto.
  let lastDodge=0;
- root.addEventListener('pointermove',e=>{
-   if(e.pointerType==='touch' || root.classList.contains('gd-open')) return;
+ // Arrastar o mascote para qualquer ponto da tela; a posição fica salva neste navegador.
+ let drag=null, dragged=false;
+ launcher.addEventListener('pointerdown',e=>{
+   if(e.button!==0) return;
+   const r=root.getBoundingClientRect();
+   drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};
+   dragged=false;
+   launcher.setPointerCapture(e.pointerId);
+ });
+ launcher.addEventListener('pointermove',e=>{
+   if(!drag || e.pointerId!==drag.id) return;
+   const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+   if(Math.abs(dx)+Math.abs(dy)>7) dragged=true;
+   if(!dragged) return;
+   const maxLeft=window.innerWidth-root.offsetWidth, maxTop=window.innerHeight-root.offsetHeight;
+   const left=Math.max(0,Math.min(maxLeft,drag.left+dx));
+   const top=Math.max(0,Math.min(maxTop,drag.top+dy));
+   root.style.left=left+'px';root.style.top=top+'px';root.style.right='auto';root.style.bottom='auto';
+ });
+ launcher.addEventListener('pointerup',e=>{
+   if(!drag || e.pointerId!==drag.id) return;
+   if(dragged){try{localStorage.setItem('gereduDuendePos',JSON.stringify({left:parseFloat(root.style.left),top:parseFloat(root.style.top)}));}catch(_){}}
+   drag=null;
+ });
+ launcher.addEventListener('click',e=>{if(dragged){e.preventDefault();e.stopImmediatePropagation();dragged=false;}},true);
+ try{const saved=JSON.parse(localStorage.getItem('gereduDuendePos')||'null');if(saved&&Number.isFinite(saved.left)&&Number.isFinite(saved.top)){root.style.left=Math.max(0,Math.min(innerWidth-root.offsetWidth,saved.left))+'px';root.style.top=Math.max(0,Math.min(innerHeight-root.offsetHeight,saved.top))+'px';root.style.right='auto';root.style.bottom='auto';}}catch(_){}
+  root.addEventListener('pointermove',e=>{
+   if(e.pointerType==='touch' || root.classList.contains('gd-open') || drag) return;
    const r=launcher.getBoundingClientRect();
    const cx=r.left+r.width/2, cy=r.top+r.height/2;
    const d=Math.hypot(e.clientX-cx,e.clientY-cy);
