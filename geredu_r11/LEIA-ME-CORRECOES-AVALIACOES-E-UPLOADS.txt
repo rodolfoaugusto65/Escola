@@ -1,0 +1,34 @@
+GEREDU - AVALIACOES COM DATAS DE REALIZACAO + OTIMIZACAO DOS UPLOADS
+Atualizacao: 11/11/2026
+
+IMPORTANTE SOBRE O PATCH ANTERIOR
+A revisao do pacote anterior mostrou que o README descrevia consultas em lote, mas o codigo ainda continha consultas individuais em pontos criticos. Este pacote corrige o codigo efetivamente.
+
+1. AVALIACOES
+- Corrige o N+1 da importacao: matrículas sao resolvidas em consultas por blocos de ate 1.000 alunos.
+- Mantem gravacao em lotes e preservacao dos snapshots/historico de importacoes.
+- Captura data/hora real de realizacao de colunas como Data de realizacao, Data da realizacao, Realizado em, Data de conclusao, Data de entrega e Data.
+- Aceita timestamps ISO-8601 com Z, datetime Excel e datas brasileiras.
+- Adiciona realizado_em, com migracao 0004.
+- Painel exibe evolucao entre importacoes, realizacoes por dia, realizacoes por turma e dia.
+- Detalhe de cada importacao exibe calendario/dias, resumo por turma e data/hora por aluno.
+- Historico exibe andamento percentual e situacao de cada importacao.
+
+2. BUSCA ATIVA
+- Resolve matriculas do SQLite em lotes de ate 1.000, sem consultas exists()/first() por aluno.
+- Carrega situacoes existentes em lotes e substitui get_or_create/save individual por bulk_create/bulk_update.
+- Carrega chaves de providencias existentes por lotes, elimina exists() por acao e grava novas providencias com bulk_create.
+- Mantem os snapshots historicos e o arquivo SQLite original.
+
+3. INSTALACAO
+- Copie as pastas acompanhamento_avaliacoes e busca_ativa para a raiz do projeto Django, mesclando/substituindo os arquivos.
+- Aplique: python manage.py migrate
+- Valide: python manage.py check
+- Execute: python manage.py test acompanhamento_avaliacoes
+- Faça backup do PostgreSQL antes do deploy.
+- Publique pelo GitHub/Railway normalmente.
+
+A migracao e aditiva: cria apenas a coluna nullable realizado_em. Dados historicos existentes permanecem validos; as datas antigas ficam vazias quando nao estavam armazenadas anteriormente. Para preencher as datas, reimporte as planilhas como uma nova fotografia historica.
+
+NOTA SOBRE FUSO HORARIO
+Os valores ISO com Z sao interpretados como UTC e armazenados com timezone. A exibicao usa o fuso horario configurado no Django (TIME_ZONE). Confira que o projeto esteja configurado com America/Cuiaba para apresentar a hora local correta.

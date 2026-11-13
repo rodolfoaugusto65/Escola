@@ -1,0 +1,36 @@
+GEREDU — NOTAS DA VERSÃO r9
+Data: 13/11/2026
+
+OBJETIVO
+Organizar o acompanhamento das avaliações e corrigir a exportação/ impressão das relações de aplicação.
+
+ALTERAÇÕES
+1. Tela de acompanhamento reorganizada em seções:
+   - filtros da avaliação, período e aplicação;
+   - filtros complementares da lista recolhidos por padrão;
+   - comparativo histórico recolhido por padrão;
+   - indicadores resumidos;
+   - resumo de pendências por turma/turno recolhido;
+   - relação de estudantes.
+2. Impressão A4 independente da tela administrativa.
+3. A impressão contém apenas:
+   - turma;
+   - nome da prova/avaliação;
+   - data da aplicação;
+   - relação numerada dos estudantes.
+   Quando mais de uma turma estiver no filtro, cada turma recebe seu próprio bloco.
+4. CSV de pendentes/ausentes e CSV de todos os estudantes mantidos, respeitando os filtros selecionados.
+5. Consolida as entregas r6, r7 e r8: nota TXT de atualização, melhorias de relatórios e correções anteriores.
+
+IMPLANTAÇÃO
+- Faça backup do PostgreSQL.
+- Aplique o pacote completo ou o patch consolidado r9.
+- Execute: python manage.py migrate
+- Execute: python manage.py check
+- Reinicie o serviço.
+
+BANCO DE DADOS
+A migration 0009 da atualização r6 está incluída no pacote consolidado. Não foi criada nova migration na r9.
+
+VALIDAÇÃO
+Verificação de sintaxe Python e integridade dos arquivos ZIP. Testes funcionais Django devem ser executados no ambiente do projeto, pois não foram executados neste ambiente.

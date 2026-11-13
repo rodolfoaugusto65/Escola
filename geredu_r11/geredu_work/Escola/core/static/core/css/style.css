@@ -1,0 +1,1609 @@
+
+/* =========================
+   RESET
+========================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =========================
+   BASE
+========================= */
+body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background-color: #f4f6f9;
+    color: #212529;
+    overflow-x: hidden;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* =========================
+   SIDEBAR (CONTROLADA POR JS)
+========================= */
+.sidebar {
+    width: 240px;
+    background: linear-gradient(180deg, #0d6efd, #0b5ed7);
+    color: #fff;
+    transition: width 0.35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+}
+
+/* Colapsada */
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar.collapsed span {
+    display: none;
+}
+
+.sidebar.collapsed i {
+    font-size: 1.8rem;
+}
+
+/* LOGO */
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* MENU */
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.sidebar a:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+/* ICONES */
+.sidebar i {
+    font-size: 1.5rem;
+    transition: font-size 0.3s ease;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   TOPBAR
+========================= */
+.topbar {
+    height: 60px;
+    background: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+/* USER INFO */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.user-info span {
+    font-weight: 500;
+}
+
+/* =========================
+   MAIN
+========================= */
+.main {
+    padding: 30px;
+    flex: 1;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer {
+    text-align: center;
+    padding: 15px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+}
+
+/* =========================
+   CARDS
+========================= */
+.card {
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* =========================
+   LOGIN MODERNO
+========================= */
+.login-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0d6efd, #084298);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 35px;
+    width: 100%;
+    max-width: 420px;
+    color: #fff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+
+.login-card h4 {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.login-card .form-control {
+    display: block !important;
+    width: 100% !important;
+    height: 48px !important;
+    padding: 12px 14px !important;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid rgba(255,255,255,0.35) !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    box-shadow: none !important;
+    caret-color: #ffffff !important;
+}
+
+.login-card .form-control::placeholder {
+    color: rgba(255,255,255,0.75) !important;
+}
+
+.login-card .form-control:focus {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15) !important;
+}
+
+.login-card input:-webkit-autofill {
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* =========================
+   NOTIFICAÇÕES SaaS
+========================= */
+.saas-toast {
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    font-size: 0.95rem !important;
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.97) !important;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.08) !important;
+    border-left: 5px solid #0d6efd;
+}
+
+/* =========================
+   ANIMAÇÕES
+========================= */
+.fade-in {
+    animation: fadeIn 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   STATUS CARDS
+========================= */
+.status-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+}
+
+.icon-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-success-soft { background: #e7f9f0; color: #16a34a; }
+.bg-info-soft { background: #e6f4ff; color: #0284c7; }
+.bg-warning-soft { background: #fff7e6; color: #d97706; }
+
+/* =========================
+   INDICADORES PREMIUM
+========================= */
+.indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.indicator-true {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+.indicator-true::before {
+    background: #16a34a;
+}
+
+.indicator-false {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.indicator-false::before {
+    background: #dc2626;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+button, .btn {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+
+.tooltip-inner {
+  background-color: #0d6efd;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #0d6efd;
+}
+
+/* =====================================
+   BLOCO DESABILITADO VISUAL
+======================================*/
+
+.box-disabled {
+  opacity: 0.6;
+  background: #f1f3f5 !important;
+  border: 1px dashed #ced4da !important;
+  transition: 0.2s;
+}
+
+.indicator-box {
+  transition: 0.3s ease;
+}
+
+/* ================= TRANSIÇÃO SUAVE HTMX ================= */
+
+#mainContent {
+    transition: opacity .2s ease;
+}
+
+#mainContent.htmx-swapping {
+    opacity: 0;
+}
+
+.sidebar a.active {
+    background: rgba(255,255,255,0.25);
+    font-weight: 600;
+}
+
+
+/* ================= INPUTS ================= */
+
+.input-group-modern{
+    position:relative;
+    margin-bottom:20px;
+}
+
+.input-group-modern input{
+    width:100%;
+    height:48px;                 /* Altura mais elegante */
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.22);
+    background:rgba(255,255,255,0.07);
+    padding-left:46px;           /* espaço ícone esquerdo */
+    padding-right:46px;          /* espaço ícone direito */
+    color:#fff;
+    font-size:0.95rem;
+    outline:none;
+    transition:.2s ease;
+}
+
+.input-group-modern input::placeholder{
+    color:rgba(255,255,255,0.6);
+}
+
+.input-group-modern input:focus{
+    border-color:#38bdf8;
+    box-shadow:0 0 0 3px rgba(56,189,248,0.25);
+    background:rgba(255,255,255,0.12);
+}
+
+/* Ícone esquerdo */
+.input-icon-left{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    width:18px;
+    height:18px;
+    opacity:.7;
+}
+
+/* Toggle senha */
+.toggle-password{
+    position:absolute;
+    top:50%;
+    right:16px;
+    transform:translateY(-50%);
+    width:22px;      /* levemente maior */
+    height:22px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:.75;
+    transition:.2s ease;
+}
+
+.toggle-password:hover{
+    opacity:1;
+}
+
+.login-card .logo i{
+    width:120px;
+    height:120px;
+    color:#38bdf8;
+    animation:floatLogo 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 20px rgba(56,189,248,0.4));
+}
+@keyframes floatLogo {
+    0%,100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+}
+
+
+/* ================= DASHBOARD RESTORE ================= */
+
+.stat-card{
+    padding:22px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:95px;
+}
+
+/* texto */
+
+.stat-card .stat-title{
+    font-size:.8rem;
+    font-weight:600;
+    margin-bottom:4px;
+    color:#64748b;
+}
+
+.stat-card .stat-value{
+    font-size:2rem;
+    font-weight:700;
+}
+
+/* ícone do card */
+
+.stat-icon{
+    width:46px;
+    height:46px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.stat-icon i{
+    width:22px;
+    height:22px;
+}
+
+/* cores suaves */
+
+.bg-primary-soft{
+    background:#e7f0ff;
+    color:#2563eb;
+}
+
+.bg-danger-soft{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.bg-warning-soft{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.bg-success-soft{
+    background:#dcfce7;
+    color:#166534;
+}
+
+/* ================= DASHBOARD CLEAN ================= */
+
+.dashboard-cards .card{
+border:none;
+border-radius:14px;
+background:#ffffff;
+box-shadow:0 6px 20px rgba(0,0,0,.06);
+transition:.2s ease;
+}
+
+.dashboard-cards .card:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 30px rgba(0,0,0,.08);
+}
+
+.dashboard-card .card-body{
+padding:28px 10px;
+}
+
+.dashboard-title{
+font-size:.9rem;
+color:#64748b;
+margin-bottom:6px;
+font-weight:500;
+}
+
+.dashboard-value{
+font-size:2.6rem;
+font-weight:700;
+letter-spacing:.5px;
+}
+
+/* cores */
+
+.total-card .dashboard-value{
+color:#2563eb;
+}
+
+.open-card .dashboard-value{
+color:#dc2626;
+}
+
+.progress-card .dashboard-value{
+color:#f59e0b;
+}
+
+.resolved-card .dashboard-value{
+color:#16a34a;
+}
+
+/* ================= TABELA MODERNA ================= */
+
+.modern-table{
+    font-size:.93rem;
+}
+
+.modern-table thead{
+    background:#f8fafc;
+    font-weight:600;
+}
+
+.modern-table thead th{
+    border-bottom:1px solid #e2e8f0;
+}
+
+.modern-table tbody tr{
+    transition:.15s ease;
+}
+
+.modern-table tbody tr:hover{
+    background:#f9fbff;
+}
+
+.modern-table td{
+    vertical-align:middle;
+}
+
+/* ================= BOTÕES ================= */
+
+.btn-modern{
+    border-radius:10px;
+    padding:8px 16px;
+    font-weight:500;
+    transition:.2s ease;
+}
+
+.btn-modern:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
+/* ================= RELATÓRIO ================= */
+
+.report-card{
+    border-radius:14px;
+    padding:20px;
+    text-align:center;
+    font-weight:600;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+}
+
+.report-card small{
+    font-size:.85rem;
+    color:#64748b;
+}
+
+.report-card h4{
+    margin-top:6px;
+    font-weight:700;
+}
+
+/* ================= FILTROS ================= */
+
+.filters-card{
+    border-radius:16px;
+    background:#ffffff;
+    box-shadow:0 6px 20px rgba(0,0,0,.05);
+}
+
+.filters-card .form-control,
+.filters-card .form-select{
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+}
+
+.filters-card .form-control:focus,
+.filters-card .form-select:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,.15);
+}
+
+.matricula-badge{
+
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
+color:white;
+
+padding:4px 10px;
+border-radius:8px;
+
+font-size:.75rem;
+font-weight:600;
+
+letter-spacing:.5px;
+
+}
+
+/* =========================
+   BADGES PADRÃO SISTEMA
+========================= */
+
+.tipo-badge,
+.status-badge{
+
+display:inline-flex;
+align-items:center;
+justify-content:center;
+gap:6px;
+
+min-width:150px;
+height:36px;
+
+padding:0 14px;
+
+border-radius:8px;
+
+font-size:.8rem;
+font-weight:600;
+
+line-height:1;
+
+}
+
+
+/* =========================
+   TIPOS DE OCORRÊNCIA
+========================= */
+
+.tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status-badge.status-open{
+background:#FECACA !important;
+color:#991B1B !important;
+border:1px solid #F87171 !important;
+}
+
+.status-badge.status-progress{
+background:#FEF08A !important;
+color:#854D0E !important;
+border:1px solid #FACC15 !important;
+}
+
+.status-badge.status-resolved{
+background:#BBF7D0 !important;
+color:#065F46 !important;
+border:1px solid #4ADE80 !important;
+}
+
+
+/* ícones */
+
+.tipo-badge i,
+.status-badge i{
+
+width:16px;
+height:16px;
+
+}
+
+/* =========================
+   CORREÇÃO FINAL TIPOS
+========================= */
+
+.tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+/* força ícone herdar cor correta */
+
+.tipo-badge svg{
+color:inherit !important;
+stroke:currentColor !important;
+}
+
+/* =========================
+   FORÇA CORES DOS TIPOS
+========================= */
+
+.modern-table .tipo-badge.tipo-disciplinar{
+background:#fee2e2 !important;
+color:#991b1b !important;
+border:1px solid #f87171 !important;
+}
+
+.modern-table .tipo-badge.tipo-atraso{
+background:#fef3c7 !important;
+color:#92400e !important;
+border:1px solid #facc15 !important;
+}
+
+.modern-table .tipo-badge.tipo-uniforme{
+background:#e0f2fe !important;
+color:#075985 !important;
+border:1px solid #38bdf8 !important;
+}
+
+.modern-table .tipo-badge.tipo-outros{
+background:#ede9fe !important;
+color:#5b21b6 !important;
+border:1px solid #a78bfa !important;
+}
+
+/* =========================
+   FIX TIPOS OCORRÊNCIA
+========================= */
+
+.modern-table .tipo-badge{
+background:#f1f5f9;
+border:1px solid #cbd5f1;
+color:#334155;
+}
+
+.modern-table .tipo-disciplinar{
+background:#fee2e2 !important;
+border-color:#ef4444 !important;
+color:#991b1b !important;
+}
+
+.modern-table .tipo-atraso{
+background:#fef3c7 !important;
+border-color:#facc15 !important;
+color:#92400e !important;
+}
+
+.modern-table .tipo-uniforme{
+background:#e0f2fe !important;
+border-color:#38bdf8 !important;
+color:#075985 !important;
+}
+
+.modern-table .tipo-outros{
+background:#ede9fe !important;
+border-color:#a78bfa !important;
+color:#5b21b6 !important;
+}
+
+/* ================= BUSCA GLOBAL ================= */
+
+.global-search{
+position:relative;
+margin-right:28px;
+}
+
+#studentSearch{
+width:340px;
+height:42px;
+border-radius:14px;
+border:1px solid #e5e7eb;
+padding:0 16px;
+font-size:.92rem;
+background:#fff;
+transition:.2s;
+}
+
+#studentSearch:focus{
+outline:none;
+border-color:#38bdf8;
+box-shadow:0 0 0 3px rgba(56,189,248,.15);
+}
+
+/* ================= RESULTADOS ================= */
+
+.search-suggestions{
+position:absolute;
+top:48px;
+left:0;
+width:100%;
+background:#fff;
+border-radius:14px;
+box-shadow:0 14px 35px rgba(0,0,0,.12);
+display:none;
+overflow:hidden;
+z-index:5000;
+}
+
+.search-suggestions.show{
+display:block;
+}
+
+.search-item{
+padding:10px 16px;
+cursor:pointer;
+transition:.15s;
+border-bottom:1px solid #f1f5f9;
+}
+
+.search-item:last-child{
+border-bottom:none;
+}
+
+.search-item:hover,
+.search-item.active{
+background:#f8fafc;
+}
+
+/* ================= TEXTO ================= */
+
+.search-main{
+font-weight:600;
+font-size:.9rem;
+color:#0f172a;
+line-height:1.25;
+white-space:normal;
+word-break:break-word;
+}
+
+.search-meta{
+font-size:.75rem;
+color:#64748b;
+margin-top:2px;
+}
+
+
+/* ================= RESULTADO DA BUSCA ================= */
+
+.search-row{
+padding:10px 14px;
+border-bottom:1px solid #f1f5f9;
+transition:.15s;
+}
+
+.search-row:hover{
+background:#f8fafc;
+}
+
+
+/* área de texto */
+
+.search-info-area{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+
+/* nome */
+
+.search-main{
+font-weight:600;
+font-size:.95rem;
+color:#1e293b;
+}
+
+
+/* metadados */
+
+.search-meta{
+font-size:.78rem;
+color:#64748b;
+}
+
+
+/* botões */
+
+.search-actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+flex-wrap:wrap;
+}
+
+
+/* estilo padrão botão */
+
+.search-btn{
+font-size:.72rem;
+padding:4px 10px;
+border-radius:6px;
+text-decoration:none;
+font-weight:500;
+transition:.15s;
+display:inline-block;
+}
+
+
+/* relatório */
+
+.search-btn.relatorio{
+background:#e0f2fe;
+color:#0369a1;
+}
+
+.search-btn.relatorio:hover{
+background:#bae6fd;
+}
+
+
+/* nova ocorrência */
+
+.search-btn.ocorrencia{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.search-btn.ocorrencia:hover{
+background:#fecaca;
+}
+
+
+/* ver ocorrências */
+
+.search-btn.historico{
+background:#eef2ff;
+color:#4338ca;
+}
+
+.search-btn.historico:hover{
+background:#e0e7ff;
+}
+
+/* ================= RESULTADO DA BUSCA ================= */
+
+.search-row{
+padding:10px 14px;
+border-bottom:1px solid #f1f5f9;
+transition:.15s;
+}
+
+.search-row:hover{
+background:#f8fafc;
+}
+
+
+/* área de texto */
+
+.search-info-area{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+
+/* nome */
+
+.search-main{
+font-weight:600;
+font-size:.95rem;
+color:#1e293b;
+}
+
+
+/* metadados */
+
+.search-meta{
+font-size:.78rem;
+color:#64748b;
+}
+
+
+/* botões */
+
+.search-actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+flex-wrap:nowrap;
+align-items:center;
+}
+
+
+/* estilo padrão botão */
+
+.search-btn{
+font-size:.72rem;
+padding:4px 10px;
+border-radius:6px;
+text-decoration:none;
+font-weight:500;
+transition:.15s;
+white-space:nowrap;
+}
+
+
+/* relatório */
+
+.search-btn.relatorio{
+background:#e0f2fe;
+color:#0369a1;
+}
+
+.search-btn.relatorio:hover{
+background:#bae6fd;
+}
+
+
+/* nova ocorrência */
+
+.search-btn.ocorrencia{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.search-btn.ocorrencia:hover{
+background:#fecaca;
+}
+
+
+/* ver ocorrências */
+
+.search-btn.historico{
+background:#eef2ff;
+color:#4338ca;
+}
+
+.search-btn.historico:hover{
+background:#e0e7ff;
+}
+
+/* ================= STATUS OCORRÊNCIAS ================= */
+
+.ocorrencias-badge{
+font-weight:600;
+margin-left:4px;
+}
+
+/* aluno tranquilo */
+
+.ocorrencias-ok{
+color:#16a34a;
+}
+
+/* atenção */
+
+.ocorrencias-atencao{
+color:#ca8a04;
+}
+
+/* crítico */
+
+.ocorrencias-alerta{
+color:#dc2626;
+}
+
+/* ===== TIPOS DE OCORRÊNCIA ===== */
+
+.tipo-badge{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 10px;
+border-radius:8px;
+font-size:.8rem;
+font-weight:600;
+}
+
+.tipo-disciplinar{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+.tipo-atraso{
+background:#fef3c7;
+color:#92400e;
+}
+
+.tipo-uniforme{
+background:#dbeafe;
+color:#1e40af;
+}
+
+.tipo-outros{
+background:#e2e8f0;
+color:#334155;
+}
+
+
+/* ===== STATUS ===== */
+
+.status-badge{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:6px 10px;
+border-radius:8px;
+font-size:.8rem;
+font-weight:600;
+}
+
+.status-open{
+background:#fee2e2;
+color:#b91c1c;
+}
+
+.status-progress{
+background:#fef3c7;
+color:#92400e;
+}
+
+.status-resolved{
+background:#dcfce7;
+color:#166534;
+}
+
+/* ================= BOTÕES DE AÇÃO ================= */
+
+.btn-icon{
+width:38px;
+height:38px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:10px;
+transition:all .2s ease;
+}
+
+.btn-icon i{
+width:18px;
+height:18px;
+}
+
+
+/* cores suaves */
+
+.btn-info-soft{
+background:#e0f2fe;
+color:#0369a1;
+border:none;
+}
+
+.btn-warning-soft{
+background:#fef3c7;
+color:#92400e;
+border:none;
+}
+
+.btn-dark-soft{
+background:#e2e8f0;
+color:#1e293b;
+border:none;
+}
+
+.btn-secondary-soft{
+background:#f1f5f9;
+color:#334155;
+border:none;
+}
+
+.btn-danger-soft{
+background:#fee2e2;
+color:#b91c1c;
+border:none;
+}
+
+
+/* hover elegante */
+
+.btn-icon:hover{
+transform:translateY(-1px);
+box-shadow:0 4px 8px rgba(0,0,0,.08);
+}
+
+.btn-primary-soft{
+background:#e7f1ff;
+color:#0d6efd;
+border:none;
+}
+
+.htmx-settling{
+opacity:.6;
+}
+
+
+
+/* ===============================
+   LOADER PADRÃO GEREDU
+================================ */
+
+.geredu-loader{
+width:42px;
+height:42px;
+
+border-radius:50%;
+
+border:4px solid #e2e8f0;
+border-top:4px solid #0ea5e9;
+
+animation:gereduSpin .8s linear infinite;
+}
+
+@keyframes gereduSpin{
+to{
+transform:rotate(360deg);
+}
+}
+
+@media print {
+
+.sidebar,
+.navbar,
+.btn {
+    display:none !important;
+}
+
+.container-fluid{
+    margin:0;
+    padding:0;
+}
+
+}
+
+/* =========================
+   FOTO DO ALUNO
+========================= */
+
+.foto-wrapper{
+
+width:130px;
+height:130px;
+
+margin:auto;
+
+border-radius:16px;
+border:1px solid #e3e6ea;
+
+background:#f8f9fa;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+position:relative;
+overflow:hidden;
+
+}
+
+
+/* CIRCULO QUE PREENCHE O QUADRO */
+
+.foto-preview{
+
+width:118px;
+height:118px;
+
+border-radius:50%;
+
+object-fit:cover;
+object-position:center;
+
+background:#fff;
+
+box-shadow:0 6px 18px rgba(0,0,0,0.18);
+
+cursor:grab;
+
+transition:transform .2s ease;
+
+}
+
+
+/* HOVER */
+
+.foto-preview:hover{
+
+transform:scale(1.03);
+
+}
+
+
+/* PREPARAÇÃO PARA ZOOM */
+
+.foto-preview.zooming{
+
+cursor:move;
+
+}
+
+
+/* LOADING */
+
+.foto-loading{
+
+position:absolute;
+
+top:0;
+left:0;
+
+width:100%;
+height:100%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:rgba(255,255,255,0.85);
+
+border-radius:16px;
+
+z-index:10;
+
+}
+
+
+/* =========================
+   ANIMAÇÃO REMOÇÃO FOTO
+========================= */
+
+.foto-explode{
+
+animation:explode .6s forwards;
+
+}
+
+@keyframes explode{
+
+0%{
+transform:scale(1) rotate(0deg);
+opacity:1;
+}
+
+50%{
+transform:scale(1.5) rotate(15deg);
+}
+
+100%{
+transform:scale(0) rotate(45deg);
+opacity:0;
+}
+
+}
+
+
+/* =========================
+   Relatorio completo
+========================= */
+
+.student-photo img{
+width:70px;
+height:70px;
+object-fit:cover;
+border-radius:50%;
+cursor:pointer;
+transition:.2s;
+}
+
+.student-photo img:hover{
+transform:scale(1.05);
+box-shadow:0 6px 16px rgba(0,0,0,0.15);
+}
+
+.student-photo-placeholder{
+width:70px;
+height:70px;
+border-radius:50%;
+background:#e2e8f0;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.indicator-card{
+border-radius:12px;
+transition:.2s;
+}
+
+.indicator-card:hover{
+transform:translateY(-3px);
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.indicator-number{
+font-size:1.4rem;
+font-weight:700;
+margin-top:6px;
+}
+
+.indicator-label{
+font-size:.85rem;
+color:#64748b;
+}
+
+.section-title{
+font-weight:600;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.pedagogico-box{
+background:#f8fafc;
+border-radius:10px;
+padding:14px;
+border:1px solid #e5e7eb;
+height:100%;
+}
+
+.pedagogico-label{
+font-size:.9rem;
+font-weight:600;
+color:#475569;
+margin-bottom:6px;
+}
+
+.upload-loader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.35);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+
+.upload-card{
+background:#fff;
+padding:25px;
+border-radius:14px;
+width:420px;
+box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+
+.upload-header{
+font-weight:600;
+font-size:18px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.upload-info{
+display:flex;
+flex-direction:column;
+gap:6px;
+font-size:14px;
+color:#495057;
+margin-top:10px;
+}
+
+.upload-row{
+display:flex;
+gap:6px;
+align-items:center;
+flex-wrap:wrap;
+}
+
+
+/* =========================
+UPLOAD MODAL FIXO
+========================= */
+
+.upload-loader{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.35);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+z-index:9999;
+}
+
+.upload-card{
+
+width:380px;
+
+background:white;
+
+padding:26px;
+
+border-radius:16px;
+
+box-shadow:0 20px 50px rgba(0,0,0,0.25);
+
+transform:none !important;
+animation:none !important;
+
+}
+
+/* evitar tremor da barra */
+
+.progress{
+height:10px;
+background:#e9ecef;
+border-radius:20px;
+overflow:hidden;
+}
+
+.progress-bar{
+
+background:#198754;
+
+transition:width 0.25s linear;
+
+}
+
+/* remover animações bootstrap que causam flicker */
+
+.progress-bar-striped,
+.progress-bar-animated{
+
+animation:none !important;
+background-image:none !important;
+
+}
+
+
+.arquivo-box{
+background:#f8f9fa;
+border:1px solid #e3e6ea;
+border-radius:10px;
+padding:10px 12px;
+}
+
+.arquivo-nome{
+font-size:0.9rem;
+font-weight:500;
+color:#495057;
+}
+
+.progress-bar{
+transition:width 0.2s linear;
+}
+

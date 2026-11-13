@@ -1,0 +1,19 @@
+{% extends base_template %}
+{% block title %}Histórico de importações | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="history"></i><h5>Histórico de importações</h5>{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"><div><h3 class="fw-bold mb-1">Histórico de importações</h3><p class="text-muted mb-0">Cada importação é preservada como uma fotografia independente dos dados recebidos.</p></div><a class="btn btn-primary" href="{% url 'acompanhamento_avaliacoes:importar' %}"><i data-lucide="file-up" class="me-1"></i> Nova importação</a></div>
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-3"><div class="row g-2 align-items-end">
+    <div class="col-12 col-lg-5"><label class="form-label small fw-semibold">Avaliação</label><select class="form-select" name="avaliacao"><option value="">Todas as avaliações</option>{% for a in avaliacoes %}<option value="{{ a.id }}" {% if filtro_avaliacao == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nome }} · {{ a.ano_letivo }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label small fw-semibold">Resultado</label><select class="form-select" name="status"><option value="">Todos</option><option value="concluida" {% if filtro_status == 'concluida' %}selected{% endif %}>Concluída</option><option value="parcial" {% if filtro_status == 'parcial' %}selected{% endif %}>Com divergências</option></select></div>
+    <div class="col-6 col-lg-2"><label class="form-label small fw-semibold">De</label><input type="date" class="form-control" name="data_inicio" value="{{ data_inicio }}"></div>
+    <div class="col-6 col-lg-2"><label class="form-label small fw-semibold">Até</label><input type="date" class="form-control" name="data_fim" value="{{ data_fim }}"></div>
+    <div class="col-6 col-lg-1 d-grid"><button class="btn btn-primary">Filtrar</button></div>
+  </div></form>
+  <div class="card border-0 shadow-sm rounded-4 p-3"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Data</th><th>Arquivo(s)</th><th>Avaliação</th><th>Registros</th><th>Realizados</th><th>Pendentes</th><th>Participação</th><th>Andamento</th><th></th></tr></thead><tbody>
+  {% for i in importacoes %}<tr><td class="text-nowrap">{{ i.criado_em|date:'d/m/Y H:i' }}</td><td style="min-width:180px"><div class="text-truncate" style="max-width:260px" title="{{ i.arquivo }}">{{ i.arquivo }}</div><small class="text-muted">{{ i.arquivos_originais.count }} arquivo(s) original(is)</small></td><td class="fw-semibold">{{ i.avaliacao.nome }}</td><td>{{ i.total_registros }}</td><td class="text-success fw-semibold">{{ i.realizados }}</td><td class="text-danger">{{ i.pendentes }}</td><td style="min-width:150px"><div class="d-flex align-items-center gap-2"><div class="progress flex-grow-1" style="height:7px"><div class="progress-bar bg-success" style="width:{{ i.percentual }}%"></div></div><strong>{{ i.percentual }}%</strong></div></td><td><span class="badge {% if i.status == 'concluida' %}text-bg-success{% else %}text-bg-warning{% endif %}">{{ i.get_status_display }}</span></td><td><a class="btn btn-sm btn-outline-primary text-nowrap" href="{% url 'acompanhamento_avaliacoes:detalhe_importacao' i.id %}">Ver detalhes</a></td></tr>
+  {% empty %}<tr><td colspan="9" class="text-center text-muted py-5">Nenhuma importação encontrada com os filtros selecionados.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

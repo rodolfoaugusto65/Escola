@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block content %}
+<style>
+.ba-wrap{max-width:1500px;margin:auto}.ba-head{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:20px}.ba-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.ba-card,.ba-panel{background:#fff;border:1px solid #e7edf5;border-radius:15px;padding:18px;box-shadow:0 7px 24px #1d35570b}.ba-card small{color:#718096}.ba-card strong{display:block;font-size:29px;margin-top:5px}.ba-panel{margin-bottom:16px}.ba-table{width:100%;border-collapse:collapse}.ba-table th,.ba-table td{padding:12px;border-bottom:1px solid #edf1f6;text-align:left}.ba-table th{font-size:11px;color:#77869b;text-transform:uppercase}.ba-pill{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.ba-red{background:#fff0f0;color:#bd3448}.ba-amber{background:#fff5e4;color:#a66b08}.ba-green{background:#e9f7ef;color:#14764f}.ba-btn{display:inline-block;padding:9px 13px;border-radius:9px;background:#365ee8;color:#fff;text-decoration:none;font-weight:600}.ba-btn.light{background:#f1f4fa;color:#33445d}.ba-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.ba-filter input,.ba-filter select{padding:9px;border:1px solid #dce3ed;border-radius:8px}@media(max-width:760px){.ba-cards{grid-template-columns:1fr}.ba-panel{overflow:auto}}
+</style>
+<div class="ba-wrap">
+ <div class="ba-head"><div><h2>Busca Ativa e Infrequência</h2><div class="text-muted">Acompanhamento integrado ao cadastro e à frequência do GerEdu.</div></div><div><a class="ba-btn" href="{% url 'busca_ativa:importar' %}">Importar planilha oficial</a> <a class="ba-btn light" href="{% url 'busca_ativa:acompanhamentos' %}">Ver acompanhamentos</a> <a class="ba-btn light" href="{% url 'busca_ativa:relatorio' %}">Relatórios de ações</a> <a class="ba-btn light" href="{% url 'busca_ativa:compensacao' %}">Compensação de ausências</a> <a class="ba-btn light" href="{% url 'busca_ativa:relatorios_personalizados' %}">Relatórios personalizados</a> <a class="ba-btn light" href="{% url 'busca_ativa:estatisticas_consultas' %}">Estatísticas de consultas</a> <a class="ba-btn light" href="{% url 'consulta_frequencia_codigo' %}" target="_blank">Página do estudante</a></div></div>
+ <div class="ba-cards">
+  <div class="ba-card"><small>Alertas críticos · 25% ou mais</small><strong>{{ total_criticos }}</strong><span class="ba-pill ba-red">Prioridade de atendimento</span></div>
+  <div class="ba-card"><small>Faixa de atenção · 10% a 24,9%</small><strong>{{ total_atencao }}</strong><span class="ba-pill ba-amber">Acompanhar</span></div>
+  <div class="ba-card"><small>Providências com prazo ativo</small><strong>{{ acoes_pendentes }}</strong><span class="ba-pill ba-green">Em acompanhamento</span></div>
+ </div>
+ <section class="ba-panel">
+  <div class="ba-head"><div><h5>Pendências de infrequência sem prazo ativo</h5><small class="text-muted">Lista de alertas que ainda precisam de providência ou revisão. Consulte a tela de acompanhamentos para ver quem já possui ações registradas.</small></div></div>
+  <form class="ba-filter" method="get"><input name="q" value="{{ q }}" placeholder="Nome ou matrícula"><select name="faixa"><option value="">Todas as faixas</option><option value="atencao" {% if faixa == 'atencao' %}selected{% endif %}>Atenção 10%–24,9%</option><option value="critico" {% if faixa == 'critico' %}selected{% endif %}>Crítico 25%+</option></select><button class="ba-btn">Filtrar</button><a class="ba-btn light" href="{% url 'busca_ativa:painel' %}">Limpar</a></form>
+  <div style="overflow:auto"><table class="ba-table"><thead><tr><th>Estudante</th><th>Turma</th><th>Infrequência oficial</th><th>Faixa</th><th>Acompanhamento</th><th></th></tr></thead><tbody>
+  {% for s in situacoes %}<tr><td><b>{{ s.aluno.nome }}</b><br><small>{{ s.aluno.matricula }}</small></td><td>{{ s.aluno.turma|default:"—" }}</td><td>{{ s.percentual_considerado }}%</td><td>{% if s.percentual_considerado >= 25 %}<span class="ba-pill ba-red">Crítico</span>{% elif s.percentual_considerado >= 10 %}<span class="ba-pill ba-amber">Atenção</span>{% else %}<span class="ba-pill ba-green">Regular</span>{% endif %}</td><td>{% if s.tem_prazo_ativo %}<span class="ba-pill ba-green">Prazo ativo</span>{% else %}<span class="text-muted">Requer análise</span>{% endif %}</td><td><a class="ba-btn light" href="{% url 'busca_ativa:ficha' s.aluno_id %}">Abrir ficha</a></td></tr>
+  {% empty %}<tr><td colspan="6">Nenhum estudante encontrado. Importe a planilha oficial para iniciar o acompanhamento.</td></tr>{% endfor %}
+  </tbody></table></div>
+ </section>
+ <section class="ba-panel">
+  <div class="ba-head"><div><h5>Backup e recuperação da Busca Ativa</h5><small class="text-muted">Recupere o banco do sistema local ou baixe uma cópia dos dados integrados ao GerEdu.</small></div>
+  <a class="ba-btn light" href="{% url 'busca_ativa:baixar_backup' %}">Baixar backup (.db)</a></div>
+  <form method="post" enctype="multipart/form-data" action="{% url 'busca_ativa:importar_backup' %}" class="ba-filter">
+    {% csrf_token %}<input type="file" name="arquivo" accept=".db,.sqlite,.sqlite3" required>
+    <button class="ba-btn" type="submit" onclick="return confirm('Importar este banco? Os dados existentes serão preservados e providências duplicadas serão ignoradas.')">Importar banco local</button>
+  </form>
+  <small class="text-muted">A associação dos estudantes é feita por matrícula/código GED. Registros sem correspondência são preservados no arquivo original e informados no resultado da importação.</small>
+ </section>
+ <section class="ba-panel"><h5>Importações recentes</h5>{% for i in importacoes %}<p class="mb-2"><b>{{ i.arquivo }}</b> · {{ i.criado_em|date:"d/m/Y H:i" }} · {{ i.vinculados }} vinculados · {{ i.nao_vinculados }} sem correspondência</p>{% empty %}<p class="text-muted">Nenhuma importação realizada.</p>{% endfor %}</section>
+</div>
+{% endblock %}

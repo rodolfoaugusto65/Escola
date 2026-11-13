@@ -1,0 +1,25 @@
+GEREDU - ATUALIZAÇÃO DE AVALIAÇÕES E UPLOADS
+
+Aplicação:
+1. Faça backup do projeto e do banco de dados.
+2. Extraia este ZIP na raiz do projeto (a pasta que contém manage.py).
+3. Permita substituir os arquivos existentes.
+4. Não há migrações novas nesta atualização.
+5. Teste localmente:
+   python manage.py check
+   python manage.py test acompanhamento_avaliacoes
+6. Faça commit e push para o GitHub para publicar no Railway.
+
+Melhorias:
+- Filtros no painel por avaliação, ano/série, turma, situação, aluno/matrícula e intervalo de datas.
+- Indicadores e gráficos recalculados conforme os filtros.
+- Paginação da lista de estudantes pendentes e da consulta por importação.
+- Resumo percentual por turma e calendário diário de realizações.
+- Aviso de estudantes marcados como realizados sem data interpretável.
+- Filtros no histórico de importações por avaliação, resultado e período.
+- Arquivamento físico com nome curto e único para as planilhas de avaliação e os backups SQLite da Busca Ativa. O nome original permanece registrado para exibição.
+- A alteração dos nomes físicos evita ultrapassar o limite padrão de 100 caracteres do FileField com nomes originais extensos.
+
+Validação:
+A sintaxe dos dois arquivos Python alterados foi compilada com sucesso neste ambiente.
+A suíte Django não foi executada porque Django não está instalado neste ambiente.

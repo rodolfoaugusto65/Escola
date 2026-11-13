@@ -1,0 +1,42 @@
+GEREDU — NOTAS DA VERSÃO
+Versão: 2026.11.11-r3 — restauração aditiva do painel e filtros
+Data: 11/11/2026
+
+OBJETIVO
+Esta revisão corrige a regressão visual/funcional do painel da Busca Ativa. A regra é aditiva:
+preservar as telas e os fluxos existentes e acrescentar melhorias sem apagar histórico.
+
+BUSCA ATIVA
+- Restaura o painel anterior completo, incluindo atalhos, cards de alertas, backup/recuperação,
+  recorrências e importações recentes.
+- Mantém a tela própria "Alunos acompanhados", com filtros e consulta do histórico de ações.
+- Mantém a fila de novas providências separada dos estudantes com ação ativa.
+- Acrescenta filtros por turno, turma e intervalo de percentual de infrequência no painel.
+- Acrescenta painéis de prazos vencidos, acompanhamentos em andamento e prioridade crítica.
+- Mantém a regra de conclusão: estudante atendido não volta à fila automaticamente; só reaparece
+  quando uma integração posterior registrar novamente a situação, conforme a regra implementada.
+
+AVALIAÇÕES
+- Preserva painel, histórico de importações e detalhe de cada importação.
+- Mantém filtros de avaliação, ano/série, turma, situação, aluno/matrícula e período de realização.
+- Mantém relatórios por turma, calendário de realização e lista paginada de pendências.
+- Mantém os arquivos originais e os snapshots das importações; uma nova importação não substitui
+  as anteriores.
+- Mantém a impressão do detalhe da importação.
+
+NOTAS E INSTALAÇÃO
+- Este arquivo acompanha o código e pode ser aberto diretamente no Explorador de Arquivos.
+- Não execute comandos de instalação a partir deste arquivo.
+- Antes de publicar, faça backup do PostgreSQL de produção.
+- Copie/mescle a pasta Escola do pacote no projeto local, confira o diff no Git e valide com
+  `python manage.py check` e os testes do projeto.
+- Aplique migrações somente se `python manage.py showmigrations` indicar pendências.
+- Faça o deploy pelo GitHub/Railway após a validação local.
+
+VALIDAÇÃO / LIMITAÇÕES
+- O pacote foi montado a partir da versão de código mais recente disponível e recupera o template
+  anterior do painel da versão imediatamente anterior.
+- Não foi possível executar a suíte Django neste ambiente, pois as dependências e o banco local
+  do projeto não estão configurados aqui. Portanto, valide em ambiente local antes do deploy.
+- O envio automático de WhatsApp/SMS aos responsáveis não é ativado nesta revisão; a escola pode
+  usar texto padronizado na ficha, mas o disparo depende de integração e autorização próprias.

@@ -1,0 +1,9 @@
+VERSAO: 2026.11.13.11
+TITULO: Lista de chamada para aplicação de avaliações
+
+TEXTO:
+- A impressão das avaliações agora utiliza formato de chamada escolar por turma.
+- Cada turma possui numeração sequencial, nome dos estudantes e campos de presença e falta.
+- A folha mantém somente identificação da prova, data de aplicação e turma.
+- Turmas homônimas de séries diferentes são agrupadas separadamente.
+- O cabeçalho da tabela é repetido quando a lista continua em outra página.

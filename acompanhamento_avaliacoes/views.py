@@ -589,20 +589,25 @@ def relatorios(request):
         item['turno_label'] = dict(Turma.TURNOS).get(codigo_turno, 'Não identificado') if codigo_turno else 'Não identificado'
     imprimir = request.GET.get('imprimir') == '1'
     lista_exibicao = lista_exportacao
-    pagina = lista_exibicao if imprimir else Paginator(lista_exibicao, 100).get_page(request.GET.get('pagina'))
-
-    # A folha de aplicação é agrupada por turma e contém somente os campos
-    # operacionais solicitados: turma, prova, data e nomes dos estudantes.
-    grupos_impressao = []
     if imprimir:
+        # A impressão é uma folha operacional independente da interface.
+        # Mantém somente prova, data e turma, seguidas dos nomes.
+        # Agrupa por ano/série + turma para evitar juntar turmas homônimas.
         mapa_turmas = {}
-        for item in lista_exportacao.order_by('turma', 'nome_aluno'):
-            chave = item.turma or 'Turma não identificada'
+        for item in lista_exportacao.order_by('ano_serie', 'turma', 'nome_aluno', 'matricula'):
+            chave = ((item.ano_serie or '').strip(), (item.turma or 'Turma não identificada').strip())
             mapa_turmas.setdefault(chave, []).append(item.nome_aluno)
         grupos_impressao = [
-            {'turma': nome_turma, 'estudantes': nomes}
-            for nome_turma, nomes in mapa_turmas.items()
+            {'ano_serie': ano_serie, 'turma': nome_turma, 'estudantes': nomes}
+            for (ano_serie, nome_turma), nomes in mapa_turmas.items()
         ]
+        return _render(request, 'acompanhamento_avaliacoes/imprimir_relatorio_aplicacao.html', {
+            'prova': selecionada.avaliacao.prova or selecionada.avaliacao.nome,
+            'data_aplicacao': timezone.localtime(selecionada.criado_em).date(),
+            'grupos_impressao': grupos_impressao,
+            'total_estudantes': lista_exportacao.count(),
+        })
+    pagina = Paginator(lista_exibicao, 50).get_page(request.GET.get('pagina'))
 
     anos_letivos = list(Avaliacao.objects.values_list('ano_letivo', flat=True).distinct().order_by('-ano_letivo'))
     total_pendencias = pendencias.count()
@@ -613,7 +618,7 @@ def relatorios(request):
         'comparativo': comparativo, 'selecionada': selecionada, 'registros': pagina,
         'resumo': resumo, 'total_pendencias': total_pendencias, 'total_filtrado': total_filtrado,
         'percentual_realizacao': percentual_realizacao, 'agrupado': agrupado, 'agrupado_turno': agrupado_turno,
-        'imprimir': imprimir, 'grupos_impressao': grupos_impressao, 'lista_exibicao_total': lista_exportacao.count(),
+        'imprimir': False, 'lista_exibicao_total': lista_exportacao.count(),
         'turmas_disponiveis': turmas, 'anos_disponiveis': anos, 'anos_letivos': anos_letivos,
         'turnos_disponiveis': Turma.TURNOS, 'filtro_avaliacao': avaliacao_id,
         'filtro_ano_letivo': ano_letivo, 'filtro_aplicacao': str(selecionada.pk) if selecionada else aplicacao_id,

@@ -1,0 +1,158 @@
+{% extends base_template %}
+
+{% load widget_tweaks %}
+
+{% block content %}
+
+<div class="container-fluid fade-in">
+
+<div class="card shadow-sm border-0 rounded-4">
+<div class="card-body p-4">
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+
+<div>
+<h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+<i data-lucide="clipboard-list"></i>
+Gerar Conselho de Classe
+</h4>
+<p class="text-muted mb-0">
+O sistema irá analisar automaticamente frequência, ocorrências e desempenho dos alunos
+</p>
+</div>
+
+<a hx-get="{% url 'conselho:lista' %}"
+   hx-target="#mainContent"
+   hx-swap="innerHTML"
+   hx-push-url="true"
+   href="{% url 'conselho:lista' %}"
+   class="btn btn-light rounded-3 d-flex align-items-center gap-2">
+    <i data-lucide="arrow-left"></i>
+    Voltar
+</a>
+
+</div>
+
+<!-- INFO -->
+<div class="alert alert-info border-0 shadow-sm">
+<i data-lucide="info"></i>
+O conselho será gerado com base em:
+<ul class="mb-0 mt-2">
+<li>✔ Frequência dos alunos</li>
+<li>✔ Ocorrências registradas</li>
+<li>✔ Classificação automática de risco</li>
+</ul>
+</div>
+
+<!-- FORM -->
+<form method="post" action="{% url 'conselho:criar' %}" id="formConselho">
+{% csrf_token %}
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    <ul class="mb-0">
+    {% for field in form %}
+        {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row g-3">
+
+<!-- TURMA -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Turma</label>
+{{ form.turma|add_class:"form-select rounded-3" }}
+<small class="text-muted">Selecione a turma que será analisada</small>
+</div>
+
+<!-- BIMESTRE -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Bimestre</label>
+{{ form.bimestre|add_class:"form-select rounded-3" }}
+</div>
+
+<!-- ANO -->
+<div class="col-md-4">
+<label class="form-label fw-semibold">Ano Letivo</label>
+{{ form.ano|add_class:"form-select rounded-3" }}
+</div>
+
+</div>
+
+<!-- PREVIEW (UX) -->
+<div class="mt-4 p-3 bg-light rounded-3 border">
+
+<div class="d-flex align-items-center gap-2 mb-2">
+<i data-lucide="eye"></i>
+<strong>Prévia</strong>
+</div>
+
+<p class="mb-1 text-muted">
+Turma: <strong id="previewTurma">-</strong>
+</p>
+
+<p class="mb-0 text-muted">
+Período: <strong id="previewPeriodo">-</strong>
+</p>
+
+</div>
+
+<!-- BOTÃO -->
+<div class="mt-4 d-flex justify-content-end">
+
+<button type="submit"
+        id="btnGerar"
+        class="btn btn-primary px-4 rounded-3 d-flex align-items-center gap-2 shadow-sm">
+
+    <i data-lucide="play"></i>
+    <span id="btnText">Gerar Conselho</span>
+
+    <span id="btnLoading" class="spinner-border spinner-border-sm d-none"></span>
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+<script>
+if (window.lucide) lucide.createIcons();
+
+// 🔎 PREVIEW DINÂMICO
+const turma = document.querySelector("[name=turma]");
+const bimestre = document.querySelector("[name=bimestre]");
+const ano = document.querySelector("[name=ano]");
+
+function atualizarPreview(){
+    const turmaTxt = turma.options[turma.selectedIndex]?.text || "-";
+    const bimTxt = bimestre.value ? bimestre.value + "º Bimestre" : "-";
+    const anoTxt = ano.value || "-";
+
+    document.getElementById("previewTurma").innerText = turmaTxt;
+    document.getElementById("previewPeriodo").innerText = bimTxt + " / " + anoTxt;
+}
+
+[turma, bimestre, ano].forEach(el => {
+    if(el){
+        el.addEventListener("change", atualizarPreview);
+    }
+});
+
+// ⚡ LOADING BUTTON
+document.getElementById("formConselho").addEventListener("submit", function(){
+    document.getElementById("btnText").innerText = "Gerando...";
+    document.getElementById("btnLoading").classList.remove("d-none");
+});
+</script>
+
+{% endblock %}

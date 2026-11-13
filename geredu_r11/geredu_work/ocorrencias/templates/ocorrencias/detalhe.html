@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h4>Detalhe da Ocorrência</h4>
+
+<div class="card shadow">
+<div class="card-body">
+
+<p><b>Código:</b> {{ o.codigo }}</p>
+<p><b>Aluno:</b> {{ o.aluno.nome }}</p>
+<p><b>Turma:</b> {{ o.turma }}</p>
+<p><b>Tipo:</b> {{ o.get_tipo_ocorrencia_display }}</p>
+<p><b>Status:</b> {{ o.get_status_display }}</p>
+<p><b>Data:</b> {{ o.data }}</p>
+
+<p><b>Descrição:</b><br>{{ o.descricao }}</p>
+<p><b>Providências:</b><br>{{ o.providencias }}</p>
+
+<a href="{% url 'imprimir_ocorrencia' o.pk %}" class="btn btn-secondary">Imprimir</a>
+<a href="{% url 'editar_ocorrencia' o.pk %}" class="btn btn-warning">Editar</a>
+<a href="{% url 'lista_ocorrencias' %}" class="btn btn-light">Voltar</a>
+
+</div>
+</div>
+
+<h5 class="mt-4">Histórico do aluno</h5>
+
+<ul>
+{% for h in historico %}
+<li>{{ h.data }} - {{ h.codigo }} - {{ h.get_tipo_ocorrencia_display }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

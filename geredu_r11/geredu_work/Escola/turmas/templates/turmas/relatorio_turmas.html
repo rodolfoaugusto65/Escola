@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block title %}Relatório de Turmas{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Relatório de Turmas</h2>
+    {% if turmas %}
+    <table class="table table-hover table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Ano Letivo</th>
+                <th>Etapa</th>
+                <th>Ano Escolar</th>
+                <th>Turma</th>
+                <th>Turno</th>
+                <th>Máx. Alunos</th>
+                <th>Professor Conselheiro</th>
+                <th>Aluno Líder</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in turmas %}
+            <tr>
+                <td>{{ t.ano_letivo }}</td>
+                <td>{{ t.get_etapa_display }}</td>
+                <td>{{ t.ano_escolar }}</td>
+                <td>{{ t.nome }}</td>
+                <td>{{ t.get_turno_display }}</td>
+                <td>{{ t.max_alunos }}</td>
+                <td>{{ t.professor_conselheiro|default:"-" }}</td>
+                <td>{{ t.aluno_lider|default:"-" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">Nenhuma turma cadastrada.</div>
+    {% endif %}
+</div>
+{% endblock %}

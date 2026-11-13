@@ -1,0 +1,25 @@
+CORREÇÃO DO CONFLITO DE MIGRAÇÕES - GEREDU
+
+1. Faça backup do banco PostgreSQL antes de atualizar.
+2. Copie a pasta busca_ativa/migrations/0008_merge_20261110.py deste pacote
+   para a pasta equivalente no seu projeto, mantendo os dois arquivos 0007.
+3. No terminal, com o ambiente virtual ativado e na pasta que contém manage.py,
+   execute:
+
+   python manage.py showmigrations busca_ativa
+   python manage.py migrate --plan
+   python manage.py migrate
+
+4. Confirme que a migração 0008_merge_20261110 aparece como aplicada:
+
+   python manage.py showmigrations busca_ativa
+
+IMPORTANTE:
+- NÃO apague nem renomeie nenhum dos dois arquivos 0007.
+- NÃO execute migrate --fake.
+- NÃO apague linhas da tabela django_migrations.
+- A migração 0008 é uma migração de união, sem operações de banco; ela preserva
+  as operações das duas migrações 0007, que serão aplicadas antes dela.
+
+Se `migrate --plan` indicar que uma das migrações 0007 já aplicada será revertida,
+pare e envie a saída antes de executar migrate.

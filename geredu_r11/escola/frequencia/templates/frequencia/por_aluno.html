@@ -1,0 +1,174 @@
+{% extends base_template %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+<i data-lucide="users"></i>
+Relatório de Frequência por Aluno
+</h3>
+
+<a href="{% url 'lista_frequencia' %}"
+class="btn btn-secondary btn-modern d-flex align-items-center gap-2">
+<i data-lucide="arrow-left"></i>
+Voltar
+</a>
+
+</div>
+
+<!-- FILTROS -->
+
+<form method="get" class="card modern-card shadow-sm mb-4">
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-4">
+
+<label class="form-label fw-semibold">
+Turma
+</label>
+
+<select name="turma" class="form-select">
+
+<option value="">Todas</option>
+
+{% for t in turmas %}
+
+<option value="{{ t.id }}"
+{% if request.GET.turma == t.id|stringformat:"s" %}
+selected
+{% endif %}
+>
+
+{{ t }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+</div>
+
+<div class="col-md-4">
+
+<label class="form-label fw-semibold">
+Aluno
+</label>
+
+<input
+type="text"
+name="aluno"
+class="form-control"
+placeholder="Nome ou matrícula"
+value="{{ request.GET.aluno }}">
+
+</div>
+
+<div class="col-md-4 d-flex align-items-end gap-2">
+
+<button class="btn btn-primary w-100">
+Filtrar
+</button>
+
+<a href="{% url 'frequencia_por_aluno' %}"
+class="btn btn-outline-secondary">
+Limpar
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</form>
+
+
+<!-- TABELA -->
+
+<div class="card modern-card shadow-sm">
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead>
+
+<tr>
+
+<th>Aluno</th>
+<th>Matrícula</th>
+<th>Turma</th>
+<th class="text-center">Presenças</th>
+<th class="text-center">Faltas</th>
+<th class="text-center">% Presença</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for r in resumo %}
+
+<tr>
+
+<td>
+
+<a href="{% url 'frequencia_aluno' r.aluno__id %}"
+class="fw-semibold text-decoration-none text-primary">
+
+{{ r.aluno__nome }}
+
+</a>
+
+</td>
+
+<td>{{ r.aluno__matricula }}</td>
+
+<td>{{ r.aluno__turma__nome }}</td>
+
+<td class="text-center text-success">
+{{ r.presencas }}
+</td>
+
+<td class="text-center text-danger">
+{{ r.faltas }}
+</td>
+
+<td class="text-center fw-bold">
+{{ r.percentual|floatformat:1 }}%
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6" class="text-center py-4 text-muted">
+
+Nenhum registro encontrado
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

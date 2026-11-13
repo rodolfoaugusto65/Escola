@@ -74,13 +74,16 @@ body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif
   <section class="card border-0 shadow-sm rounded-4 p-3 mb-3">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2"><div><small class="text-muted">Aplicação selecionada</small><h4 class="fw-bold mb-1">{{ selecionada.avaliacao.nome }}</h4><div class="text-muted small">Data de aplicação/importação: {{ selecionada.criado_em|date:'d/m/Y H:i' }} · {{ selecionada.arquivo }}</div></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-danger btn-sm" href="?{{ request.GET.urlencode }}&lista=pendencias&csv=1">Exportar pendentes/ausentes (CSV)</a><a class="btn btn-outline-primary btn-sm" href="?{{ request.GET.urlencode }}&lista=todos&csv=1">Exportar todos (CSV)</a><a class="btn btn-outline-secondary btn-sm" target="_blank" href="?{{ request.GET.urlencode }}&imprimir=1">Imprimir relação</a></div></div>
   </section>
-  <div class="row g-2 mb-3">
-    <div class="col-6 col-xl"><div class="indicador"><small>Filtrados</small><strong>{{ resumo.total|default:0 }}</strong></div></div>
-    <div class="col-6 col-xl"><div class="indicador text-success"><small>Realizados</small><strong>{{ resumo.realizados|default:0 }}</strong></div></div>
-    <div class="col-6 col-xl"><div class="indicador text-warning"><small>Pendentes</small><strong>{{ resumo.pendentes|default:0 }}</strong></div></div>
-    <div class="col-6 col-xl"><div class="indicador text-danger"><small>Ausentes / outras</small><strong>{{ resumo.ausentes|add:resumo.outros|default:0 }}</strong></div></div>
-    <div class="col-6 col-xl"><div class="indicador text-primary"><small>Participação</small><strong>{{ percentual_realizacao }}%</strong></div></div>
-  </div>
+  <details class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <summary class="fw-bold">Indicadores da aplicação <span class="text-muted fw-normal">· {{ resumo.total|default:0 }} estudantes</span></summary>
+    <div class="row g-2 mt-2">
+      <div class="col-6 col-xl"><div class="indicador"><small>Filtrados</small><strong>{{ resumo.total|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-success"><small>Realizados</small><strong>{{ resumo.realizados|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-warning"><small>Pendentes</small><strong>{{ resumo.pendentes|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-danger"><small>Ausentes / outras</small><strong>{{ resumo.ausentes|add:resumo.outros|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-primary"><small>Participação</small><strong>{{ percentual_realizacao }}%</strong></div></div>
+    </div>
+  </details>
   <details class="card border-0 shadow-sm rounded-4 p-3 mb-3">
     <summary class="fw-bold">Resumo das pendências por turma e turno <span class="badge text-bg-danger">{{ total_pendencias }}</span></summary>
     <div class="table-responsive mt-3"><table class="table table-sm mb-0"><thead><tr><th>Ano/série</th><th>Turma</th><th class="text-end">Pendentes / ausentes</th></tr></thead><tbody>{% for item in agrupado %}<tr><td>{{ item.ano_serie }}</td><td>{{ item.turma|default:'Não identificada' }}</td><td class="text-end fw-bold text-danger">{{ item.total }}</td></tr>{% empty %}<tr><td colspan="3" class="text-success">Nenhuma pendência.</td></tr>{% endfor %}</tbody></table></div>
@@ -88,7 +91,7 @@ body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif
   </details>
   <section class="card border-0 shadow-sm rounded-4 p-3">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h5 class="fw-bold mb-0">Relação de estudantes</h5><small class="text-muted">Use a lista de pendências para busca ativa ou todos para conferência da aplicação.</small></div><span class="badge text-bg-light">{{ lista_exibicao_total }} estudante(s)</span></div>
-    <div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-sm {% if lista_tipo == 'pendencias' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="?{{ request.GET.urlencode }}&lista=pendencias">Pendentes e ausentes</a><a class="btn btn-sm {% if lista_tipo == 'todos' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?{{ request.GET.urlencode }}&lista=todos">Todos os estudantes</a></div>
+    <div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-sm {% if lista_tipo == 'pendencias' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="?{{ request.GET.urlencode }}&lista=pendencias">Pendentes e ausentes</a><a class="btn btn-sm {% if lista_tipo == 'todos' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?{{ request.GET.urlencode }}&lista=todos">Todos os estudantes</a><a class="btn btn-sm btn-outline-secondary ms-auto" href="?{{ request.GET.urlencode }}&imprimir=1" target="_blank">Imprimir lista filtrada</a></div>
     <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Estudante</th><th>Matrícula</th><th>Ano/série</th><th>Turma</th><th>Situação</th><th>Data da realização</th></tr></thead><tbody>{% for r in registros %}<tr><td class="fw-semibold">{{ r.nome_aluno }}</td><td>{{ r.matricula }}</td><td>{{ r.ano_serie }}</td><td>{{ r.turma }}</td><td><span class="badge {% if r.situacao == 'ausente' %}text-bg-danger{% elif r.situacao == 'pendente' %}text-bg-warning{% elif r.situacao == 'realizado' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ r.get_situacao_display }}</span></td><td>{{ r.realizado_em|date:'d/m/Y H:i'|default:'—' }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum estudante encontrado.</td></tr>{% endfor %}</tbody></table></div>
     {% if registros.has_other_pages %}<div class="d-flex justify-content-between mt-3"><small class="text-muted">Página {{ registros.number }} de {{ registros.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if registros.has_previous %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.previous_page_number }}">Anterior</a>{% endif %}{% if registros.has_next %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.next_page_number }}">Próxima</a>{% endif %}</div></div>{% endif %}
   </section>
@@ -97,7 +100,7 @@ body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif
 <style>
 .acompanhamento-avaliacoes .indicador{height:100%;min-height:88px;padding:14px 16px;border:1px solid #e6eaf0;border-radius:14px;background:#fff;display:flex;flex-direction:column;justify-content:space-between}
 .acompanhamento-avaliacoes .indicador small{color:#667085}.acompanhamento-avaliacoes .indicador strong{font-size:1.65rem;line-height:1.1}
-.acompanhamento-avaliacoes details>summary{cursor:pointer;list-style:none}.acompanhamento-avaliacoes details>summary::-webkit-details-marker{display:none}.acompanhamento-avaliacoes details>summary:after{content:'＋';float:right;color:#667085}.acompanhamento-avaliacoes details[open]>summary:after{content:'−'}
+.acompanhamento-avaliacoes details>summary{cursor:pointer;list-style:none;user-select:none}.acompanhamento-avaliacoes details>summary::-webkit-details-marker{display:none}.acompanhamento-avaliacoes details>summary:after{content:'＋';float:right;color:#667085}.acompanhamento-avaliacoes details[open]>summary:after{content:'−'}
 @media(max-width:768px){.acompanhamento-avaliacoes .indicador{min-height:76px}}
 </style>
 {% endif %}

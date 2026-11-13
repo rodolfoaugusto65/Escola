@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chamada de aplicação - {{ prova }}</title>
+<style>
+@page { size: A4 portrait; margin: 12mm 13mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; color: #111; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+body { font-size: 10.5pt; }
+.acoes { max-width: 184mm; margin: 12px auto; text-align: right; }
+.acoes button { border: 0; border-radius: 5px; padding: 9px 16px; background: #1d4ed8; color: #fff; font-size: 10pt; cursor: pointer; }
+.folha { width: 100%; }
+.cabecalho { margin: 0 0 7mm; text-align: center; }
+.cabecalho h1 { margin: 0 0 4mm; font-size: 15pt; letter-spacing: .35px; }
+.dados-prova { display: flex; justify-content: space-between; gap: 8mm; padding: 2.5mm 0; border-top: 1px solid #333; border-bottom: 1px solid #333; text-align: left; font-size: 10.5pt; }
+.turma { margin: 0 0 7mm; break-inside: auto; page-break-inside: auto; }
+.turma + .turma { break-before: page; page-break-before: always; }
+.turma h2 { margin: 0 0 3mm; padding: 2.5mm 3mm; border: 1px solid #555; font-size: 12pt; text-align: left; break-after: avoid; page-break-after: avoid; }
+.turma table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.turma thead { display: table-header-group; }
+.turma tr { break-inside: avoid; page-break-inside: avoid; }
+.turma th, .turma td { border: 1px solid #777; padding: 2mm 2.2mm; }
+.turma th { font-size: 9pt; text-transform: uppercase; background: #f0f0f0; }
+.turma td { height: 9mm; }
+.col-numero { width: 11mm; text-align: center; }
+.col-nome { width: auto; }
+.col-presenca, .col-falta { width: 19mm; text-align: center; }
+.marcacao { font-size: 13pt; }
+.vazio { text-align: center; padding: 12mm 0; }
+@media screen { body { max-width: 184mm; margin: 18px auto; padding: 10mm; box-shadow: 0 2px 18px #0002; } }
+@media print { .acoes { display: none !important; } body { max-width: none; margin: 0; padding: 0; box-shadow: none; } .turma th { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<div class="acoes"><button type="button" onclick="window.print()">Imprimir chamada</button></div>
+<main class="folha">
+  <header class="cabecalho">
+    <h1>LISTA DE CHAMADA — APLICAÇÃO DE AVALIAÇÃO</h1>
+    <div class="dados-prova">
+      <span><strong>Prova:</strong> {{ prova }}</span>
+      <span><strong>Data:</strong> {{ data_aplicacao|date:'d/m/Y' }}</span>
+    </div>
+  </header>
+  {% for grupo in grupos_impressao %}
+  <section class="turma">
+    <h2>Turma: {% if grupo.ano_serie %}{{ grupo.ano_serie }} — {% endif %}{{ grupo.turma }}</h2>
+    <table>
+      <thead><tr><th class="col-numero">Nº</th><th class="col-nome">Nome do estudante</th><th class="col-presenca">Presença</th><th class="col-falta">Falta</th></tr></thead>
+      <tbody>
+      {% for nome in grupo.estudantes %}<tr><td class="col-numero">{{ forloop.counter }}</td><td>{{ nome }}</td><td class="col-presenca marcacao">□</td><td class="col-falta marcacao">□</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% empty %}<p class="vazio">Nenhum estudante encontrado para os filtros selecionados.</p>{% endfor %}
+</main>
+</body>
+</html>

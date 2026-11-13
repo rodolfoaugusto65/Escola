@@ -1,0 +1,279 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h3 class="fw-bold mb-1">
+            Painel - {{ conselho.turma }}
+        </h3>
+
+        <p class="text-muted mb-0">
+            Acompanhamento do preenchimento do Conselho de Classe
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a
+            hx-get="{% url 'conselho:detalhe' conselho.id %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            class="btn btn-outline-secondary">
+
+            <i data-lucide="arrow-left"></i>
+            Voltar
+
+        </a>
+
+        <a
+            hx-get="{% url 'conselho:ata' conselho.id %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            class="btn btn-success">
+
+            <i data-lucide="file-text"></i>
+            Gerar Ata
+
+        </a>
+
+    </div>
+
+</div>
+
+<!-- INDICADORES -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-success">
+                {{ concluidos }}
+            </h2>
+            <small class="text-muted">
+                Concluídos
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-danger">
+                {{ pendentes }}
+            </h2>
+            <small class="text-muted">
+                Pendentes
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-primary">
+                {{ total }}
+            </h2>
+            <small class="text-muted">
+                Total de Alunos
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <h2 class="fw-bold text-warning">
+                {{ percentual }}%
+            </h2>
+            <small class="text-muted">
+                Preenchido
+            </small>
+        </div>
+    </div>
+
+</div>
+
+<!-- PROGRESSO -->
+
+<div class="card shadow-sm border-0 mb-4">
+<div class="card-body">
+
+    <h6 class="fw-bold mb-3">
+        Progresso do Conselho
+    </h6>
+
+    <div class="progress" style="height:22px;">
+
+        <div
+            class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+            style="width: {{ percentual }}%;">
+
+            {{ percentual }}%
+
+        </div>
+
+    </div>
+
+</div>
+</div>
+
+<!-- TABELA -->
+
+<div class="card shadow-sm border-0">
+<div class="card-body">
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle">
+
+<thead class="table-light">
+
+<tr>
+    <th>Aluno</th>
+    <th>Média</th>
+    <th>Freq.</th>
+    <th>Ocorr.</th>
+    <th>Informes</th>
+    <th>Status</th>
+    <th></th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for a in alunos %}
+
+<tr>
+
+    <td>
+
+        <a
+            href="{% url 'relatorio_aluno_completo' a.aluno.id %}"
+            class="fw-semibold text-decoration-none text-dark">
+
+            {{ a.aluno }}
+
+        </a>
+
+        <br>
+
+        <small class="text-muted">
+
+            {% if a.aluno.transferido %}
+                Transferido
+            {% endif %}
+
+            {% if a.aluno.aluno_paed %}
+                • PAED
+            {% endif %}
+
+            {% if a.aluno.aluno_trabalhador %}
+                • Trabalhador
+            {% endif %}
+
+        </small>
+
+    </td>
+
+    <td>
+        {{ a.media|default:"-" }}
+    </td>
+
+    <td>
+        {% if a.frequencia %}
+            {{ a.frequencia }}%
+        {% else %}
+            -
+        {% endif %}
+    </td>
+
+    <td>
+        {{ a.total_ocorrencias }}
+    </td>
+
+    <td>
+
+        {% if a.aluno.aluno_paed %}
+            <span class="badge bg-danger">
+                PAED
+            </span>
+        {% endif %}
+
+        {% if a.aluno.aluno_busca_ativa %}
+            <span class="badge bg-warning text-dark">
+                Busca Ativa
+            </span>
+        {% endif %}
+
+        {% if a.aluno.transferido %}
+            <span class="badge bg-secondary">
+                Transferido
+            </span>
+        {% endif %}
+
+        {% if a.aluno.possui_dependencia %}
+            <span class="badge bg-info">
+                Dependência
+            </span>
+        {% endif %}
+
+    </td>
+
+    <td>
+
+        {% if a.preenchido %}
+            <span class="badge bg-success">
+                Concluído
+            </span>
+        {% else %}
+            <span class="badge bg-danger">
+                Pendente
+            </span>
+        {% endif %}
+
+    </td>
+
+    <td>
+
+        <a
+            href="{% url 'conselho:preencher_aluno' conselho.id %}?indice={{ forloop.counter0 }}"
+            class="btn btn-sm btn-outline-primary">
+
+            Abrir
+
+        </a>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="7" class="text-center text-muted py-4">
+        Nenhum aluno encontrado.
+    </td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+if (window.lucide) {
+    lucide.createIcons();
+}
+</script>
+
+{% endblock %}

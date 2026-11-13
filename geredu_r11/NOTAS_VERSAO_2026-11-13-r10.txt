@@ -1,0 +1,23 @@
+GEREDU — NOTA DE ATUALIZAÇÃO r10
+Versão: 2026.11.13.10
+Data: 13/11/2026
+
+MELHORIAS
+1. A tela de acompanhamento foi simplificada. Os indicadores iniciam recolhidos para priorizar a relação de estudantes e os filtros operacionais.
+2. O histórico comparativo e o resumo de pendências permanecem disponíveis em painéis expansíveis.
+3. A impressão foi isolada da interface administrativa. Não imprime menus, cabeçalhos do sistema, rodapés, alertas, gráficos, cartões de indicadores ou tabelas de análise.
+4. A folha A4 apresenta somente a identificação da prova, a data da aplicação, a turma e os nomes dos estudantes.
+5. Os estudantes são agrupados por turma. A impressão respeita os filtros e a opção selecionada (pendentes/ausentes ou todos).
+
+PUBLICAÇÃO DA NOTA
+A nota é lida do arquivo TXT `busca_ativa/atualizacoes/2026.11.13.10.txt` e cadastrada automaticamente pela migration `0010_comunicado_relatorios_impressao_r10`.
+
+IMPLANTAÇÃO
+- Faça backup do banco de dados.
+- Atualize o código com o pacote r10.
+- Execute: python manage.py migrate
+- Execute: python manage.py check
+- Reinicie o serviço.
+
+VALIDAÇÃO
+A sintaxe Python e a integridade dos pacotes foram verificadas. Testes funcionais Django e impressão em navegador precisam ser confirmados no ambiente da escola.

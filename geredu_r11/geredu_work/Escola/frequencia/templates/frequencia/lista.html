@@ -1,0 +1,482 @@
+{% extends base_template %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<!-- HEADER -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-0">
+<i data-lucide="calendar-check"></i>
+Relatório de Frequências
+</h3>
+
+<div class="d-flex gap-2">
+
+<a href="{% url 'criar_frequencia' %}"
+class="btn btn-success btn-modern d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="plus"></i>
+Lançar frequência
+</a>
+
+<a href="{% url 'lista_lancamentos' %}"
+class="btn btn-info btn-modern text-white d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="list"></i>
+Ver lançamentos
+</a>
+
+<a href="{% url 'frequencia_por_aluno' %}"
+class="btn btn-primary btn-modern d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="users"></i>
+Ver por aluno
+</a>
+
+</div>
+</div>
+
+<!-- FILTROS -->
+
+<form method="get" class="card modern-card shadow-sm mb-4">
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-4">
+
+<label class="form-label fw-semibold">
+Turma
+</label>
+
+<select name="turma" class="form-select">
+
+<option value="">Todas</option>
+
+{% for t in turmas %}
+
+<option value="{{ t.id }}"
+{% if request.GET.turma == t.id|stringformat:"s" %}
+selected
+{% endif %}
+>
+
+{{ t }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-4">
+
+<label class="form-label fw-semibold">
+Aluno
+</label>
+
+<input
+type="text"
+name="aluno"
+class="form-control"
+placeholder="Nome ou matrícula"
+value="{{ request.GET.aluno }}">
+
+</div>
+
+
+<div class="col-md-2">
+
+<label class="form-label fw-semibold">
+Data início
+</label>
+
+<input
+type="date"
+name="data_inicio"
+class="form-control"
+value="{{ request.GET.data_inicio }}">
+
+</div>
+
+
+<div class="col-md-2">
+
+<label class="form-label fw-semibold">
+Data fim
+</label>
+
+<input
+type="date"
+name="data_fim"
+class="form-control"
+value="{{ request.GET.data_fim }}">
+
+</div>
+
+</div>
+
+
+<div class="mt-3 d-flex gap-2">
+
+<button class="btn btn-primary btn-modern">
+Filtrar
+</button>
+
+<a href="{% url 'lista_frequencia' %}"
+class="btn btn-outline-secondary">
+Limpar
+</a>
+
+</div>
+
+</div>
+
+</form>
+
+<!-- RESUMO DO DIA -->
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Data</div>
+<div class="fw-bold">
+{{ resumo_dia.data|date:"d/m/Y"|default:"Hoje" }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Turmas</div>
+<div class="fw-bold text-primary">
+{{ resumo_dia.turmas|default:0 }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Alunos</div>
+<div class="fw-bold">
+{{ resumo_dia.total_alunos|default:0 }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Presenças</div>
+<div class="fw-bold text-success">
+{{ resumo_dia.presencas|default:0 }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Faltas</div>
+<div class="fw-bold text-danger">
+{{ resumo_dia.faltas|default:0 }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">% Presença</div>
+<div class="fw-bold text-success">
+{{ resumo_dia.percentual|floatformat:1 }}%
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<!-- RESUMO GERAL -->
+
+<div class="row g-3 mb-4">
+
+<div class="col-md-3">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Total de Lançamentos</div>
+<div class="fw-bold fs-4">
+{{ resumo_turmas|length }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Total de Presenças</div>
+<div class="fw-bold text-success fs-4">
+{{ total_presencas }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Total de Faltas</div>
+<div class="fw-bold text-danger fs-4">
+{{ total_faltas }}
+</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card modern-card shadow-sm text-center">
+<div class="card-body">
+<div class="text-muted small">Frequência Média</div>
+<div class="fw-bold text-primary fs-4">
+{{ resumo_dia.percentual|floatformat:1 }}%
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<!-- GRÁFICOS -->
+
+<div class="row g-3 mb-4">
+
+<div class="col-lg-4">
+<div class="card modern-card shadow-sm">
+<div class="card-header fw-semibold">Frequência do dia</div>
+<div class="card-body">
+<canvas id="graficoDia"></canvas>
+</div>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="card modern-card shadow-sm">
+<div class="card-header fw-semibold">Frequência por turno</div>
+<div class="card-body">
+<canvas id="graficoTurno"></canvas>
+</div>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="card modern-card shadow-sm">
+<div class="card-header fw-semibold">Frequência da semana</div>
+<div class="card-body">
+<canvas id="graficoSemana"></canvas>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<!-- TABELA -->
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-0">
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead>
+
+<tr>
+<th>Série</th>
+<th>Turma</th>
+<th>Data</th>
+<th class="text-center">Alunos</th>
+<th class="text-center">Presentes</th>
+<th class="text-center">Faltas</th>
+<th class="text-center">% Presença</th>
+<th class="text-center">Ações</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for r in resumo_turmas %}
+
+<tr class="hover-row">
+
+<td>{{ r.frequencia__turma__ano_escolar }}</td>
+
+<td class="fw-semibold">
+
+<a href="{% url 'frequencia_por_aluno' %}?turma={{ r.frequencia__turma__id }}"
+class="text-decoration-none">
+
+{{ r.frequencia__turma__nome }}
+
+</a>
+
+</td>
+
+<td>
+{{ r.frequencia__data|date:"d/m/Y" }}
+</td>
+
+<td class="text-center">{{ r.total }}</td>
+
+<td class="text-center text-success">{{ r.presencas }}</td>
+
+<td class="text-center text-danger">{{ r.faltas }}</td>
+
+<td class="text-center fw-bold">
+{{ r.percentual|floatformat:1 }}%
+</td>
+
+<td class="text-center">
+
+<div class="d-flex justify-content-center gap-2">
+
+<a href="{% url 'frequencia_detalhe' r.frequencia__id %}"
+   class="btn btn-icon btn-info-soft">
+<i data-lucide="eye"></i>
+</a>
+
+{% if user.pode_gerenciar_usuarios %}
+
+<a href="{% url 'editar_frequencia' r.frequencia__id %}"
+class="btn btn-icon btn-warning-soft">
+<i data-lucide="edit-3"></i>
+</a>
+
+<button
+class="btn btn-icon btn-danger-soft btn-excluir"
+data-url="{% url 'excluir_frequencia' r.frequencia__id %}">
+<i data-lucide="trash-2"></i>
+</button>
+
+{% endif %}
+
+</div>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="8" class="text-center py-5 text-muted">
+
+<i data-lucide="calendar-x" style="width:40px;height:40px;"></i>
+
+<p class="mt-3 mb-0">
+Nenhum lançamento encontrado
+</p>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+window.grafico_dia = {{ grafico_dia|safe }};
+window.grafico_turno = {{ grafico_turno|safe }};
+window.grafico_semana = {{ grafico_semana|safe }};
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+window.grafico_dia = {{ grafico_dia|safe }};
+window.grafico_turno = {{ grafico_turno|safe }};
+window.grafico_semana = {{ grafico_semana|safe }};
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // GRAFICO DIA
+    const ctxDia = document.getElementById("graficoDia");
+
+    if (ctxDia && window.grafico_dia) {
+        new Chart(ctxDia, {
+            type: "doughnut",
+            data: window.grafico_dia,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "bottom" }
+                }
+            }
+        });
+    }
+
+    // GRAFICO TURNO
+    const ctxTurno = document.getElementById("graficoTurno");
+
+    if (ctxTurno && window.grafico_turno) {
+        new Chart(ctxTurno, {
+            type: "bar",
+            data: window.grafico_turno,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // GRAFICO SEMANA
+    const ctxSemana = document.getElementById("graficoSemana");
+
+    if (ctxSemana && window.grafico_semana) {
+        new Chart(ctxSemana, {
+            type: "line",
+            data: window.grafico_semana,
+            options: {
+                responsive: true,
+                tension: 0.4
+            }
+        });
+    }
+
+});
+</script>
+{% endblock %}

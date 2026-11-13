@@ -1,0 +1,16 @@
+Valor do token
+
+S0h8GTqq60bM6SmshjeLr2v_x3aMopxEhnWmC9OC
+
+ID da chave de acesso
+
+3c92a66e49624ab7ce23a3e2953eca80
+
+Chave de acesso secreta
+
+9501c01370b91461238a2f4b4073005e14a9a94cd76f8b32ce99ac9a0ea9292e
+
+
+Use pontos de extremidade específicos de jurisdição para clientes S3:
+
+https://f10157951b1e36f163670f6a6cb03de6.r2.cloudflarestorage.com

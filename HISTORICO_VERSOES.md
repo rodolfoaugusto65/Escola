@@ -27,3 +27,19 @@
 - Impressão simplificada em folha A4: cabeçalho com turma, prova e data da aplicação, seguido somente dos nomes dos estudantes, agrupados por turma.
 - Removidos da impressão indicadores, alertas, tabelas gerenciais, matrícula, situação, campos de assinatura e elementos de navegação.
 - Exportação CSV preservada para pendências/ausentes e relação completa, respeitando os filtros da aplicação.
+
+## r10 — 2026-11-13 — Relatórios e impressão simplificados
+- Reorganizada a área de acompanhamento para reduzir a concentração de indicadores e quadros na tela.
+- Indicadores passaram a iniciar recolhidos; histórico comparativo e resumo de pendências permanecem em seções expansíveis.
+- Impressão da aplicação isolada em template HTML próprio, sem herdar menu, cabeçalho, rodapé, alertas ou componentes administrativos.
+- Folha A4 contém somente prova, data da aplicação, turma e relação nominal dos estudantes, agrupada por turma.
+- Incluída nota TXT `busca_ativa/atualizacoes/2026.11.13.10.txt`, publicada automaticamente pela migration `busca_ativa.0010_comunicado_relatorios_impressao_r10`.
+
+
+## r11 — Lista de chamada para aplicação de avaliações (2026-11-13)
+- Impressão organizada como chamada escolar, separada por turma.
+- Colunas: número, nome do estudante, presença e falta.
+- Cabeçalho contém somente prova e data; cada turma possui identificação própria.
+- Numeração reinicia em cada turma; cabeçalho da tabela se repete entre páginas.
+- Agrupamento considera ano/série e turma para evitar mesclar turmas homônimas.
+- Nota TXT publicada automaticamente pela migration `0011_comunicado_chamada_avaliacoes_r11`.
