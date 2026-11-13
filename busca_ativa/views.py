@@ -7,6 +7,8 @@ import hashlib
 import json
 import logging
 import uuid
+from pathlib import Path
+from django.conf import settings
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from urllib.parse import quote
@@ -1392,11 +1394,41 @@ def importar_comunicado_txt(request):
                 versao=versao,
                 defaults={'titulo': titulo[:180], 'texto': texto, 'ativo': True},
             )
-            messages.success(request, f'Atualização {comunicado.versao} publicada. O aviso será exibido aos usuários até confirmarem a leitura.')
+            # Arquiva o TXT original em uma pasta única de notas de versão.
+            pasta_notas = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+            pasta_notas.mkdir(parents=True, exist_ok=True)
+            nome_arquivo = get_valid_filename(f'NOTAS_VERSAO_{versao}.txt')
+            (pasta_notas / nome_arquivo).write_text(conteudo, encoding='utf-8')
+            messages.success(request, f'Atualização {comunicado.versao} publicada e arquivada. O aviso será exibido aos usuários até confirmarem a leitura.')
             return redirect('busca_ativa:atualizacao_txt')
         except UnicodeDecodeError:
             messages.error(request, 'Não foi possível ler o TXT. Salve o arquivo em UTF-8 e tente novamente.')
         except Exception as exc:
             messages.error(request, str(exc))
     historico = ComunicadoSistema.objects.order_by('-criado_em')[:20]
-    return render(request, 'busca_ativa/atualizacao_txt.html', {'historico': historico})
+    pasta_notas = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+    pasta_notas.mkdir(parents=True, exist_ok=True)
+    arquivos_notas = sorted(pasta_notas.glob('NOTAS_VERSAO_*.txt'), key=lambda p: p.stat().st_mtime, reverse=True)
+    notas_versao = [{'name': p.name, 'size': p.stat().st_size} for p in arquivos_notas]
+    return render(request, 'busca_ativa/atualizacao_txt.html', {
+        'historico': historico,
+        'notas_versao': notas_versao,
+    })
+
+
+@login_required
+def baixar_nota_versao(request, nome):
+    """Disponibiliza somente arquivos NOTAS_VERSAO_*.txt da pasta oficial."""
+    if not gerencial(request.user):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    nome_seguro = get_valid_filename(nome)
+    if nome_seguro != nome or not nome.startswith('NOTAS_VERSAO_') or not nome.endswith('.txt'):
+        raise Http404
+    pasta = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+    arquivo = (pasta / nome).resolve()
+    if arquivo.parent != pasta.resolve() or not arquivo.is_file():
+        raise Http404
+    resposta = HttpResponse(arquivo.read_bytes(), content_type='text/plain; charset=utf-8')
+    resposta['Content-Disposition'] = f'attachment; filename="{nome}"'
+    return resposta

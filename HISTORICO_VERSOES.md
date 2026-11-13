@@ -1,8 +1,11 @@
 # Histórico de versões
 
-## r12 — 13/11/2026
-- Movida a opção **Atualizações do sistema** do grupo Busca Ativa para Administração.
-- Removido o atalho da tela/painel da Busca Ativa.
-- Mantido o acesso para usuários com permissão de gerenciamento.
-- Incluída nota TXT `busca_ativa/atualizacoes/2026.11.13.12.txt`.
-- Sem alterações de banco de dados e sem nova migration.
+## r13 — Correção do módulo de atualizações
+- Corrigida a herança do template de atualização, substituindo a variável `base_template` sem valor por `core/base.html`.
+- Movido o acesso **Atualizações do sistema** para o grupo **Administração** da barra lateral.
+- Restaurada a publicação via TXT, com criação/atualização do comunicado e confirmação de leitura.
+- Cada TXT publicado passa a ser arquivado em `busca_ativa/atualizacoes/` com nome `NOTAS_VERSAO_<versao>.txt`.
+- Reunidas nessa pasta as notas históricas existentes no pacote (r3 a r10).
+- Incluída listagem e download das notas de versão na tela administrativa.
+- Melhorado o layout responsivo da tela e a leitura de nomes longos na barra lateral.
+- Sem novas migrations.

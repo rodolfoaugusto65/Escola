@@ -316,6 +316,20 @@ transition:left .3s ease;
     border-left:6px solid #38bdf8;
 }
 </style>
+<style>
+/* r13: sidebar labels remain readable in expanded/collapsed layouts */
+.sidebar .sidebar-scroll a,
+.sidebar .sidebar-group > a { min-width:0; }
+.sidebar .sidebar-group > a span,
+.sidebar .sidebar-scroll > a span {
+  min-width:0; overflow:visible; text-overflow:clip;
+  white-space:normal; line-height:1.25; overflow-wrap:anywhere;
+}
+.sidebar .sidebar-group > a,
+.sidebar .sidebar-scroll > a { align-items:center; }
+.sidebar .sidebar-group > a i,
+.sidebar .sidebar-scroll > a i { flex:0 0 20px; }
+</style>
 </head>
 
 <body>
@@ -361,7 +375,6 @@ transition:left .3s ease;
  <a href="{% url 'busca_ativa:compensacao' %}"><i data-lucide="clipboard-list"></i><span>Compensação de ausências</span></a>
  <a href="{% url 'busca_ativa:relatorios_personalizados' %}"><i data-lucide="file-chart-column"></i><span>Relatórios personalizados</span></a>
  <a href="{% url 'busca_ativa:estatisticas_consultas' %}"><i data-lucide="chart-no-axes-combined"></i><span>Estatísticas de consultas</span></a>
- <a href="{% url 'busca_ativa:atualizacao_txt' %}"><i data-lucide="file-text"></i><span>Atualizações do sistema</span></a>
 </details>
 <details class="sidebar-group">
  <summary><i data-lucide="chart-no-axes-combined"></i><span>Avaliações</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
@@ -371,11 +384,12 @@ transition:left .3s ease;
 </details>
 {% endif %}
 
-{% if user.pode_gerenciar_usuarios %}
+{% if user.is_superuser or user.pode_gerenciar_usuarios %}
 <details class="sidebar-group">
  <summary><i data-lucide="settings"></i><span>Administração</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a hx-get="{% url 'lista_usuarios' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_usuarios' %}"><i data-lucide="users-cog"></i><span>Usuários</span></a>
  <a hx-get="{% url 'conselho:lista' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'conselho:lista' %}"><i data-lucide="clipboard-signature"></i><span>Conselho de Classe</span></a>
+ <a href="{% url 'busca_ativa:atualizacao_txt' %}" title="Atualizações do sistema"><i data-lucide="file-text"></i><span>Atualizações do sistema</span></a>
 </details>
 {% endif %}
 </div>

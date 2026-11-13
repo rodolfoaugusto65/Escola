@@ -1,0 +1,24 @@
+GEREDU — ATUALIZAÇÃO r8
+
+Esta atualização reúne as melhorias das versões r6 e r7 (comunicado de atualização por TXT e acompanhamento de avaliações) e corrige a impressão da relação de estudantes.
+
+IMPRESSÃO
+- A impressão abre uma página dedicada, sem painel, alertas, indicadores, gráficos, filtros ou tabelas de gestão.
+- Exibe somente o nome da avaliação selecionada e a relação numerada de estudantes.
+- Considera todos os registros filtrados, sem limite de paginação.
+
+ACOMPANHAMENTO
+- Mantidos os filtros por ano/série, turma, turno, situação, aluno/matrícula e data.
+- Ajustado o filtro por data para não eliminar registros pendentes, ausentes ou de outras situações sem data de realização.
+- Exportação CSV e demais consultas permanecem disponíveis.
+
+ATUALIZAÇÃO TXT
+- Mantida a migration 0009 da r6, que lê o comunicado versionado em busca_ativa/atualizacoes/2026.11.13.6.txt e registra a nota no banco.
+- Ao implantar este pacote consolidado, executar: python manage.py migrate
+
+BANCO DE DADOS
+- Nenhuma migration adicional nesta r8. A migration 0009 da r6 permanece necessária para registrar o comunicado TXT.
+
+VALIDAÇÃO
+- Validar com python manage.py check e python manage.py test acompanhamento_avaliacoes busca_ativa no ambiente do projeto antes da publicação.
+- Não foi possível executar testes Django neste ambiente de empacotamento.
