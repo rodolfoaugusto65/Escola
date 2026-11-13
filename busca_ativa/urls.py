@@ -5,6 +5,9 @@ app_name = "busca_ativa"
 
 urlpatterns = [
     path("", views.painel, name="painel"),
+    path("relatorio-25-mais/", views.relatorio_25mais, name="relatorio_25mais"),
+    path("lancamentos-atuais/", views.lancamentos_atuais, name="lancamentos_atuais"),
+    path("alertas-operacionais/", views.painel_alertas, name="alertas_operacionais"),
     path("aluno/<int:aluno_id>/", views.ficha_aluno, name="ficha"),
     path("aluno/<int:aluno_id>/acao/", views.registrar_acao, name="acao"),
     path("aluno/<int:aluno_id>/acao/<int:acao_id>/status/", views.atualizar_status_acao, name="status_acao"),

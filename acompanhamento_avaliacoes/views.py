@@ -425,10 +425,11 @@ def detalhe_importacao(request, pk):
     importacao = get_object_or_404(
         ImportacaoAvaliacao.objects.select_related('avaliacao').prefetch_related('arquivos_originais'), pk=pk
     )
-    registros_base = importacao.registros.all()
+    registros_base = importacao.registros.select_related('aluno', 'aluno__turma').all()
     registros = registros_base
     situacao = request.GET.get('situacao', '').strip()
     turma = request.GET.get('turma', '').strip()
+    turno = request.GET.get('turno', '').strip()
     ano = request.GET.get('ano', '').strip()
     q = request.GET.get('q', '').strip()
     data_inicio_txt = request.GET.get('data_inicio', '').strip()
@@ -440,6 +441,10 @@ def detalhe_importacao(request, pk):
         registros = registros.filter(situacao=situacao)
     if turma:
         registros = registros.filter(turma=turma)
+    if turno:
+        registros = registros.filter(aluno__turma__turno=turno)
+    if request.GET.get('nao_realizados') == '1':
+        registros = registros.filter(situacao__in=['pendente', 'ausente', 'outro'])
     if ano:
         registros = registros.filter(ano_serie=ano)
     if q:
@@ -450,6 +455,15 @@ def detalhe_importacao(request, pk):
         registros = registros.filter(realizado_em__date__lte=data_fim)
 
     total_filtrado = registros.count()
+    if request.GET.get('csv') == '1':
+        resposta = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        resposta['Content-Disposition'] = f'attachment; filename="nao_realizados_avaliacao_{importacao.pk}.csv"'
+        escritor = csv.writer(resposta, delimiter=';')
+        escritor.writerow(['Avaliação', 'Ano/série', 'Turma', 'Turno', 'Estudante', 'Matrícula', 'Situação', 'Participação'])
+        for item in registros.order_by('ano_serie', 'turma', 'nome_aluno'):
+            turno_aluno = item.aluno.turma.get_turno_display() if item.aluno_id and item.aluno.turma_id else ''
+            escritor.writerow([importacao.avaliacao.nome, item.ano_serie, item.turma, turno_aluno, item.nome_aluno, item.matricula, item.get_situacao_display(), item.participacao])
+        return resposta
     pagina = Paginator(registros.order_by('ano_serie', 'turma', 'nome_aluno'), 50).get_page(request.GET.get('pagina'))
 
     base_realizados = registros_base.filter(situacao='realizado', realizado_em__isnull=False)
@@ -466,7 +480,8 @@ def detalhe_importacao(request, pk):
     return _render(request, 'acompanhamento_avaliacoes/detalhe.html', {
         'importacao': importacao, 'registros': pagina,
         'arquivos_originais': importacao.arquivos_originais.all(),
-        'situacao_filtro': situacao, 'turma_filtro': turma, 'ano_filtro': ano,
+        'situacao_filtro': situacao, 'turma_filtro': turma, 'turno_filtro': turno, 'ano_filtro': ano,
+        'turnos_disponiveis': __import__('turmas.models', fromlist=['Turma']).Turma.TURNOS,
         'busca': q, 'data_inicio': data_inicio_txt, 'data_fim': data_fim_txt,
         'turmas_disponiveis': list(registros_base.exclude(turma='').values_list('turma', flat=True).distinct().order_by('turma')),
         'anos_disponiveis': list(registros_base.exclude(ano_serie='').values_list('ano_serie', flat=True).distinct().order_by('ano_serie')),

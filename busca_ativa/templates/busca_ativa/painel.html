@@ -5,6 +5,15 @@
 </style>
 <div class="ba-wrap">
  <div class="ba-hero mb-3"><div class="ba-head mb-0"><div><div class="small text-uppercase fw-bold opacity-75 mb-2">GerEdu · acompanhamento escolar</div><h2 class="mb-1">Busca Ativa e Infrequência</h2><p>Visão integrada de alertas, providências, frequência e histórico dos estudantes.</p></div><div class="ba-actions"><a class="ba-btn" style="background:#fff;color:#174c72" href="{% url 'busca_ativa:importar' %}"><i class="bi bi-cloud-upload me-1"></i> Importar dados</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:relatorio' %}">Relatórios</a></div></div></div>
+ <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Abas de Busca Ativa">
+  <a class="ba-btn" href="{% url 'busca_ativa:painel' %}">Painel geral</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:alertas_operacionais' %}">Alertas e prazos</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:relatorio_25mais' %}">Alerta 25%+</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:lancamentos_atuais' %}">Lançamentos atuais</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:relatorio' %}">Histórico e relatórios</a>
+  <a class="ba-btn light" href="{% url 'busca_ativa:importar' %}">Importar planilha</a>
+ </nav>
  <div class="d-flex flex-wrap gap-2 mb-3"><a class="ba-btn light" href="{% url 'busca_ativa:compensacao' %}">Compensação de ausências</a><a class="ba-btn light" href="{% url 'busca_ativa:relatorios_personalizados' %}">Relatórios personalizados</a><a class="ba-btn light" href="{% url 'busca_ativa:estatisticas_consultas' %}">Estatísticas de consultas</a><a class="ba-btn light" href="{% url 'consulta_frequencia_codigo' %}" target="_blank" rel="noopener">Página do estudante</a></div>
  <div class="ba-cards">
   <div class="ba-card"><small>Alertas críticos · 25% ou mais</small><strong>{{ total_criticos }}</strong><span class="ba-pill ba-red">Prioridade de atendimento</span></div>
