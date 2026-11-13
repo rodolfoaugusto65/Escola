@@ -43,3 +43,13 @@
 - Boas-vindas personalizadas com primeiro nome; fallback para username.
 - Mantidas a arrastabilidade, posição salva, ajuda e informação do calendário letivo.
 - Incluída nota TXT `NOTAS_VERSAO_2026-11-13-r17.txt` e migration `0015_comunicado_duende_boas_vindas_r17`.
+
+## r18 — 13/11/2026
+- Mascote ganhou dança contínua, com balanço corporal, pequenos saltos, gestos e movimento de braços e cabeça.
+- Portal redimensionado para acompanhar a área ocupada pelo mascote.
+- Efeito de moedas douradas durante entrada e saída do portal.
+- Seletor de tempo de visibilidade: sempre, 5, 15, 30 minutos, 1 ou 2 horas.
+- Ao atingir o limite escolhido, mascote se recolhe e deixa botão mágico para reaparecer.
+- Preferência salva localmente por usuário/navegador.
+- Calendário apresenta dias letivos restantes e dias corridos até a data final cadastrada.
+- Nota TXT `NOTAS_VERSAO_2026-11-13-r18.txt` e migration `0016_comunicado_duende_danca_r18`.

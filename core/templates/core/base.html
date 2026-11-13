@@ -1908,6 +1908,21 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-launcher{width:118px;height:166px;padding:0;border:0;background:transparent;cursor:grab;position:relative;filter:drop-shadow(0 9px 12px #102b4730);transform-origin:50% 85%}
 #gereduDuende .gd-launcher:active{cursor:grabbing}
 #gereduDuende .gd-launcher:hover{filter:drop-shadow(0 12px 16px #102b4750)}
+#gereduDuende .gd-launcher{animation:gdDance 2.4s ease-in-out infinite}
+#gereduDuende .gd-portal{width:118px;height:166px;border-radius:50%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(ellipse at center,rgba(255,255,255,.06) 0 28%,rgba(255,214,102,.35) 42%,rgba(67,190,137,.8) 56%,rgba(125,222,175,.3) 68%,transparent 76%);filter:drop-shadow(0 0 16px #ffd76a)}
+#gereduDuende .gd-portal:before{border-color:#ffe6a1 #70d6a0 #ffe6a1 #70d6a0}
+#gereduDuende .gd-portal:after{border-color:#fff3bf transparent #8be1b4 #8be1b4}
+#gereduDuende .gd-coins{position:absolute;inset:-8px;z-index:3;pointer-events:none}
+#gereduDuende .gd-coin{position:absolute;width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff5b7 0 12%,#ffd45c 25%,#c78312 78%);border:1px solid #9c650e;box-shadow:0 0 7px #ffcf4a;opacity:0}
+#gereduDuende .gd-coin:nth-child(1){--coin-x:-24px;left:2%;top:20%}.gd-coin:nth-child(2){--coin-x:24px;right:0;top:28%}.gd-coin:nth-child(3){--coin-x:-28px;left:8%;top:55%}.gd-coin:nth-child(4){--coin-x:28px;right:4%;top:62%}.gd-coin:nth-child(5){left:25%;top:4%}.gd-coin:nth-child(6){right:24%;top:5%}.gd-coin:nth-child(7){left:28%;bottom:2%}.gd-coin:nth-child(8){right:28%;bottom:1%}
+#gereduDuende.gd-vanishing .gd-coin{animation:gdCoinBurst .95s ease-out forwards}
+#gereduDuende.gd-returning .gd-coin{animation:gdCoinGather .95s ease-in reverse}
+#gereduDuende .gd-preferences{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 11px;background:#f4f8f4;border:1px solid #dceade;border-radius:11px;font-size:12px}
+#gereduDuende .gd-preferences select{max-width:150px;border:1px solid #cbd9ce;border-radius:8px;padding:6px;background:white;color:#244437}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal{display:none}
+#gereduDuende .gd-summon{display:none;position:absolute;right:0;bottom:0;width:48px;height:48px;border:2px solid #f4d47a;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff4c2,#d79a25 60%,#81500c);color:#fff;font-size:22px;box-shadow:0 5px 20px #98630c66;cursor:pointer}
+#gereduDuende.gd-away .gd-summon{display:block}
+
 #gereduDuende .gd-character{width:100%;height:100%;overflow:visible;position:relative;z-index:2}
 #gereduDuende .gd-head{transform-origin:80px 76px;animation:gdLook 4s ease-in-out infinite}
 #gereduDuende .gd-arm-left{transform-origin:54px 111px;animation:gdWave 3.6s ease-in-out infinite}
@@ -1935,6 +1950,9 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende.gd-returning .gd-portal{animation:gdPortalClose 1s ease-in forwards}
 #gereduDuende .gd-launcher.gd-flee-left{transform:translateX(-38px) rotate(-4deg)}
 #gereduDuende .gd-launcher.gd-flee-right{transform:translateX(38px) rotate(4deg)}
+@keyframes gdDance{0%,100%{transform:translateY(0) rotate(0) scale(1)}12%{transform:translateY(-5px) rotate(-5deg) scale(1.02)}25%{transform:translateY(0) rotate(5deg) scale(1)}38%{transform:translateY(-8px) rotate(-4deg) scale(1.03)}52%{transform:translateY(0) rotate(4deg) scale(1)}68%{transform:translateY(-4px) rotate(-3deg)}82%{transform:translateY(0) rotate(3deg)}}
+@keyframes gdCoinBurst{0%{opacity:0;transform:translate(0,0) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translate(var(--coin-x,18px),-36px) scale(1.2) rotate(220deg)}}
+@keyframes gdCoinGather{0%{opacity:0;transform:translate(0,0) scale(.2)}100%{opacity:1;transform:translate(0,0) scale(1)}}
 @keyframes gdLook{0%,100%{transform:rotate(0)}30%{transform:rotate(3deg)}65%{transform:rotate(-3deg)}}
 @keyframes gdWave{0%,62%,100%{transform:rotate(0)}70%{transform:rotate(-28deg)}78%{transform:rotate(14deg)}86%{transform:rotate(-18deg)}}
 @keyframes gdGesture{0%,100%{transform:rotate(0)}45%{transform:rotate(10deg)}60%{transform:rotate(-7deg)}}
@@ -1957,11 +1975,26 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
    <div style="margin-top:12px;padding:12px;border-radius:12px;background:#f0f7f1;border:1px solid #d8e9dc">
     <div style="font-size:11px;font-weight:800;color:#367c61;text-transform:uppercase;letter-spacing:.06em">Calendário letivo</div>
     {% if data_fim_letivo %}
-      <div style="font-size:25px;font-weight:900;color:#244c3e;line-height:1.2">{{ dias_letivos_restantes|default:"—" }} dias letivos</div>
-      <div style="font-size:12px;color:#52687a">Restantes até {{ data_fim_letivo|date:"d/m/Y" }}</div>
+      <div style="font-size:25px;font-weight:900;color:#244c3e;line-height:1.2" id="gdCalendarDays">{{ dias_letivos_restantes|default:"—" }} dias letivos</div>
+      <div style="font-size:12px;color:#52687a">Até {{ data_fim_letivo|date:"d/m/Y" }}</div>
+      <div style="font-size:12px;color:#52687a;margin-top:3px" id="gdCalendarNaturalDays" data-end="{{ data_fim_letivo|date:'Y-m-d' }}">Calculando dias corridos até o encerramento...</div>
     {% else %}
       <div style="font-size:13px;color:#52687a">Cadastre ou ative o calendário escolar para acompanhar o encerramento do ano letivo.</div>
     {% endif %}
+   </div>
+   {% if comunicado_pendente %}
+   <div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff5e6;border:1px solid #f3d39b;color:#875314;font-size:12px">🔔 Há uma atualização do GerEdu aguardando sua confirmação de leitura.</div>
+   {% endif %}
+   <div class="gd-preferences">
+    <label for="gdHideAfter"><strong>Tempo para desaparecer</strong></label>
+    <select id="gdHideAfter" aria-label="Tempo para o duende desaparecer">
+     <option value="0">Sempre visível</option>
+     <option value="300">5 minutos</option>
+     <option value="900">15 minutos</option>
+     <option value="1800">30 minutos</option>
+     <option value="3600">1 hora</option>
+     <option value="7200">2 horas</option>
+    </select>
    </div>
    <div class="gd-actions">
     <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><span>📊</span> Avaliações e participação</a>
@@ -1975,6 +2008,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   <button type="button" class="gd-speech-close" id="gdSpeechClose" aria-label="Fechar balão de boas-vindas">×</button>
  </div>
  <div class="gd-portal" id="gdPortal" aria-hidden="true"></div>
+ <div class="gd-coins" aria-hidden="true">{% for coin in "12345678" %}<i class="gd-coin"></i>{% endfor %}</div>
+ <button type="button" class="gd-summon" id="gdSummon" aria-label="Trazer o duende de volta">✦</button>
  <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
   <svg class="gd-character" viewBox="0 0 160 205" role="img" aria-label="Duende simpático do GerEdu com chapéu pontudo verde">
    <ellipse class="gd-shadow" cx="80" cy="194" rx="38" ry="6" fill="#182638"/>
@@ -2028,7 +2063,9 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  const speech=document.getElementById('gdSpeech');
  const speechClose=document.getElementById('gdSpeechClose');
  const portal=document.getElementById('gdPortal');
- let drag=null,dragged=false,portalBusy=false,animationTimer=null,lastDodge=0;
+ const hideSelect=document.getElementById('gdHideAfter');
+ const summon=document.getElementById('gdSummon');
+ let drag=null,dragged=false,portalBusy=false,animationTimer=null,lastDodge=0,hideTimer=null;
  function setOpen(open){
   root.classList.toggle('gd-open',open);
   launcher.setAttribute('aria-expanded',String(open));
@@ -2041,8 +2078,24 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  speech.addEventListener('click',()=>{speech.style.display='none';});
  document.addEventListener('click',e=>{if(root.classList.contains('gd-open')&&!dialog.contains(e.target)&&!launcher.contains(e.target))setOpen(false);});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')setOpen(false);});
+ function setAway(seconds){
+  if(hideTimer)clearTimeout(hideTimer);
+  try{localStorage.setItem('gereduDuendeHideAfter',String(seconds));}catch(_){}
+  root.classList.remove('gd-away');
+  if(seconds>0)hideTimer=setTimeout(()=>{root.classList.add('gd-away');setOpen(false);},seconds*1000);
+ }
+ let savedDuration='0';try{savedDuration=localStorage.getItem('gereduDuendeHideAfter')||'0';}catch(_){}
+ if(hideSelect){hideSelect.value=savedDuration;setAway(parseInt(savedDuration,10)||0);hideSelect.addEventListener('change',()=>setAway(parseInt(hideSelect.value,10)||0));}
+ if(summon)summon.addEventListener('click',()=>{root.classList.remove('gd-away');setAway(parseInt(hideSelect?.value||'0',10)||0);setOpen(true);});
+ const naturalDays=document.getElementById('gdCalendarNaturalDays');
+ if(naturalDays&&naturalDays.dataset.end){
+  const parts=naturalDays.dataset.end.split('-').map(Number),endDate=new Date(parts[0],parts[1]-1,parts[2]);
+  const now=new Date();now.setHours(0,0,0,0);
+  const diff=Math.max(0,Math.ceil((endDate-now)/86400000));
+  naturalDays.textContent=diff+' dias corridos até o encerramento do calendário letivo.';
+ }
  function portalCycle(){
-  if(portalBusy||drag||root.classList.contains('gd-open')){animationTimer=setTimeout(portalCycle,4000);return;}
+  if(portalBusy||drag||root.classList.contains('gd-open')||root.classList.contains('gd-away')){animationTimer=setTimeout(portalCycle,4000);return;}
   portalBusy=true;
   root.classList.remove('gd-hidden','gd-returning','gd-vanishing');
   void launcher.offsetWidth;
