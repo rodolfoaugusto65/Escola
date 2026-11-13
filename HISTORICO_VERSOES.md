@@ -21,3 +21,9 @@
 - Seletor e comparativo ampliados para 500 aplicações.
 - Sem migrations e sem exclusão de histórico.
 \n## 2026-11-13 — r8\n- Impressão dedicada contendo somente o nome da avaliação e a relação numerada de estudantes, sem indicadores ou painéis.\n- Impressão utiliza todos os registros filtrados, sem paginação.\n- Filtros de data preservam pendentes/ausentes sem data de realização.\n- Consolida as entregas r6 (nota TXT) e r7 (relatórios e acompanhamento).\n
+
+## r9 — 2026-11-13 — Acompanhamento e exportação de avaliações
+- Reorganizada a tela de relatórios em blocos recolhíveis, separando filtros, comparativo histórico, indicadores, resumo de pendências e relação de estudantes.
+- Impressão simplificada em folha A4: cabeçalho com turma, prova e data da aplicação, seguido somente dos nomes dos estudantes, agrupados por turma.
+- Removidos da impressão indicadores, alertas, tabelas gerenciais, matrícula, situação, campos de assinatura e elementos de navegação.
+- Exportação CSV preservada para pendências/ausentes e relação completa, respeitando os filtros da aplicação.
