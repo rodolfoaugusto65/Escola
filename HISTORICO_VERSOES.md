@@ -35,3 +35,11 @@
 - Janela de diálogo fecha pelo botão, tecla Esc ou clique fora.
 - Mantida a interação de arrastar e posicionar o mascote.
 - Incluída nota TXT `NOTAS_VERSAO_2026-11-13-r16.txt` e migration `0014_comunicado_portal_duende_r16`.
+
+## r17 — 13/11/2026
+- Mascote redesenhado com proporções mais harmoniosas, expressão amigável, túnica clara e chapéu pontudo verde.
+- Refeito o ciclo do portal com temporização sequencial explícita para corrigir falhas de desaparecimento/reaparecimento.
+- Balão de boas-vindas e janela de diálogo possuem botões próprios de fechar.
+- Boas-vindas personalizadas com primeiro nome; fallback para username.
+- Mantidas a arrastabilidade, posição salva, ajuda e informação do calendário letivo.
+- Incluída nota TXT `NOTAS_VERSAO_2026-11-13-r17.txt` e migration `0015_comunicado_duende_boas_vindas_r17`.
