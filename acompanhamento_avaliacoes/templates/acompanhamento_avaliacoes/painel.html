@@ -5,7 +5,7 @@
 <div class="container-fluid py-3">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div><h3 class="fw-bold mb-1">Painel de participação</h3><p class="text-muted mb-0">Acompanhe a realização das avaliações e as pendências por turma.</p></div>
-    <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history" class="me-1"></i> Histórico</a><a class="btn btn-primary" href="{% url 'acompanhamento_avaliacoes:importar' %}"><i data-lucide="file-up" class="me-1"></i> Importar planilhas</a></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'acompanhamento_avaliacoes:relatorios' %}"><i data-lucide="clipboard-list" class="me-1"></i> Relatórios e listas</a><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history" class="me-1"></i> Histórico</a><a class="btn btn-primary" href="{% url 'acompanhamento_avaliacoes:importar' %}"><i data-lucide="file-up" class="me-1"></i> Importar planilhas</a></div>
   </div>
   {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">{{ message }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
   <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-4">

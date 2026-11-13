@@ -1351,3 +1351,52 @@ def acompanhamentos(request):
         "tipos": AcaoBuscaAtiva.TIPOS, "status_choices": AcaoBuscaAtiva.STATUS,
         "turnos": [(v, l) for v, l in __import__("turmas.models", fromlist=["Turma"]).Turma.TURNOS],
     })
+
+
+@login_required
+def importar_comunicado_txt(request):
+    """Publica a atualização do sistema a partir de um arquivo TXT versionado."""
+    if not gerencial(request.user):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    if request.method == 'POST':
+        arquivo = request.FILES.get('arquivo_txt')
+        if not arquivo:
+            messages.error(request, 'Selecione o arquivo TXT da atualização.')
+            return redirect('busca_ativa:atualizacao_txt')
+        if not arquivo.name.lower().endswith('.txt') or arquivo.size > 512 * 1024:
+            messages.error(request, 'Envie somente arquivo .txt de até 512 KB.')
+            return redirect('busca_ativa:atualizacao_txt')
+        try:
+            conteudo = arquivo.read().decode('utf-8-sig')
+            campos = {}
+            corpo = []
+            lendo_texto = False
+            for linha in conteudo.splitlines():
+                if not lendo_texto and ':' in linha:
+                    chave, valor = linha.split(':', 1)
+                    chave = chave.strip().upper()
+                    if chave in {'VERSAO', 'TITULO'}:
+                        campos[chave] = valor.strip()
+                        continue
+                    if chave == 'TEXTO':
+                        if valor.strip(): corpo.append(valor.strip())
+                        lendo_texto = True
+                        continue
+                if lendo_texto:
+                    corpo.append(linha)
+            versao, titulo, texto = campos.get('VERSAO', ''), campos.get('TITULO', ''), '\n'.join(corpo).strip()
+            if not versao or not titulo or not texto:
+                raise ValueError('O TXT precisa conter VERSAO:, TITULO: e TEXTO:, seguido da descrição da atualização.')
+            comunicado, criado = ComunicadoSistema.objects.update_or_create(
+                versao=versao,
+                defaults={'titulo': titulo[:180], 'texto': texto, 'ativo': True},
+            )
+            messages.success(request, f'Atualização {comunicado.versao} publicada. O aviso será exibido aos usuários até confirmarem a leitura.')
+            return redirect('busca_ativa:atualizacao_txt')
+        except UnicodeDecodeError:
+            messages.error(request, 'Não foi possível ler o TXT. Salve o arquivo em UTF-8 e tente novamente.')
+        except Exception as exc:
+            messages.error(request, str(exc))
+    historico = ComunicadoSistema.objects.order_by('-criado_em')[:20]
+    return render(request, 'busca_ativa/atualizacao_txt.html', {'historico': historico})

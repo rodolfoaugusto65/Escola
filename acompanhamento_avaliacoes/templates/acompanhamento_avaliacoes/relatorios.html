@@ -1,0 +1,46 @@
+{% extends base_template %}
+{% block title %}Relatórios de Avaliações | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="clipboard-list"></i><h5>Relatórios de Avaliações</h5>{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><h3 class="fw-bold mb-1">Relatórios e acompanhamento das aplicações</h3><p class="text-muted mb-0">Selecione uma avaliação e uma aplicação específica para conferir quem realizou, quem está pendente e quem faltou.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:painel' %}">Voltar ao painel</a><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}">Histórico</a></div>
+  </div>
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+    <h6 class="fw-bold mb-3">1. Período e aplicação</h6>
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-xl-4"><label class="form-label">Avaliação</label><select class="form-select" name="avaliacao"><option value="">Todas as avaliações</option>{% for a in avaliacoes %}<option value="{{ a.id }}" {% if filtro_avaliacao == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nome }} · {{ a.ano_letivo }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-3"><label class="form-label">Aplicações cadastradas desde</label><input class="form-control" type="date" name="data_inicio" value="{{ data_inicio }}"></div>
+      <div class="col-6 col-md-3"><label class="form-label">Aplicações cadastradas até</label><input class="form-control" type="date" name="data_fim" value="{{ data_fim }}"></div>
+      <div class="col-12 col-xl-4"><label class="form-label">Aplicação / importação</label><select class="form-select" name="aplicacao"><option value="">Mais recente do período</option>{% for imp in aplicacoes %}<option value="{{ imp.id }}" {% if filtro_aplicacao == imp.id|stringformat:'s' %}selected{% endif %}>{{ imp.avaliacao.nome }} · {{ imp.criado_em|date:'d/m/Y H:i' }} · {{ imp.total_registros }} alunos</option>{% endfor %}</select></div>
+    </div>
+    <hr><h6 class="fw-bold mb-3">2. Filtros da lista</h6>
+    <div class="row g-3 align-items-end">
+      <div class="col-6 col-md-2"><label class="form-label">Ano/série</label><select class="form-select" name="ano"><option value="">Todos</option>{% for v in anos_disponiveis %}<option value="{{ v }}" {% if ano_filtro == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for v in turmas_disponiveis %}<option value="{{ v }}" {% if turma_filtro == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Turno</label><select class="form-select" name="turno"><option value="">Todos</option>{% for v,label in turnos_disponiveis %}<option value="{{ v }}" {% if turno_filtro == v %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Situação</label><select class="form-select" name="situacao"><option value="">Todas</option><option value="pendente" {% if situacao_filtro == 'pendente' %}selected{% endif %}>Pendente</option><option value="ausente" {% if situacao_filtro == 'ausente' %}selected{% endif %}>Ausente</option><option value="outro" {% if situacao_filtro == 'outro' %}selected{% endif %}>Outra situação</option><option value="realizado" {% if situacao_filtro == 'realizado' %}selected{% endif %}>Realizado</option></select></div>
+      <div class="col-6 col-md-2"><label class="form-label">Realização desde</label><input class="form-control" type="date" name="realizacao_inicio" value="{{ realizacao_inicio }}"></div>
+      <div class="col-6 col-md-2"><label class="form-label">Realização até</label><input class="form-control" type="date" name="realizacao_fim" value="{{ realizacao_fim }}"></div>
+      <div class="col-12 col-md-6"><label class="form-label">Estudante ou matrícula</label><input class="form-control" name="q" value="{{ busca }}" placeholder="Pesquisar estudante"></div>
+      <div class="col-6 col-md-3 d-grid"><button class="btn btn-primary"><i data-lucide="filter" class="me-1"></i> Aplicar filtros</button></div>
+      <div class="col-6 col-md-3 d-grid"><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:relatorios' %}">Limpar</a></div>
+    </div>
+  </form>
+  {% if selecionada %}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><div class="small text-muted">Aplicação selecionada</div><h5 class="fw-bold mb-0">{{ selecionada.avaliacao.nome }}</h5><small class="text-muted">Importada em {{ selecionada.criado_em|date:'d/m/Y H:i' }} · {{ selecionada.arquivo }}</small></div><div class="d-flex gap-2"><a class="btn btn-danger" href="?{{ request.GET.urlencode }}&csv=1"><i data-lucide="file-spreadsheet" class="me-1"></i> Exportar lista de pendentes/ausentes</a><button class="btn btn-outline-secondary" onclick="window.print()"><i data-lucide="printer" class="me-1"></i> Imprimir</button></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3"><small class="text-muted">Total filtrado</small><div class="display-6 fw-bold">{{ resumo.total|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3"><small class="text-muted">Realizaram</small><div class="display-6 fw-bold text-success">{{ resumo.realizados|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3"><small class="text-muted">Pendentes</small><div class="display-6 fw-bold text-warning">{{ resumo.pendentes|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3"><small class="text-muted">Ausentes / outras situações</small><div class="display-6 fw-bold text-danger">{{ resumo.ausentes|add:resumo.outros|default:0 }}</div></div></div>
+  </div>
+  <section class="card border-0 shadow-sm rounded-4 p-3 mb-4"><h5 class="fw-bold">Pendências por turma</h5><div class="table-responsive"><table class="table table-sm table-hover"><thead><tr><th>Ano/série</th><th>Turma</th><th class="text-end">Estudantes para verificar</th></tr></thead><tbody>{% for item in agrupado %}<tr><td>{{ item.ano_serie }}</td><td>{{ item.turma|default:'Não identificada' }}</td><td class="text-end fw-bold text-danger">{{ item.total }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-success">Nenhuma pendência nos filtros.</td></tr>{% endfor %}</tbody></table></div></section>
+  <section class="card border-0 shadow-sm rounded-4 p-3"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><div><h5 class="fw-bold mb-0">Lista para conferência em sala</h5><small class="text-muted">Use esta relação para confirmar a aplicação aos ausentes e pendentes.</small></div><span class="badge text-bg-danger">{{ total_pendencias }} estudantes</span></div><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Estudante</th><th>Matrícula</th><th>Ano/série</th><th>Turma</th><th>Turno</th><th>Situação</th><th>Conferência em sala</th></tr></thead><tbody>{% for r in registros %}<tr><td class="fw-semibold">{{ r.nome_aluno }}</td><td>{{ r.matricula }}</td><td>{{ r.ano_serie }}</td><td>{{ r.turma }}</td><td>{% if r.aluno_id and r.aluno.turma_id %}{{ r.aluno.turma.get_turno_display }}{% else %}—{% endif %}</td><td><span class="badge {% if r.situacao == 'ausente' %}text-bg-danger{% elif r.situacao == 'pendente' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ r.get_situacao_display }}</span></td><td>☐ Compareceu: ________ &nbsp; Data: ___/___/_____</td></tr>{% empty %}<tr><td colspan="7" class="text-center text-success py-4">Nenhum estudante pendente ou ausente encontrado.</td></tr>{% endfor %}</tbody></table></div>
+    {% if registros.has_other_pages %}<div class="d-flex justify-content-between mt-3"><small class="text-muted">Página {{ registros.number }} de {{ registros.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if registros.has_previous %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.previous_page_number }}">Anterior</a>{% endif %}{% if registros.has_next %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.next_page_number }}">Próxima</a>{% endif %}</div></div>{% endif %}
+  </section>
+  {% else %}<div class="alert alert-info">Não há aplicações para os filtros de período selecionados. Importe uma planilha ou ajuste o período.</div>{% endif %}
+</div>
+<style>@media print{aside,nav,.btn,form,.sidebar,.topbar{display:none!important}.container-fluid{padding:0!important}.card{box-shadow:none!important;border:1px solid #bbb!important}.table{font-size:10pt}}</style>
+{% endblock %}

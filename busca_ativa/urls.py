@@ -25,5 +25,6 @@ urlpatterns = [
     path("calendario-letivo/", views.calendario_letivo, name="calendario_letivo"),
     path("consulta/<str:token>/", views.consulta_publica, name="consulta_publica"),
     path("comunicado/<int:comunicado_id>/lido/", views.confirmar_comunicado, name="confirmar_comunicado"),
+    path("atualizacao-txt/", views.importar_comunicado_txt, name="atualizacao_txt"),
     path("assistente-natalino/dispensar/", views.dispensar_assistente_natalino, name="dispensar_natalino"),
 ]
