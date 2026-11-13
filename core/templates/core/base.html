@@ -361,10 +361,13 @@ transition:left .3s ease;
  <a href="{% url 'busca_ativa:compensacao' %}"><i data-lucide="clipboard-list"></i><span>Compensação de ausências</span></a>
  <a href="{% url 'busca_ativa:relatorios_personalizados' %}"><i data-lucide="file-chart-column"></i><span>Relatórios personalizados</span></a>
  <a href="{% url 'busca_ativa:estatisticas_consultas' %}"><i data-lucide="chart-no-axes-combined"></i><span>Estatísticas de consultas</span></a>
+ <a href="{% url 'busca_ativa:atualizacao_txt' %}"><i data-lucide="file-text"></i><span>Atualizações do sistema</span></a>
 </details>
 <details class="sidebar-group">
  <summary><i data-lucide="chart-no-axes-combined"></i><span>Avaliações</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><i data-lucide="chart-column-increasing"></i><span>Avaliações e participação</span></a>
+ <a href="{% url 'acompanhamento_avaliacoes:relatorios' %}"><i data-lucide="clipboard-list"></i><span>Relatórios e listas de sala</span></a>
+ <a href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history"></i><span>Histórico das aplicações</span></a>
 </details>
 {% endif %}
 

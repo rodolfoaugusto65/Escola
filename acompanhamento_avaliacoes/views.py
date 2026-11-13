@@ -450,12 +450,27 @@ def detalhe_importacao(request, pk):
         registros = registros.filter(ano_serie=ano)
     if q:
         registros = registros.filter(Q(nome_aluno__icontains=q) | Q(matricula__icontains=q))
-    if data_inicio:
-        registros = registros.filter(realizado_em__date__gte=data_inicio)
-    if data_fim:
-        registros = registros.filter(realizado_em__date__lte=data_fim)
+    # O filtro por período deve considerar a data de realização sem apagar
+    # pendentes/ausentes, que normalmente não possuem realizado_em.
+    situacoes_sem_data = Q(situacao__in=['pendente', 'ausente', 'outro'])
+    if data_inicio and data_fim:
+        registros = registros.filter(
+            Q(realizado_em__date__range=(data_inicio, data_fim)) | situacoes_sem_data
+        )
+    elif data_inicio:
+        registros = registros.filter(Q(realizado_em__date__gte=data_inicio) | situacoes_sem_data)
+    elif data_fim:
+        registros = registros.filter(Q(realizado_em__date__lte=data_fim) | situacoes_sem_data)
 
     total_filtrado = registros.count()
+    if request.GET.get('imprimir') == '1':
+        # Impressão dedicada: todos os registros filtrados, sem paginação,
+        # indicadores, tabelas gerenciais ou dados acessórios.
+        return _render(request, 'acompanhamento_avaliacoes/imprimir_lista.html', {
+            'importacao': importacao,
+            'estudantes': registros.order_by('nome_aluno', 'matricula'),
+            'total_filtrado': total_filtrado,
+        })
     if request.GET.get('csv') == '1':
         resposta = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         resposta['Content-Disposition'] = f'attachment; filename="nao_realizados_avaliacao_{importacao.pk}.csv"'
@@ -494,22 +509,31 @@ def detalhe_importacao(request, pk):
 
 @login_required
 def relatorios(request):
-    """Relatórios por avaliação/aplicação, com filtros de período e listas de sala."""
+    """Painel de aplicações, comparação por período e listas operacionais."""
     _somente_gestao(request.user)
-    aplicacoes = ImportacaoAvaliacao.objects.select_related('avaliacao').all()
+    aplicacoes_base = ImportacaoAvaliacao.objects.select_related('avaliacao').all()
     avaliacao_id = request.GET.get('avaliacao', '').strip()
+    ano_letivo = request.GET.get('ano_letivo', '').strip()
     inicio_txt = request.GET.get('data_inicio', '').strip()
     fim_txt = request.GET.get('data_fim', '').strip()
     aplicacao_id = request.GET.get('aplicacao', '').strip()
     inicio = parse_date(inicio_txt) if inicio_txt else None
     fim = parse_date(fim_txt) if fim_txt else None
     if avaliacao_id.isdigit():
-        aplicacoes = aplicacoes.filter(avaliacao_id=avaliacao_id)
+        aplicacoes_base = aplicacoes_base.filter(avaliacao_id=avaliacao_id)
+    if ano_letivo.isdigit():
+        aplicacoes_base = aplicacoes_base.filter(avaliacao__ano_letivo=int(ano_letivo))
     if inicio:
-        aplicacoes = aplicacoes.filter(criado_em__date__gte=inicio)
+        aplicacoes_base = aplicacoes_base.filter(criado_em__date__gte=inicio)
     if fim:
-        aplicacoes = aplicacoes.filter(criado_em__date__lte=fim)
-    aplicacoes = aplicacoes.order_by('-criado_em')
+        aplicacoes_base = aplicacoes_base.filter(criado_em__date__lte=fim)
+    aplicacoes = aplicacoes_base.order_by('-criado_em')
+    comparativo = list(aplicacoes.annotate(
+        qtd_realizados=Count('registros', filter=Q(registros__situacao='realizado')),
+        qtd_pendentes=Count('registros', filter=Q(registros__situacao='pendente')),
+        qtd_ausentes=Count('registros', filter=Q(registros__situacao='ausente')),
+        qtd_outros=Count('registros', filter=Q(registros__situacao='outro')),
+    ).order_by('-criado_em')[:500])
     selecionada = aplicacoes.filter(pk=aplicacao_id).first() if aplicacao_id.isdigit() else aplicacoes.first()
     registros_base = selecionada.registros.select_related('aluno', 'aluno__turma').all() if selecionada else RegistroParticipacao.objects.none()
 
@@ -526,32 +550,61 @@ def relatorios(request):
     if turma: registros = registros.filter(turma=turma)
     if turno: registros = registros.filter(aluno__turma__turno=turno)
     if ano: registros = registros.filter(ano_serie=ano)
-    if situacao in {'realizado','pendente','ausente','outro'}: registros = registros.filter(situacao=situacao)
+    if situacao in {'realizado', 'pendente', 'ausente', 'outro'}: registros = registros.filter(situacao=situacao)
     if q: registros = registros.filter(Q(nome_aluno__icontains=q) | Q(matricula__icontains=q))
-    if realizacao_inicio: registros = registros.filter(realizado_em__date__gte=realizacao_inicio)
-    if realizacao_fim: registros = registros.filter(realizado_em__date__lte=realizacao_fim)
+    # Datas de realização só se aplicam a registros que possuem data; não devem
+    # ocultar pendentes/ausentes sem data quando o usuário solicita a lista de sala.
+    if realizacao_inicio: registros = registros.filter(Q(realizado_em__date__gte=realizacao_inicio) | Q(realizado_em__isnull=True, situacao__in=['pendente', 'ausente', 'outro']))
+    if realizacao_fim: registros = registros.filter(Q(realizado_em__date__lte=realizacao_fim) | Q(realizado_em__isnull=True, situacao__in=['pendente', 'ausente', 'outro']))
 
-    resumo = registros.aggregate(total=Count('id'), realizados=Count('id',filter=Q(situacao='realizado')), pendentes=Count('id',filter=Q(situacao='pendente')), ausentes=Count('id',filter=Q(situacao='ausente')), outros=Count('id',filter=Q(situacao='outro')))
-    pendencias = registros.filter(situacao__in=['pendente','ausente','outro']).order_by('ano_serie','turma','nome_aluno')
+    resumo = registros.aggregate(
+        total=Count('id'), realizados=Count('id', filter=Q(situacao='realizado')),
+        pendentes=Count('id', filter=Q(situacao='pendente')),
+        ausentes=Count('id', filter=Q(situacao='ausente')),
+        outros=Count('id', filter=Q(situacao='outro')),
+    )
+    lista_tipo = request.GET.get('lista', 'pendencias').strip()
+    if lista_tipo not in {'pendencias', 'todos'}:
+        lista_tipo = 'pendencias'
+    pendencias = registros.filter(situacao__in=['pendente', 'ausente', 'outro']).order_by('ano_serie', 'turma', 'nome_aluno')
+    lista_exportacao = registros.order_by('ano_serie', 'turma', 'nome_aluno') if lista_tipo == 'todos' else pendencias
     if request.GET.get('csv') == '1':
         resposta = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-        resposta['Content-Disposition'] = f'attachment; filename="lista_aplicacao_{selecionada.pk if selecionada else "sem_aplicacao"}.csv"'
+        sufixo = 'todos' if lista_tipo == 'todos' else 'pendentes_ausentes'
+        resposta['Content-Disposition'] = f'attachment; filename="avaliacao_{selecionada.pk if selecionada else "sem_aplicacao"}_{sufixo}.csv"'
         escritor = csv.writer(resposta, delimiter=';')
-        escritor.writerow(['Avaliação','Aplicação em','Ano/série','Turma','Turno','Estudante','Matrícula','Situação','Participação','Data de realização'])
-        for item in pendencias:
+        escritor.writerow(['Avaliação', 'Aplicação em', 'Ano letivo', 'Ano/série', 'Turma', 'Turno', 'Estudante', 'Matrícula', 'Situação', 'Participação', 'Data de realização'])
+        for item in lista_exportacao:
             turno_aluno = item.aluno.turma.get_turno_display() if item.aluno_id and item.aluno.turma_id else ''
-            escritor.writerow([selecionada.avaliacao.nome, timezone.localtime(selecionada.criado_em).strftime('%d/%m/%Y %H:%M'),item.ano_serie,item.turma,turno_aluno,item.nome_aluno,item.matricula,item.get_situacao_display(),item.participacao,item.realizado_em.strftime('%d/%m/%Y %H:%M') if item.realizado_em else ''])
+            escritor.writerow([selecionada.avaliacao.nome, timezone.localtime(selecionada.criado_em).strftime('%d/%m/%Y %H:%M'), selecionada.avaliacao.ano_letivo, item.ano_serie, item.turma, turno_aluno, item.nome_aluno, item.matricula, item.get_situacao_display(), item.participacao, timezone.localtime(item.realizado_em).strftime('%d/%m/%Y %H:%M') if item.realizado_em else ''])
         return resposta
-    turmas = list(registros_base.exclude(turma='').values_list('turma',flat=True).distinct().order_by('turma'))
-    anos = list(registros_base.exclude(ano_serie='').values_list('ano_serie',flat=True).distinct().order_by('ano_serie'))
-    agrupado = list(pendencias.values('ano_serie','turma').annotate(total=Count('id')).order_by('ano_serie','turma'))
-    pagina = Paginator(pendencias,100).get_page(request.GET.get('pagina'))
     from turmas.models import Turma
-    return _render(request,'acompanhamento_avaliacoes/relatorios.html',{
-        'avaliacoes':Avaliacao.objects.order_by('-ano_letivo','nome'),'aplicacoes':aplicacoes[:100],'selecionada':selecionada,
-        'registros':pagina,'resumo':resumo,'total_pendencias':pendencias.count(),'agrupado':agrupado,
-        'turmas_disponiveis':turmas,'anos_disponiveis':anos,'turnos_disponiveis':Turma.TURNOS,
-        'filtro_avaliacao':avaliacao_id,'filtro_aplicacao':str(selecionada.pk) if selecionada else aplicacao_id,
-        'data_inicio':inicio_txt,'data_fim':fim_txt,'realizacao_inicio':realizacao_inicio_txt,'realizacao_fim':realizacao_fim_txt,
-        'turma_filtro':turma,'turno_filtro':turno,'ano_filtro':ano,'situacao_filtro':situacao,'busca':q,
+    turmas = list(registros_base.exclude(turma='').values_list('turma', flat=True).distinct().order_by('turma'))
+    anos = list(registros_base.exclude(ano_serie='').values_list('ano_serie', flat=True).distinct().order_by('ano_serie'))
+    agrupado = list(pendencias.values('ano_serie', 'turma').annotate(total=Count('id')).order_by('ano_serie', 'turma'))
+    # Resumo adicional por turno: considera apenas vínculos de turma existentes.
+    agrupado_turno = list(pendencias.values('aluno__turma__turno').annotate(total=Count('id')).order_by('aluno__turma__turno'))
+    for item in agrupado_turno:
+        codigo_turno = item.get('aluno__turma__turno')
+        item['turno_label'] = dict(Turma.TURNOS).get(codigo_turno, 'Não identificado') if codigo_turno else 'Não identificado'
+    imprimir = request.GET.get('imprimir') == '1'
+    lista_exibicao = lista_exportacao
+    pagina = lista_exibicao if imprimir else Paginator(lista_exibicao, 100).get_page(request.GET.get('pagina'))
+    anos_letivos = list(Avaliacao.objects.values_list('ano_letivo', flat=True).distinct().order_by('-ano_letivo'))
+    total_pendencias = pendencias.count()
+    total_filtrado = registros.count()
+    percentual_realizacao = round((resumo['realizados'] or 0) * 100 / total_filtrado, 1) if total_filtrado else 0
+    return _render(request, 'acompanhamento_avaliacoes/relatorios.html', {
+        'avaliacoes': Avaliacao.objects.order_by('-ano_letivo', 'nome'), 'aplicacoes': aplicacoes[:500],
+        'comparativo': comparativo, 'selecionada': selecionada, 'registros': pagina,
+        'resumo': resumo, 'total_pendencias': total_pendencias, 'total_filtrado': total_filtrado,
+        'percentual_realizacao': percentual_realizacao, 'agrupado': agrupado, 'agrupado_turno': agrupado_turno,
+        'imprimir': imprimir, 'lista_exibicao_total': lista_exportacao.count(),
+        'turmas_disponiveis': turmas, 'anos_disponiveis': anos, 'anos_letivos': anos_letivos,
+        'turnos_disponiveis': Turma.TURNOS, 'filtro_avaliacao': avaliacao_id,
+        'filtro_ano_letivo': ano_letivo, 'filtro_aplicacao': str(selecionada.pk) if selecionada else aplicacao_id,
+        'data_inicio': inicio_txt, 'data_fim': fim_txt, 'realizacao_inicio': realizacao_inicio_txt,
+        'realizacao_fim': realizacao_fim_txt, 'turma_filtro': turma, 'turno_filtro': turno,
+        'ano_filtro': ano, 'situacao_filtro': situacao, 'busca': q, 'lista_tipo': lista_tipo,
     })
+

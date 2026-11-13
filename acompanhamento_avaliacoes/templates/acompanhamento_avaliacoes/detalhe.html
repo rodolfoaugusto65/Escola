@@ -2,12 +2,12 @@
 {% block title %}Detalhes da importação | GerEdu{% endblock %}
 {% block page_header %}<i data-lucide="file-spreadsheet"></i><h5>Detalhes da importação</h5>{% endblock %}
 {% block content %}
-<style>@media print{nav,aside,.sidebar,.navbar,form,.btn,button,.no-print{display:none!important}.card{box-shadow:none!important;border:1px solid #bbb!important;break-inside:avoid}body{background:#fff!important}}</style>
+
 <div class="container-fluid py-3">
   <div class="d-flex justify-content-end flex-wrap gap-2 mb-3 no-print">
     <a class="btn btn-danger" href="?nao_realizados=1{% if turma_filtro %}&turma={{ turma_filtro|urlencode }}{% endif %}{% if turno_filtro %}&turno={{ turno_filtro|urlencode }}{% endif %}{% if ano_filtro %}&ano={{ ano_filtro|urlencode }}{% endif %}"><i data-lucide="users" class="me-1"></i> Ver quem não realizou</a>
     <a class="btn btn-outline-danger" href="?nao_realizados=1&csv=1{% if turma_filtro %}&turma={{ turma_filtro|urlencode }}{% endif %}{% if turno_filtro %}&turno={{ turno_filtro|urlencode }}{% endif %}{% if ano_filtro %}&ano={{ ano_filtro|urlencode }}{% endif %}"><i data-lucide="file-spreadsheet" class="me-1"></i> Exportar lista de cobrança</a>
-    <button class="btn btn-outline-primary" onclick="window.print()" type="button"><i data-lucide="printer" class="me-1"></i> Imprimir relatório da avaliação</button>
+    <a class="btn btn-outline-primary" target="_blank" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}imprimir=1"><i data-lucide="printer" class="me-1"></i> Imprimir somente estudantes</a>
   </div>
   <div class="d-flex justify-content-between flex-wrap align-items-start gap-2 mb-3">
     <div><h3 class="fw-bold mb-1">{{ importacao.avaliacao.nome }}</h3><p class="text-muted mb-0">{{ importacao.arquivo }} · Importada em {{ importacao.criado_em|date:'d/m/Y H:i' }}</p></div>

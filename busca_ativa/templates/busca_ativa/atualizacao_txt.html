@@ -5,11 +5,12 @@
 <div class="container-fluid py-3"><div class="row g-4"><div class="col-12 col-xl-5"><section class="card border-0 shadow-sm rounded-4 p-4"><h4 class="fw-bold">Publicar upgrade por arquivo TXT</h4><p class="text-muted">O sistema lê a versão, o título e o texto do arquivo e publica o comunicado na tela dos usuários. Não é necessário preencher os dados manualmente.</p>
 {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}{% endif %}
 <form method="post" enctype="multipart/form-data">{% csrf_token %}<label class="form-label fw-semibold">Arquivo da atualização (.txt)</label><input class="form-control mb-3" type="file" name="arquivo_txt" accept=".txt,text/plain" required><button class="btn btn-primary w-100"><i data-lucide="upload" class="me-1"></i> Ler TXT e publicar atualização</button></form>
-<hr><h6 class="fw-bold">Formato obrigatório do arquivo</h6><pre class="bg-body-tertiary rounded-3 p-3 small">VERSAO: 2026.11.13.5
-TITULO: Melhorias no acompanhamento
+<hr><h6 class="fw-bold">Formato obrigatório do arquivo</h6><pre class="bg-body-tertiary rounded-3 p-3 small">VERSAO: 2026.11.13.6
+TITULO: GerEdu r6 — relatórios de avaliações e acompanhamento
 TEXTO:
-- Novo relatório de avaliações pendentes.
-- Filtros por período, turma e turno.
-- Lista de ausentes para conferência em sala.</pre><small class="text-muted">Use UTF-8. O texto após TEXTO: pode ocupar várias linhas.</small></section></div>
+- Comparativo das aplicações por período e ano letivo.
+- Filtros por avaliação, aplicação, turma, turno e situação.
+- Lista de pendentes e ausentes para conferência em sala.
+- Exportação dos pendentes/ausentes ou de todos os estudantes filtrados.</pre><small class="text-muted">Use UTF-8. O texto após TEXTO: pode ocupar várias linhas. O comunicado desta versão r6 também será cadastrado automaticamente pela migration 0009 durante a implantação.</small></section></div>
 <div class="col-12 col-xl-7"><section class="card border-0 shadow-sm rounded-4 p-4"><h5 class="fw-bold">Histórico de atualizações publicadas</h5><div class="list-group list-group-flush">{% for item in historico %}<article class="list-group-item px-0"><div class="d-flex justify-content-between gap-2"><strong>{{ item.titulo }}</strong><span class="badge text-bg-primary">{{ item.versao }}</span></div><small class="text-muted">{{ item.criado_em|date:'d/m/Y H:i' }}</small><p class="mb-1 mt-2" style="white-space:pre-line">{{ item.texto }}</p><small class="text-muted">{% if item.ativo %}Ativo{% else %}Inativo{% endif %} · {{ item.leituras.count }} confirmação(ões) de leitura</small></article>{% empty %}<p class="text-muted">Nenhuma atualização publicada.</p>{% endfor %}</div></section></div></div></div>
 {% endblock %}
