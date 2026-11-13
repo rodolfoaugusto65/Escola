@@ -27,3 +27,11 @@
 - Mascote pode ser arrastado e sua posição fica salva no navegador.
 - Diálogo do assistente exibe dias letivos restantes e data de encerramento do calendário ativo.
 - Incluída nota TXT `2026.11.13.15.txt` e migration `0013_comunicado_global_mascote_r15`.
+
+## r16 — 13/11/2026
+- Mascote redesenhado com aparência de criatura fantástica doméstica original, inspirada na referência enviada, sem reproduzir personagem protegido.
+- Animação de portal: desaparece periodicamente e retorna com efeitos de energia.
+- Balão de fala pode ser fechado pelo botão ou clicando no próprio balão.
+- Janela de diálogo fecha pelo botão, tecla Esc ou clique fora.
+- Mantida a interação de arrastar e posicionar o mascote.
+- Incluída nota TXT `NOTAS_VERSAO_2026-11-13-r16.txt` e migration `0014_comunicado_portal_duende_r16`.

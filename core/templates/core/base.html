@@ -1908,7 +1908,16 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-launcher{width:108px;height:145px;border:0;background:transparent;cursor:pointer;position:relative;transition:transform .28s ease;filter:drop-shadow(0 8px 9px #102b4730)}
 #gereduDuende .gd-launcher:hover{transform:translateY(-5px) scale(1.04)}
 #gereduDuende .gd-launcher:focus-visible{outline:3px solid #38bdf8;outline-offset:5px;border-radius:22px}
-#gereduDuende .gd-character{width:100%;height:100%;overflow:visible}
+#gereduDuende .gd-character{width:100%;height:100%;overflow:visible;position:relative;z-index:2}
+#gereduDuende .gd-portal{position:absolute;left:50%;top:50%;width:118px;height:118px;transform:translate(-50%,-50%) scale(.1) rotate(0);border-radius:50%;opacity:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(18,38,78,.08) 0 34%,rgba(42,160,210,.25) 42%,rgba(104,72,210,.78) 55%,rgba(24,204,190,.35) 63%,transparent 72%);filter:drop-shadow(0 0 12px #3dd8ff)}
+#gereduDuende .gd-portal:before,#gereduDuende .gd-portal:after{content:"";position:absolute;inset:8px;border:3px solid #8ceaff;border-left-color:#a88cff;border-bottom-color:transparent;border-radius:50%;box-shadow:0 0 13px #3bd6ff,inset 0 0 12px #6c83ff}
+#gereduDuende .gd-portal:after{inset:19px;border-width:2px;border-color:#b8f7ff transparent #a78bfa #a78bfa;animation:gdPortalSpin .8s linear infinite}
+#gereduDuende.gd-vanishing .gd-launcher{animation:gdVanish .9s ease-in forwards}
+#gereduDuende.gd-vanishing .gd-portal{animation:gdPortalOpen .95s ease-out forwards}
+#gereduDuende.gd-returning .gd-launcher{animation:gdAppear .9s cubic-bezier(.16,.8,.2,1) both}
+#gereduDuende.gd-returning .gd-portal{animation:gdPortalClose .9s ease-in forwards}
+#gereduDuende.gd-hidden .gd-character{opacity:0}
+#gereduDuende .gd-speech-close{border:0;background:transparent;color:#64748b;font-size:14px;line-height:1;padding:0 0 0 8px;cursor:pointer}
 #gereduDuende .gd-head{transform-origin:50% 70%;animation:gdNod 3.2s ease-in-out infinite}
 #gereduDuende .gd-arm-left{transform-origin:55px 92px;animation:gdWave 2.8s ease-in-out infinite}
 #gereduDuende .gd-arm-right{transform-origin:82px 93px;animation:gdArm 3.4s ease-in-out infinite}
@@ -1934,6 +1943,12 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 @keyframes gdBreathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}
 @keyframes gdShadow{0%,100%{transform:scaleX(1);opacity:.25}50%{transform:scaleX(.86);opacity:.16}}
 @keyframes gdDialogIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes gdPortalSpin{to{transform:rotate(360deg)}}
+@keyframes gdPortalOpen{0%{opacity:0;transform:translate(-50%,-50%) scale(.1) rotate(0)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(180deg)}100%{opacity:.8;transform:translate(-50%,-50%) scale(1) rotate(360deg)}}
+@keyframes gdPortalClose{0%{opacity:.8;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-50%) scale(.1) rotate(360deg)}}
+@keyframes gdVanish{0%{opacity:1;transform:scale(1) rotate(0)}35%{opacity:1;transform:scale(.85) rotate(-15deg)}100%{opacity:0;transform:scale(.05) rotate(160deg)}}
+@keyframes gdAppear{0%{opacity:0;transform:scale(.05) rotate(-160deg)}65%{opacity:1;transform:scale(1.12) rotate(8deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+
 @media(max-width:600px){#gereduDuende{right:8px;bottom:8px}#gereduDuende .gd-launcher{width:74px;height:100px}#gereduDuende .gd-dialog{bottom:106px;right:-2px}}
 @media(prefers-reduced-motion:reduce){#gereduDuende *{animation:none!important;transition:none!important}}
 </style>
@@ -1959,32 +1974,41 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
    <p class="mb-0 mt-3" style="font-size:12px;color:#64748b">Dica: clique em uma opção para abrir a área correspondente. O duende permanece disponível durante a navegação.</p>
   </div>
  </div>
- <div class="gd-speech" id="gdSpeech">{% if data_fim_letivo %}{{ dias_letivos_restantes|default:"—" }} dias letivos até o fim do ano!{% else %}Precisa de ajuda? Clique em mim!{% endif %}</div>
- <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
-  <svg class="gd-character" viewBox="0 0 140 170" role="img" aria-label="Mascote super-herói original do GerEdu">
-   <ellipse class="gd-shadow" cx="70" cy="159" rx="35" ry="6" fill="#102b45"/>
-   <path d="M48 58 Q13 61 18 139 Q38 132 55 126Z" fill="#9d1f37" stroke="#64172a" stroke-width="3"/>
-   <path d="M92 58 Q127 61 122 139 Q102 132 85 126Z" fill="#c52d42" stroke="#64172a" stroke-width="3"/>
+ <div class="gd-speech" id="gdSpeech"><span>{% if data_fim_letivo %}{{ dias_letivos_restantes|default:"—" }} dias letivos até o fim do ano!{% else %}Precisa de ajuda? Clique em mim!{% endif %}</span><button type="button" class="gd-speech-close" id="gdSpeechClose" aria-label="Fechar balão">×</button></div>
+ <div class="gd-portal" id="gdPortal" aria-hidden="true"></div>\n <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
+  <svg class="gd-character" viewBox="0 0 160 205" role="img" aria-label="Duende doméstico original do GerEdu, com orelhas grandes, olhos expressivos e túnica simples">
+   <ellipse class="gd-shadow" cx="80" cy="194" rx="38" ry="6" fill="#182638"/>
+   <!-- orelhas grandes e pontudas -->
+   <path d="M48 57 Q15 20 4 38 Q9 73 54 82Z" fill="#b88c78" stroke="#70574e" stroke-width="3"/>
+   <path d="M112 57 Q145 20 156 38 Q151 73 106 82Z" fill="#b88c78" stroke="#70574e" stroke-width="3"/>
+   <path d="M17 42 Q31 43 48 68 M143 42 Q129 43 112 68" fill="none" stroke="#d6ad98" stroke-width="4"/>
+   <!-- braços finos -->
+   <g class="gd-arm-left"><path d="M54 105 Q35 126 31 157" fill="none" stroke="#9d796b" stroke-width="8" stroke-linecap="round"/><path d="M31 155 Q21 166 27 175 M31 158 L39 174 M29 158 L19 169" fill="none" stroke="#9d796b" stroke-width="4" stroke-linecap="round"/></g>
+   <g class="gd-arm-right"><path d="M106 105 Q126 126 129 157" fill="none" stroke="#9d796b" stroke-width="8" stroke-linecap="round"/><path d="M129 155 Q139 166 133 175 M129 158 L121 174 M131 158 L141 169" fill="none" stroke="#9d796b" stroke-width="4" stroke-linecap="round"/></g>
+   <!-- túnica simples, costurada -->
    <g class="gd-body">
-    <path d="M42 69 Q70 54 98 69 L108 126 Q70 145 32 126Z" fill="#1769aa" stroke="#103e70" stroke-width="4"/>
-    <path d="M49 76 L70 101 L91 76 L97 130 Q70 142 43 130Z" fill="#2386ca"/>
-    <path d="M70 91 L77 103 L91 105 L80 115 L83 130 L70 122 L57 130 L60 115 L49 105 L63 103Z" fill="#f4c542" stroke="#b27a17" stroke-width="2"/>
-    <path d="M45 83 L35 124 M95 83 L105 124" stroke="#a9d9f5" stroke-width="3" opacity=".7"/>
+    <path d="M54 88 Q80 78 106 88 L119 164 Q82 179 41 164Z" fill="#d7d2c7" stroke="#77756d" stroke-width="3"/>
+    <path d="M54 90 L45 158 Q79 174 114 158 L106 90 Q81 99 54 90Z" fill="#bdb9ae"/>
+    <path d="M66 94 Q80 107 94 94 L103 164 L57 164Z" fill="#e6e0d5" opacity=".75"/>
+    <path d="M53 111 L62 116 M103 128 L111 133 M59 148 L68 151" stroke="#77756d" stroke-width="2" stroke-linecap="round"/>
    </g>
-   <g class="gd-arm-left"><path d="M42 83 Q23 88 22 111" fill="none" stroke="#1769aa" stroke-width="13" stroke-linecap="round"/><path d="M16 112 Q21 103 28 110 L31 119 Q22 127 15 119Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/></g>
-   <g class="gd-arm-right"><path d="M98 83 Q118 76 119 55" fill="none" stroke="#1769aa" stroke-width="13" stroke-linecap="round"/><path d="M112 52 Q120 43 127 51 L127 61 Q119 68 111 60Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/></g>
-   <path d="M49 127 L45 149 M89 127 L95 149" stroke="#153f68" stroke-width="12" stroke-linecap="round"/>
-   <path d="M32 150 Q44 142 56 151 L57 159 L29 159Z M84 151 Q97 142 109 150 L112 159 L84 159Z" fill="#b62b42" stroke="#721c31" stroke-width="2"/>
+   <!-- pernas longas e pés grandes -->
+   <path d="M59 161 Q54 178 47 187" fill="none" stroke="#987567" stroke-width="9" stroke-linecap="round"/>
+   <path d="M99 163 Q106 180 112 187" fill="none" stroke="#987567" stroke-width="9" stroke-linecap="round"/>
+   <path d="M47 184 Q30 187 24 197 Q43 202 58 192 L60 187Z M112 184 Q130 187 138 198 Q120 204 103 192 L102 187Z" fill="#8a6a5e" stroke="#5f4a43" stroke-width="2"/>
+   <!-- cabeça e expressão -->
    <g class="gd-head">
-    <path d="M37 49 Q40 15 70 15 Q100 15 103 49 Q100 83 70 86 Q40 83 37 49Z" fill="#f1c6a4" stroke="#9a654d" stroke-width="3"/>
-    <path d="M31 42 Q35 8 70 6 Q105 8 109 42 L100 36 L91 42 L81 35 L70 42 L58 35 L47 43Z" fill="#173d66" stroke="#0b2949" stroke-width="3"/>
-    <path d="M31 42 Q70 32 109 42 L106 50 Q70 43 34 50Z" fill="#f4c542" stroke="#a97916" stroke-width="2"/>
-    <path d="M51 54 Q58 48 64 54 M77 54 Q84 48 90 54" fill="none" stroke="#263747" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="58" cy="56" r="2" fill="#152d42"/><circle cx="83" cy="56" r="2" fill="#152d42"/>
-    <path d="M64 69 Q70 75 77 69" fill="none" stroke="#a34f45" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M47 66 Q54 61 61 66 M79 66 Q86 61 93 66" fill="none" stroke="#e99d88" stroke-width="4" opacity=".5"/>
+    <path d="M48 55 Q49 20 80 20 Q111 20 112 55 Q112 91 80 99 Q48 91 48 55Z" fill="#b88c78" stroke="#70574e" stroke-width="3"/>
+    <path d="M55 44 Q65 26 80 28 Q96 25 106 45" fill="none" stroke="#d7b09a" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="66" cy="58" rx="10" ry="13" fill="#f3eee5" stroke="#6d554b" stroke-width="2"/>
+    <ellipse cx="94" cy="58" rx="10" ry="13" fill="#f3eee5" stroke="#6d554b" stroke-width="2"/>
+    <circle cx="68" cy="60" r="5" fill="#37483e"/><circle cx="92" cy="60" r="5" fill="#37483e"/>
+    <circle cx="69" cy="58" r="2" fill="#fff"/><circle cx="93" cy="58" r="2" fill="#fff"/>
+    <path d="M75 69 Q80 64 85 69 Q84 82 80 82 Q76 80 75 69Z" fill="#a77765"/>
+    <path d="M70 87 Q80 94 90 87" fill="none" stroke="#6e4d46" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M57 46 Q66 40 74 45 M87 45 Q96 40 104 46" fill="none" stroke="#6b5147" stroke-width="3" stroke-linecap="round"/>
    </g>
-   <path d="M108 15 L114 4 L120 15 L132 21 L120 27 L114 39 L108 27 L96 21Z" fill="#f4c542" stroke="#b27a17" stroke-width="1.5"/>
+   <path d="M80 7 l4 8 l9 1 l-7 6 l2 9 l-8 -5 l-8 5 l2 -9 l-7 -6 l9 -1Z" fill="#8bd7e8" stroke="#3988a1" stroke-width="1.5"/>
   </svg>
  </button>
 </div>
@@ -1996,6 +2020,34 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  const dialog=document.getElementById('gdDialog');
  const close=document.getElementById('gdClose');
  const speech=document.getElementById('gdSpeech');
+ const speechClose=document.getElementById('gdSpeechClose');
+ const portal=document.getElementById('gdPortal');
+ let portalTimer=null, portalBusy=false;
+ function travelThroughPortal(){
+   if(portalBusy || drag || root.classList.contains('gd-open')) return;
+   portalBusy=true;
+   root.classList.remove('gd-hidden','gd-returning');
+   root.classList.add('gd-vanishing');
+   if(portal) portal.style.opacity='1';
+   window.setTimeout(()=>{
+     root.classList.remove('gd-vanishing');
+     root.classList.add('gd-hidden');
+     window.setTimeout(()=>{
+       root.classList.remove('gd-hidden');
+       root.classList.add('gd-returning');
+       window.setTimeout(()=>{
+         root.classList.remove('gd-returning');
+         portalBusy=false;
+       },950);
+     },900);
+   },900);
+ }
+ // O duende atravessa um portal periodicamente; interação do usuário pausa o efeito.
+ portalTimer=window.setInterval(travelThroughPortal,18000);
+ window.setTimeout(travelThroughPortal,6500);
+ launcher.addEventListener('pointerdown',()=>{if(portalBusy){root.classList.remove('gd-vanishing','gd-hidden','gd-returning');portalBusy=false;}});
+ if(speechClose) speechClose.addEventListener('click',e=>{e.stopPropagation();speech.style.display='none';});
+ if(speech) speech.addEventListener('click',()=>{speech.style.display='none';});
  function setOpen(open){
    root.classList.toggle('gd-open',open);
    launcher.setAttribute('aria-expanded',String(open));
@@ -2004,6 +2056,9 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  }
  launcher.addEventListener('click',()=>setOpen(!root.classList.contains('gd-open')));
  close.addEventListener('click',()=>setOpen(false));
+ document.addEventListener('click',e=>{
+   if(root.classList.contains('gd-open') && !dialog.contains(e.target) && !launcher.contains(e.target)) setOpen(false);
+ });
  document.addEventListener('keydown',e=>{if(e.key==='Escape') setOpen(false);});
  // Movimento discreto: o personagem se esquiva uma vez quando o cursor chega muito perto.
  let lastDodge=0;
