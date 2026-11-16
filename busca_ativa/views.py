@@ -1493,3 +1493,90 @@ def baixar_nota_versao(request, nome):
     resposta = HttpResponse(arquivo.read_bytes(), content_type='text/plain; charset=utf-8')
     resposta['Content-Disposition'] = f'attachment; filename="{nome}"'
     return resposta
+
+
+@login_required
+@user_passes_test(gerencial)
+def dashboard_busca_ativa(request):
+    """Dashboard analítico complementar; não altera as filas e telas operacionais."""
+    from django.db.models import Count, Q, F
+    from django.db.models.functions import Greatest
+    from turmas.models import Turma
+
+    hoje = timezone.localdate()
+    ano = int(request.GET.get("ano") or hoje.year)
+    turno = request.GET.get("turno", "").strip()
+    turma_id = request.GET.get("turma", "").strip()
+
+    situacoes = SituacaoInfrequencia.objects.filter(ano_letivo=ano).select_related(
+        "aluno", "aluno__turma"
+    ).annotate(
+        percentual_painel=Greatest(
+            "percentual_geral_final", "percentual_geral", "percentual_relatorio_25"
+        )
+    )
+    if turno:
+        situacoes = situacoes.filter(aluno__turma__turno=turno)
+    if turma_id:
+        situacoes = situacoes.filter(aluno__turma_id=turma_id)
+
+    # Indicadores consolidados, mantendo os filtros de ano, turno e turma.
+    from django.db.models import Avg
+    totais = situacoes.aggregate(
+        estudantes=Count("id"),
+        criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+        atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+        regular=Count("id", filter=Q(percentual_painel__lt=10)),
+        media=Avg("percentual_painel"),
+    )
+    acoes = AcaoBuscaAtiva.objects.filter(aluno__situacoes_infrequencia__ano_letivo=ano)
+    if turno:
+        acoes = acoes.filter(aluno__turma__turno=turno)
+    if turma_id:
+        acoes = acoes.filter(aluno__turma_id=turma_id)
+    acoes = acoes.distinct()
+    total_acoes = acoes.count()
+    abertas = acoes.exclude(status__in=["Concluída", "Cancelada"])
+    acoes_abertas = abertas.count()
+    acoes_vencidas = abertas.filter(prazo__lt=hoje).count()
+    acoes_sem_prazo = abertas.filter(prazo__isnull=True).count()
+    acoes_concluidas = acoes.filter(status="Concluída").count()
+
+    fila_prioritaria = situacoes.filter(percentual_painel__gte=25).order_by(
+        "-percentual_painel", "aluno__nome"
+    )[:10]
+    maior_atencao = situacoes.filter(percentual_painel__gte=10).order_by(
+        "-percentual_painel", "aluno__nome"
+    )[:10]
+    importacoes = ImportacaoInfrequencia.objects.filter(ano_letivo=ano).order_by("-criado_em")[:6]
+    ultima_importacao = importacoes[0] if importacoes else None
+
+    por_turma = list(
+        situacoes.values("aluno__turma__nome", "aluno__turma__turno")
+        .annotate(
+            estudantes=Count("id"),
+            criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+            atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+        )
+        .order_by("-criticos", "-atencao", "aluno__turma__nome")[:12]
+    )
+    turnos = getattr(Turma, "TURNOS", [])
+    anos_disponiveis = list(
+        SituacaoInfrequencia.objects.order_by("-ano_letivo")
+        .values_list("ano_letivo", flat=True).distinct()[:8]
+    )
+    if ano not in anos_disponiveis:
+        anos_disponiveis.insert(0, ano)
+
+    return render(request, "busca_ativa/dashboard.html", {
+        "ano": ano, "anos_disponiveis": anos_disponiveis,
+        "turno": turno, "turma_id": turma_id, "turnos": turnos,
+        "turmas": Turma.objects.all().order_by("nome"),
+        "totais": totais, "total_acoes": total_acoes,
+        "acoes_abertas": acoes_abertas, "acoes_vencidas": acoes_vencidas,
+        "acoes_sem_prazo": acoes_sem_prazo, "acoes_concluidas": acoes_concluidas,
+        "taxa_conclusao": round(acoes_concluidas * 100 / total_acoes, 1) if total_acoes else 0,
+        "fila_prioritaria": fila_prioritaria, "maior_atencao": maior_atencao,
+        "por_turma": por_turma, "importacoes": importacoes,
+        "ultima_importacao": ultima_importacao,
+    })

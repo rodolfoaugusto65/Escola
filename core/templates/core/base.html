@@ -1986,28 +1986,22 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 @media(max-width:600px){#gereduDuende{right:8px;bottom:8px}#gereduDuende .gd-launcher{width:88px;height:126px}#gereduDuende .gd-dialog{bottom:132px;right:-2px}#gereduDuende .gd-speech{right:78px;bottom:76px}}
 @media(prefers-reduced-motion:reduce){#gereduDuende *{animation:none!important;transition:none!important}}
 
-#gereduDuende{width:190px;height:270px;overflow:visible}
-#gereduDuende .gd-launcher{width:184px;height:260px;overflow:visible;display:block;isolation:isolate}
+
+#gereduDuende{width:124px;height:174px;right:18px;bottom:14px;overflow:visible}
+#gereduDuende .gd-launcher{width:120px;height:168px;overflow:visible;display:block;isolation:isolate}
 #gereduDuende #gd3dCanvas{width:100%!important;height:100%!important;display:block;overflow:visible}
-#gereduDuende .gd-portal{width:184px;height:260px}
-#gereduDuende .gd-coins{inset:-22px}
-#gereduDuende .gd-dialog{right:0;bottom:270px;width:min(390px,calc(100vw - 32px))}
-#gereduDuende .gd-speech{width:290px;max-width:min(290px,calc(100vw - 36px));min-width:240px;right:145px;bottom:112px;white-space:normal;overflow-wrap:normal;word-break:normal;line-height:1.42;font-size:13px}
-#gereduDuende .gd-speech span{display:block;padding-right:4px}#gereduDuende .gd-welcome-count{display:block;margin-top:5px;color:#2e704c;font-weight:700}
-#gereduDuende .gd-summon{width:54px;height:54px;display:none;align-items:center;justify-content:center;font-size:30px;line-height:1;border:2px solid #f9e4a4;background:radial-gradient(circle at 32% 25%,#fffbd8,#a6d66d 38%,#2d8a4d 76%);box-shadow:0 5px 22px #28633d66;animation:gdCloverPulse 2.4s ease-in-out infinite}
-#gereduDuende.gd-away{width:60px;height:60px;right:18px;bottom:18px}
-#gereduDuende.gd-away .gd-summon{display:flex;position:relative;inset:auto}
+#gereduDuende .gd-portal{width:120px;height:168px}
+#gereduDuende .gd-coins{inset:-12px}
+#gereduDuende .gd-dialog{right:0;bottom:176px;width:min(370px,calc(100vw - 30px))}
+#gereduDuende .gd-speech{width:270px;max-width:min(270px,calc(100vw - 28px));min-width:220px;right:92px;bottom:72px;font-size:12px;line-height:1.4}
+#gereduDuende .gd-summon{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;font-size:17px;line-height:1;border-width:1px}
+#gereduDuende.gd-away{width:32px;height:32px;right:6px;bottom:6px;left:auto;top:auto}
+#gereduDuende.gd-away .gd-summon{display:flex;position:relative;inset:auto;width:30px;height:30px}
+#gereduDuende.gd-away .gd-summon:after{inset:-4px;border-width:1px}
 #gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal,#gereduDuende.gd-away .gd-coins{display:none}
-#gereduDuende.gd-away .gd-summon:after{content:"";position:absolute;inset:-8px;border:2px dashed #8ccf8d;border-radius:50%;animation:gdCloverOrbit 8s linear infinite}
-#gereduDuende .gd-hide-now,#gereduDuende .gd-dance-now{border:1px solid #d6e8d8;border-radius:10px;background:#edf7ef;color:#24523e;padding:9px 10px;font-weight:700;font-size:12px}
-#gereduDuende .gd-hide-now:hover,#gereduDuende .gd-dance-now:hover{background:#dff0e2}
-#gereduDuende.gd-vanishing .gd-launcher{animation:gdMagicVanish 1.15s cubic-bezier(.2,.7,.1,1) forwards}
-#gereduDuende.gd-returning .gd-launcher{animation:gdMagicAppear 1.2s cubic-bezier(.2,.8,.2,1) both}
-@keyframes gdMagicVanish{0%{opacity:1;transform:translateY(0) rotate(0) scale(1);filter:drop-shadow(0 0 0 #f9d56b)}35%{transform:translateY(-18px) rotate(-12deg) scale(1.08);filter:drop-shadow(0 0 20px #ffe17b)}65%{opacity:.9;transform:translateY(8px) rotate(35deg) scale(.55)}100%{opacity:0;transform:translateY(18px) rotate(180deg) scale(.03);filter:drop-shadow(0 0 28px #ffe17b)}}
-@keyframes gdMagicAppear{0%{opacity:0;transform:translateY(16px) rotate(-180deg) scale(.03);filter:drop-shadow(0 0 28px #ffe17b)}45%{opacity:1;transform:translateY(-12px) rotate(18deg) scale(1.12);filter:drop-shadow(0 0 22px #ffe17b)}100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
-@keyframes gdCloverPulse{0%,100%{transform:scale(1) rotate(-5deg)}50%{transform:scale(1.08) rotate(7deg)}}
-@keyframes gdCloverOrbit{to{transform:rotate(360deg)}}
-@media(max-width:600px){#gereduDuende{width:132px;height:190px;right:6px;bottom:8px}#gereduDuende .gd-launcher{width:128px;height:184px}#gereduDuende .gd-dialog{bottom:194px;right:0}#gereduDuende .gd-speech{right:90px;bottom:75px;width:240px;min-width:220px}#gereduDuende .gd-portal{width:128px;height:184px}}
+#gereduDuende.gd-vanishing .gd-launcher{animation:gdMagicVanish .95s cubic-bezier(.2,.7,.1,1) forwards}
+#gereduDuende.gd-returning .gd-launcher{animation:gdMagicAppear .95s cubic-bezier(.2,.8,.2,1) both}
+@media(max-width:600px){#gereduDuende{width:100px;height:142px;right:5px;bottom:6px}#gereduDuende .gd-launcher{width:96px;height:136px}#gereduDuende .gd-dialog{bottom:145px}#gereduDuende .gd-speech{right:72px;bottom:62px;width:230px;min-width:210px}#gereduDuende .gd-portal{width:96px;height:136px}}
 </style>
 <div id="gereduDuende">
  <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
@@ -2215,7 +2209,6 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  canvas.dataset.ready='1';
  try{
   const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
-  const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
   renderer.setSize(launcher.clientWidth,launcher.clientHeight,false);
@@ -2225,8 +2218,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(37,launcher.clientWidth/launcher.clientHeight,.1,30);
-  camera.position.set(0,1.53,4.8);
+  const camera=new THREE.PerspectiveCamera(34,launcher.clientWidth/launcher.clientHeight,.1,30);
+  camera.position.set(0,1.50,4.2);
   camera.lookAt(0,1.48,0);
   scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
   const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
@@ -2234,11 +2227,60 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   const rim=new THREE.PointLight(0xffd16a,1.0,9);rim.position.set(0,3,-2);scene.add(rim);
   const floor=new THREE.Mesh(new THREE.CircleGeometry(1.0,40),new THREE.MeshBasicMaterial({color:0x203c2b,transparent:true,opacity:.13}));
   floor.rotation.x=-Math.PI/2;floor.position.y=.01;floor.scale.set(.68,.22,1);scene.add(floor);
-  const loader=new GLTFLoader();
-  const gltf=await loader.loadAsync("{% static 'models/duende_geredu.glb' %}");
-  const model=gltf.scene;
-  model.scale.setScalar(.96);
-  model.position.set(0,-.02,0);
+  const model=new THREE.Group();
+  const mat=(color,roughness=.68,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+  const skin=mat(0xf0c99b),skinLight=mat(0xffdfb8),green=mat(0x3e8a62),greenDark=mat(0x245b45),leaf=mat(0x80bd75),gold=mat(0xe5b95b,.42,.22),boot=mat(0x654b3d),white=mat(0xfff8e9),iris=mat(0x4b7d68),black=mat(0x27333a),blush=mat(0xe99483);
+  const sphere=(name,r,pos,material,scale=[1,1,1])=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,24,18),material);m.name=name;m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;model.add(m);return m;};
+  const capsule=(name,r,len,pos,material)=>{const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,5,12),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  const cone=(name,r,h,pos,material,segments=28)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,segments),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  const cyl=(name,rt,rb,h,pos,material)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,28),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  // Silhueta pequena e arredondada: guardião da floresta com gorro de folha.
+  sphere('body',.43,[0,1.12,0],green,[.82,1.08,.64]);
+  sphere('belly',.29,[0,1.10,.285],mat(0xd9e9c9),[.9,1.03,.28]);
+  // Cabeça e rosto expressivo.
+  const head=sphere('head_skin',.48,[0,1.91,0],skin,[1.02,.94,.83]);
+  sphere('left_ear',.17,[-.46,1.92,0],skin,[.48,.8,.42]);
+  sphere('right_ear',.17,[.46,1.92,0],skin,[.48,.8,.42]);
+  sphere('left_eye_white',.105,[-.18,1.98,.385],white,[.88,1.1,.55]);
+  sphere('right_eye_white',.105,[.18,1.98,.385],white,[.88,1.1,.55]);
+  sphere('left_iris',.052,[-.17,1.97,.443],iris,[.9,1.0,.5]);
+  sphere('right_iris',.052,[.19,1.97,.443],iris,[.9,1.0,.5]);
+  sphere('left_pupil',.025,[-.16,1.97,.464],black,[.9,1.0,.5]);
+  sphere('right_pupil',.025,[.20,1.97,.464],black,[.9,1.0,.5]);
+  sphere('left_glint',.012,[-.175,1.995,.477],white);
+  sphere('right_glint',.012,[.185,1.995,.477],white);
+  sphere('nose',.065,[0,1.86,.435],skinLight,[1,.7,.75]);
+  sphere('cheek_l',.07,[-.29,1.82,.34],blush,[1,.55,.3]);
+  sphere('cheek_r',.07,[.29,1.82,.34],blush,[1,.55,.3]);
+  // Chapéu de aventureiro com copa macia e folha dourada.
+  cyl('hat_brim',.52,.49,.10,[0,2.34,0],greenDark);
+  cone('hat',.40,.58,[0,2.65,0],green);
+  sphere('hat_tip',.07,[0,2.96,0],gold,[.9,1.2,.9]);
+  const leafMesh=new THREE.Mesh(new THREE.SphereGeometry(.15,16,12),leaf);leafMesh.name='hat_leaf';leafMesh.position.set(.25,2.72,.05);leafMesh.scale.set(1.5,.45,.35);leafMesh.rotation.z=-.4;model.add(leafMesh);
+  // Cachecol e pequena fivela.
+  const scarf=capsule('scarf',.10,.42,[0,1.48,.22],gold);scarf.rotation.z=Math.PI/2;
+  sphere('scarf_knot',.12,[.24,1.49,.23],gold,[.9,1.2,.8]);
+  // Braços articulados.
+  capsule('left_arm',.105,.42,[-.39,1.34,0],green).rotation.z=-.35;
+  capsule('right_arm',.105,.42,[.39,1.34,0],green).rotation.z=.35;
+  sphere('left_hand',.12,[-.47,1.08,.02],skin);
+  sphere('right_hand',.12,[.47,1.08,.02],skin);
+  // Pernas curtas e botas arredondadas.
+  capsule('left_leg',.12,.28,[-.18,.62,0],greenDark);
+  capsule('right_leg',.12,.28,[.18,.62,0],greenDark);
+  sphere('left_boot',.16,[-.20,.31,.10],boot,[1.15,.72,1.4]);
+  sphere('right_boot',.16,[.20,.31,.10],boot,[1.15,.72,1.4]);
+  // Agrupa a cabeça e os traços faciais para que o olhar acompanhe a rotação.
+  const headGroup=new THREE.Group();headGroup.name='head';headGroup.position.set(0,1.91,0);
+  model.updateMatrixWorld(true);
+  ['head_skin','left_ear','right_ear','left_eye_white','right_eye_white','left_iris','right_iris','left_pupil','right_pupil','left_glint','right_glint','nose','cheek_l','cheek_r'].forEach(n=>{
+    const part=model.getObjectByName(n);if(part)headGroup.attach(part);
+  });
+  model.add(headGroup);
+  // Pequena mochila/folha nas costas.
+  sphere('backpack',.24,[0,1.18,-.34],gold,[.8,1,.5]);
+  model.scale.setScalar(.86);
+  model.position.set(0,-.08,0);
   scene.add(model);
   const get=n=>model.getObjectByName(n);
   const pivot=(name,point)=>{

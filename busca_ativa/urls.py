@@ -4,6 +4,7 @@ from . import views
 app_name = "busca_ativa"
 
 urlpatterns = [
+    path("dashboard/", views.dashboard_busca_ativa, name="dashboard"),
     path("", views.painel, name="painel"),
     path("relatorio-25-mais/", views.relatorio_25mais, name="relatorio_25mais"),
     path("lancamentos-atuais/", views.lancamentos_atuais, name="lancamentos_atuais"),

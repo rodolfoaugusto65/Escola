@@ -80,3 +80,12 @@
 - Último upload destacado no painel com arquivo, data, ano letivo e totais de vínculo.
 - Fila principal reduzida para 15 estudantes por página.
 - Nota TXT `NOTAS_VERSAO_2026-11-16-r21.txt` e migration `0019_comunicado_mascote_busca_ativa_r21`.
+
+
+## r22 — 16/11/2026
+- Reduzido o tamanho do mascote e redesenhado como um guardião da floresta 3D original, mais compacto e arredondado, com chapéu de folha e cachecol.
+- O trevo de retorno agora fica no canto inferior direito e mede aproximadamente 30 px.
+- Criado dashboard independente da Busca Ativa, com filtros por ano, turno e turma, indicadores de infrequência e providências, distribuição por turma, último upload e filas prioritárias.
+- Atalho para o dashboard adicionado ao cabeçalho do painel atual.
+- Preservadas as rotinas operacionais e não foram criadas migrations de banco.
+- Nota TXT: `NOTAS_VERSAO_2026-11-16-r22.txt`.

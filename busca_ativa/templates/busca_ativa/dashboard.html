@@ -1,0 +1,101 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard · Busca Ativa | GerEdu{% endblock %}
+{% block content %}
+<style>
+.ba-dash{max-width:1500px;margin:auto;padding:8px 4px 32px;color:#20334b}
+.ba-dash-hero{padding:24px 28px;border-radius:20px;background:linear-gradient(115deg,#102b45,#1b557e 65%,#2d6ca4);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 14px 35px #153e5e20}
+.ba-dash-hero h2{font-weight:850;letter-spacing:-.035em;margin:0}.ba-dash-hero p{color:#dceeff;margin:5px 0 0}
+.ba-dash-links{display:flex;gap:8px;flex-wrap:wrap}.ba-dash-links a{border-radius:10px;padding:9px 13px;background:#ffffff20;color:#fff;text-decoration:none;font-size:13px;font-weight:700}.ba-dash-links a.primary{background:#fff;color:#174b70}
+.ba-dash-filter{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:15px;margin:16px 0;border:1px solid #e0e8f1;border-radius:15px;background:#fff;box-shadow:0 6px 20px #1d35570a}
+.ba-dash-filter label{display:grid;gap:5px;font-size:12px;color:#5d7088;font-weight:750}.ba-dash-filter select{min-width:145px;padding:9px 12px;border:1px solid #d6e1ed;border-radius:9px;background:#fff;color:#20334b}
+.ba-dash-btn{border:0;border-radius:9px;background:#246db0;color:#fff;font-weight:750;padding:10px 16px;text-decoration:none;display:inline-block}
+.ba-dash-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:14px 0}
+.ba-dash-card,.ba-dash-panel{background:#fff;border:1px solid #e3eaf2;border-radius:16px;padding:17px;box-shadow:0 7px 22px #1b35560a;min-width:0}
+.ba-dash-card small{display:block;color:#72849a;font-weight:650}.ba-dash-card strong{display:block;font-size:30px;letter-spacing:-.05em;margin:4px 0}.ba-dash-card span{font-size:11px;color:#71839a}
+.ba-dash-card.critical{border-top:3px solid #df4555}.ba-dash-card.warning{border-top:3px solid #e5a12b}.ba-dash-card.good{border-top:3px solid #2a9b70}.ba-dash-card.blue{border-top:3px solid #3985c2}
+.ba-dash-two{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin:14px 0}
+.ba-dash-panel h5{font-weight:800;margin:0 0 13px}.ba-dash-muted{font-size:12px;color:#74859a}
+.ba-dash-bar{display:grid;grid-template-columns:120px minmax(80px,1fr) 35px;gap:10px;align-items:center;margin:12px 0;font-size:12px}
+.ba-dash-track{height:12px;background:#edf2f7;border-radius:20px;overflow:hidden}.ba-dash-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#3987c5,#4b9fba)}
+.ba-dash-fill.red{background:linear-gradient(90deg,#df4555,#f08b70)}.ba-dash-fill.amber{background:linear-gradient(90deg,#e6a12c,#f3c86b)}
+.ba-dash-table{width:100%;border-collapse:collapse;font-size:13px}.ba-dash-table th,.ba-dash-table td{padding:10px 9px;border-bottom:1px solid #edf1f5;text-align:left}.ba-dash-table th{font-size:10px;color:#71839a;text-transform:uppercase;letter-spacing:.06em;background:#f6f9fc}
+.ba-dash-pill{display:inline-block;border-radius:20px;padding:4px 8px;font-size:11px;font-weight:800;background:#fff0f0;color:#bd3448}
+.ba-dash-import{padding:14px;border-radius:13px;background:linear-gradient(110deg,#edf8ff,#f8fbff);border:1px solid #c9e5f7;overflow-wrap:anywhere}
+.ba-dash-import strong{display:block;color:#1b4e72;font-size:15px}.ba-dash-import small{color:#58758d}
+@media(max-width:950px){.ba-dash-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ba-dash-two{grid-template-columns:1fr}}
+@media(max-width:560px){.ba-dash-grid{grid-template-columns:1fr 1fr}.ba-dash-card strong{font-size:25px}.ba-dash-bar{grid-template-columns:90px minmax(60px,1fr) 30px}.ba-dash-filter label,.ba-dash-filter select{width:100%}}
+</style>
+<div class="ba-dash">
+ <header class="ba-dash-hero">
+  <div><div class="small text-uppercase fw-bold opacity-75 mb-2">GerEdu · Busca Ativa</div><h2>Dashboard de acompanhamento</h2><p>Indicadores para apoiar a priorização e o acompanhamento das providências.</p></div>
+  <div class="ba-dash-links">
+   <a class="primary" href="{% url 'busca_ativa:painel' %}">Abrir painel operacional</a>
+   <a href="{% url 'busca_ativa:relatorio_25mais' %}">Fila 25%+</a>
+   <a href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a>
+   <a href="{% url 'busca_ativa:importar' %}">Importar planilha</a>
+  </div>
+ </header>
+ <form method="get" class="ba-dash-filter">
+  <label>Ano letivo<select name="ano">{% for a in anos_disponiveis %}<option value="{{ a }}" {% if ano == a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></label>
+  <label>Turno<select name="turno"><option value="">Todos</option>{% for val,label in turnos %}<option value="{{ val }}" {% if turno == val %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <label>Turma<select name="turma"><option value="">Todas</option>{% for t in turmas %}<option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+  <button class="ba-dash-btn" type="submit">Aplicar filtros</button>
+  <a class="ba-dash-btn" style="background:#edf2f7;color:#40546b" href="{% url 'busca_ativa:dashboard' %}">Limpar</a>
+ </form>
+ <div class="ba-dash-grid">
+  <article class="ba-dash-card blue"><small>Estudantes monitorados</small><strong>{{ totais.estudantes|default:0 }}</strong><span>Com situação importada no ano selecionado</span></article>
+  <article class="ba-dash-card critical"><small>Infrequência crítica · 25%+</small><strong>{{ totais.criticos|default:0 }}</strong><span>Prioridade de atendimento</span></article>
+  <article class="ba-dash-card warning"><small>Faixa de atenção · 10%–24,9%</small><strong>{{ totais.atencao|default:0 }}</strong><span>Acompanhar preventivamente</span></article>
+  <article class="ba-dash-card good"><small>Providências concluídas</small><strong>{{ acoes_concluidas }}</strong><span>{{ taxa_conclusao }}% das providências registradas</span></article>
+ </div>
+ <div class="ba-dash-two">
+  <section class="ba-dash-panel">
+   <h5>Distribuição da infrequência</h5>
+   <div class="ba-dash-bar"><span>Crítica · 25%+</span><div class="ba-dash-track"><div class="ba-dash-fill red" style="width:{% if totais.estudantes %}{% widthratio totais.criticos totais.estudantes 100 %}{% else %}0{% endif %}%"></div></div><strong>{{ totais.criticos|default:0 }}</strong></div>
+   <div class="ba-dash-bar"><span>Atenção · 10–24%</span><div class="ba-dash-track"><div class="ba-dash-fill amber" style="width:{% if totais.estudantes %}{% widthratio totais.atencao totais.estudantes 100 %}{% else %}0{% endif %}%"></div></div><strong>{{ totais.atencao|default:0 }}</strong></div>
+   <div class="ba-dash-bar"><span>Regular · abaixo 10%</span><div class="ba-dash-track"><div class="ba-dash-fill" style="width:{% if totais.estudantes %}{% widthratio totais.regular totais.estudantes 100 %}{% else %}0{% endif %}%"></div></div><strong>{{ totais.regular|default:0 }}</strong></div>
+   <p class="ba-dash-muted mt-3 mb-0">Percentual médio geral: <strong>{{ totais.media|default:0|floatformat:2 }}%</strong>. Os percentuais seguem a maior informação disponível entre a base geral e o relatório específico de 25%+.</p>
+  </section>
+  <section class="ba-dash-panel">
+   <h5>Providências registradas</h5>
+   <div class="ba-dash-bar"><span>Em aberto</span><div class="ba-dash-track"><div class="ba-dash-fill amber" style="width:{% if total_acoes %}{% widthratio acoes_abertas total_acoes 100 %}{% else %}0{% endif %}%"></div></div><strong>{{ acoes_abertas }}</strong></div>
+   <div class="ba-dash-bar"><span>Concluídas</span><div class="ba-dash-track"><div class="ba-dash-fill" style="width:{% if total_acoes %}{% widthratio acoes_concluidas total_acoes 100 %}{% else %}0{% endif %}%"></div></div><strong>{{ acoes_concluidas }}</strong></div>
+   <div class="mt-3 d-flex flex-wrap gap-2"><span class="ba-dash-pill">{{ acoes_vencidas }} vencidas</span><span class="badge text-bg-secondary">{{ acoes_sem_prazo }} sem prazo</span></div>
+   <p class="ba-dash-muted mt-3 mb-0">{{ total_acoes }} providência(s) vinculada(s) aos estudantes monitorados.</p>
+  </section>
+ </div>
+ <div class="ba-dash-two">
+  <section class="ba-dash-panel">
+   <h5>Turmas que exigem maior atenção</h5>
+   <div style="overflow:auto"><table class="ba-dash-table"><thead><tr><th>Turma</th><th>Turno</th><th>Monitorados</th><th>25%+</th><th>Atenção</th></tr></thead><tbody>
+   {% for item in por_turma %}<tr><td>{{ item.aluno__turma__nome|default:"Sem turma" }}</td><td>{{ item.aluno__turma__turno|default:"—" }}</td><td>{{ item.estudantes }}</td><td><strong class="text-danger">{{ item.criticos }}</strong></td><td>{{ item.atencao }}</td></tr>{% empty %}<tr><td colspan="5">Não há dados para os filtros selecionados.</td></tr>{% endfor %}
+   </tbody></table></div>
+  </section>
+  <section class="ba-dash-panel">
+   <h5>Último upload integrado</h5>
+   {% if ultima_importacao %}
+   <div class="ba-dash-import"><small>Importação mais recente · {{ ultima_importacao.criado_em|date:"d/m/Y H:i" }}</small><strong>{{ ultima_importacao.arquivo }}</strong><small>Ano {{ ultima_importacao.ano_letivo }} · {{ ultima_importacao.total_registros }} linhas · {{ ultima_importacao.vinculados }} vinculados · {{ ultima_importacao.nao_vinculados }} sem vínculo</small></div>
+   {% else %}<p class="ba-dash-muted">Nenhuma importação registrada neste ano.</p>{% endif %}
+   <h5 class="mt-4">Importações recentes</h5>
+   {% for imp in importacoes %}<div class="d-flex justify-content-between gap-2 py-2 border-bottom"><div class="small"><strong>{{ imp.arquivo }}</strong><div class="ba-dash-muted">{{ imp.criado_em|date:"d/m/Y H:i" }}</div></div><span class="small text-muted">{{ imp.vinculados }}/{{ imp.total_registros }}</span></div>{% empty %}<p class="ba-dash-muted">Sem histórico de upload.</p>{% endfor %}
+  </section>
+ </div>
+ <div class="ba-dash-two">
+  <section class="ba-dash-panel">
+   <div class="d-flex align-items-center justify-content-between gap-2 mb-2"><h5 class="mb-0">Maiores percentuais de infrequência</h5><a class="small" href="{% url 'busca_ativa:relatorio_25mais' %}">Ver fila 25%+</a></div>
+   <div style="overflow:auto"><table class="ba-dash-table"><thead><tr><th>Estudante</th><th>Turma</th><th>Percentual</th><th></th></tr></thead><tbody>
+   {% for s in fila_prioritaria %}<tr><td><strong>{{ s.aluno.nome }}</strong><div class="ba-dash-muted">{{ s.aluno.matricula }}</div></td><td>{{ s.aluno.turma|default:"—" }}</td><td><span class="ba-dash-pill">{{ s.percentual_painel|floatformat:2 }}%</span></td><td><a href="{% url 'busca_ativa:ficha' s.aluno_id %}">Ficha</a></td></tr>{% empty %}<tr><td colspan="4">Nenhum estudante com 25% ou mais.</td></tr>{% endfor %}
+   </tbody></table></div>
+  </section>
+  <section class="ba-dash-panel">
+   <h5>Faixa de atenção · 10% ou mais</h5>
+   {% for s in maior_atencao %}<div class="d-flex align-items-center justify-content-between gap-2 border-bottom py-2"><div><strong class="small">{{ s.aluno.nome }}</strong><div class="ba-dash-muted">{{ s.aluno.turma|default:"—" }}</div></div><strong class="text-warning">{{ s.percentual_painel|floatformat:2 }}%</strong></div>{% empty %}<p class="ba-dash-muted">Nenhum estudante nesta faixa.</p>{% endfor %}
+  </section>
+ </div>
+ <div class="d-flex flex-wrap gap-2 mt-3">
+  <a class="ba-dash-btn" href="{% url 'busca_ativa:painel' %}">Voltar ao painel atual</a>
+  <a class="ba-dash-btn" href="{% url 'busca_ativa:alertas_operacionais' %}">Central de alertas e prazos</a>
+  <a class="ba-dash-btn" href="{% url 'busca_ativa:relatorio' %}">Relatórios e histórico</a>
+ </div>
+</div>
+{% endblock %}
