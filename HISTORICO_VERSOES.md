@@ -89,3 +89,12 @@
 - Atalho para o dashboard adicionado ao cabeçalho do painel atual.
 - Preservadas as rotinas operacionais e não foram criadas migrations de banco.
 - Nota TXT: `NOTAS_VERSAO_2026-11-16-r22.txt`.
+
+
+## r23 — 16/11/2026
+- Dashboard: adicionado comparativo histórico por ano letivo e ano explícito na tabela de turmas.
+- Mascote: palco 3D reduzido, câmera reenquadrada e passeio limitado ao palco para impedir que o personagem saia da área visível.
+- Ao desaparecer, o trevo fica fixo no extremo inferior direito e foi reduzido para aproximadamente 22 px.
+- Busca Ativa: unificação visual de cabeçalho, navegação por abas, cartões, tabelas e controles.
+- Sem mudanças no banco de dados; sem migration.
+- Nota TXT: `NOTAS_VERSAO_2026-11-16-r23.txt`.

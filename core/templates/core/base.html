@@ -2002,6 +2002,19 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende.gd-vanishing .gd-launcher{animation:gdMagicVanish .95s cubic-bezier(.2,.7,.1,1) forwards}
 #gereduDuende.gd-returning .gd-launcher{animation:gdMagicAppear .95s cubic-bezier(.2,.8,.2,1) both}
 @media(max-width:600px){#gereduDuende{width:100px;height:142px;right:5px;bottom:6px}#gereduDuende .gd-launcher{width:96px;height:136px}#gereduDuende .gd-dialog{bottom:145px}#gereduDuende .gd-speech{right:72px;bottom:62px;width:230px;min-width:210px}#gereduDuende .gd-portal{width:96px;height:136px}}
+
+#gereduDuende{width:92px!important;height:128px!important;right:10px!important;bottom:10px!important;left:auto!important;top:auto!important;overflow:visible!important}
+#gereduDuende .gd-launcher{width:88px!important;height:124px!important;max-width:88px!important;max-height:124px!important;overflow:visible!important}
+#gereduDuende #gd3dCanvas{width:88px!important;height:124px!important;max-width:88px!important;max-height:124px!important}
+#gereduDuende .gd-portal{width:88px!important;height:124px!important}
+#gereduDuende .gd-coins{inset:-5px!important}
+#gereduDuende .gd-dialog{bottom:132px!important;right:0!important;width:min(340px,calc(100vw - 24px))!important}
+#gereduDuende .gd-speech{width:250px!important;min-width:210px!important;max-width:calc(100vw - 28px)!important;right:76px!important;bottom:52px!important;font-size:12px!important;line-height:1.38!important}
+#gereduDuende.gd-away{position:fixed!important;width:24px!important;height:24px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;z-index:99999!important}
+#gereduDuende.gd-away .gd-summon{display:flex!important;position:fixed!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;font-size:13px!important;padding:0!important;border-width:1px!important;z-index:100000!important}
+#gereduDuende.gd-away .gd-summon:after{inset:-3px!important;border-width:1px!important}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal,#gereduDuende.gd-away .gd-coins{display:none!important}
+@media(max-width:600px){#gereduDuende{width:72px!important;height:100px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:68px!important;height:96px!important}#gereduDuende .gd-portal{width:68px!important;height:96px!important}#gereduDuende .gd-dialog{bottom:104px!important}#gereduDuende .gd-speech{right:58px!important;bottom:40px!important;width:220px!important;min-width:190px!important}}
 </style>
 <div id="gereduDuende">
  <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
@@ -2112,11 +2125,13 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   root.classList.remove('gd-returning','gd-hidden');root.classList.add('gd-vanishing');
   setTimeout(()=>{
    root.classList.remove('gd-vanishing');root.classList.add('gd-hidden','gd-away');
+   root.style.left='auto';root.style.top='auto';root.style.right='0px';root.style.bottom='0px';
    portalBusy=false;
   },1150);
  }
  function magicalReturn(openDialog=false){
   root.classList.remove('gd-away','gd-hidden','gd-vanishing');
+  root.style.left='auto';root.style.top='auto';root.style.right='10px';root.style.bottom='10px';
   root.classList.add('gd-returning');
   setAway(parseInt(hideSelect?.value||'0',10)||0);
   setTimeout(()=>root.classList.remove('gd-returning'),1250);
@@ -2218,8 +2233,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(34,launcher.clientWidth/launcher.clientHeight,.1,30);
-  camera.position.set(0,1.50,4.2);
+  const camera=new THREE.PerspectiveCamera(31,launcher.clientWidth/launcher.clientHeight,.1,30);
+  camera.position.set(0,1.48,4.9);
   camera.lookAt(0,1.48,0);
   scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
   const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
@@ -2279,7 +2294,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   model.add(headGroup);
   // Pequena mochila/folha nas costas.
   sphere('backpack',.24,[0,1.18,-.34],gold,[.8,1,.5]);
-  model.scale.setScalar(.86);
+  model.scale.setScalar(.70);
   model.position.set(0,-.08,0);
   scene.add(model);
   const get=n=>model.getObjectByName(n);
@@ -2350,14 +2365,13 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
     if(now-modeSince>60000&&dayMode()!== (window._gdDay||'')){window._gdDay=dayMode();setRoutine();}
     if(idle>22&&mode!=='wander'&&mode!=='sleep'&&mode!=='rest'){
       mode='wander';modeSince=now;wanderUntil=now+18000;wanderTarget=(Math.random()-.5)*.75;
-      root.style.transition='left 3.2s ease, top 3.2s ease';
-      root.style.right='auto';root.style.bottom='auto';
-      root.style.top=Math.max(8,window.innerHeight-root.offsetHeight-14)+'px';
-      root.style.left=Math.max(8,Math.min(window.innerWidth-root.offsetWidth-8,Math.random()*(window.innerWidth-root.offsetWidth)))+'px';
+      // Mantém o mascote ancorado no canto inferior direito; o passeio é animado no próprio palco 3D.
+      root.style.transition='none';root.style.left='auto';root.style.top='auto';
+      root.style.right='10px';root.style.bottom='10px';
       lastScreenWander=now;
     }
     if(mode==='wander'&&now-lastScreenWander>4200){
-      root.style.left=Math.max(8,Math.min(window.innerWidth-root.offsetWidth-8,Math.random()*(window.innerWidth-root.offsetWidth)))+'px';
+      wanderTarget=(Math.random()-.5)*.9;
       lastScreenWander=now;
     }
     if(mode==='wander'&&now>wanderUntil){mode=night?'sleep':'rest';modeSince=now;}

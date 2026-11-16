@@ -64,11 +64,17 @@
    <p class="ba-dash-muted mt-3 mb-0">{{ total_acoes }} providência(s) vinculada(s) aos estudantes monitorados.</p>
   </section>
  </div>
+ <section class="ba-dash-panel" style="margin:14px 0">
+  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap"><div><h5 class="mb-1">Comparativo por ano letivo</h5><p class="ba-dash-muted mb-2">Visão histórica de todos os anos importados; respeita os filtros de turno e turma, mas não o filtro de ano do formulário.</p></div><span class="badge text-bg-light">Histórico completo</span></div>
+  <div style="overflow:auto"><table class="ba-dash-table"><thead><tr><th>Ano letivo</th><th>Monitorados</th><th>25%+</th><th>Atenção</th><th>Regular</th></tr></thead><tbody>
+  {% for item in comparativo_anos %}<tr><td><strong>{{ item.ano_letivo }}</strong></td><td>{{ item.estudantes }}</td><td class="text-danger fw-bold">{{ item.criticos }}</td><td>{{ item.atencao }}</td><td>{{ item.regular }}</td></tr>{% empty %}<tr><td colspan="5">Não há dados históricos para os filtros selecionados.</td></tr>{% endfor %}
+  </tbody></table></div>
+ </section>
  <div class="ba-dash-two">
   <section class="ba-dash-panel">
    <h5>Turmas que exigem maior atenção</h5>
-   <div style="overflow:auto"><table class="ba-dash-table"><thead><tr><th>Turma</th><th>Turno</th><th>Monitorados</th><th>25%+</th><th>Atenção</th></tr></thead><tbody>
-   {% for item in por_turma %}<tr><td>{{ item.aluno__turma__nome|default:"Sem turma" }}</td><td>{{ item.aluno__turma__turno|default:"—" }}</td><td>{{ item.estudantes }}</td><td><strong class="text-danger">{{ item.criticos }}</strong></td><td>{{ item.atencao }}</td></tr>{% empty %}<tr><td colspan="5">Não há dados para os filtros selecionados.</td></tr>{% endfor %}
+   <div style="overflow:auto"><table class="ba-dash-table"><thead><tr><th>Ano</th><th>Turma</th><th>Turno</th><th>Monitorados</th><th>25%+</th><th>Atenção</th></tr></thead><tbody>
+   {% for item in por_turma %}<tr><td>{{ item.ano_letivo }}</td><td>{{ item.aluno__turma__nome|default:"Sem turma" }}</td><td>{{ item.aluno__turma__turno|default:"—" }}</td><td>{{ item.estudantes }}</td><td><strong class="text-danger">{{ item.criticos }}</strong></td><td>{{ item.atencao }}</td></tr>{% empty %}<tr><td colspan="6">Não há dados para os filtros selecionados.</td></tr>{% endfor %}
    </tbody></table></div>
   </section>
   <section class="ba-dash-panel">

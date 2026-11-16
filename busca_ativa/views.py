@@ -1551,8 +1551,27 @@ def dashboard_busca_ativa(request):
     importacoes = ImportacaoInfrequencia.objects.filter(ano_letivo=ano).order_by("-criado_em")[:6]
     ultima_importacao = importacoes[0] if importacoes else None
 
+    # Comparativo histórico: não herda o filtro de ano para permitir visualizar todos os anos.
+    historico_anos = SituacaoInfrequencia.objects.all().select_related("aluno", "aluno__turma").annotate(
+        percentual_painel=Greatest(
+            "percentual_geral_final", "percentual_geral", "percentual_relatorio_25"
+        )
+    )
+    if turno:
+        historico_anos = historico_anos.filter(aluno__turma__turno=turno)
+    if turma_id:
+        historico_anos = historico_anos.filter(aluno__turma_id=turma_id)
+    comparativo_anos = list(
+        historico_anos.values("ano_letivo").annotate(
+            estudantes=Count("id"),
+            criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+            atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+            regular=Count("id", filter=Q(percentual_painel__lt=10)),
+        ).order_by("ano_letivo")
+    )
+
     por_turma = list(
-        situacoes.values("aluno__turma__nome", "aluno__turma__turno")
+        situacoes.values("ano_letivo", "aluno__turma__nome", "aluno__turma__turno")
         .annotate(
             estudantes=Count("id"),
             criticos=Count("id", filter=Q(percentual_painel__gte=25)),
@@ -1577,6 +1596,7 @@ def dashboard_busca_ativa(request):
         "acoes_sem_prazo": acoes_sem_prazo, "acoes_concluidas": acoes_concluidas,
         "taxa_conclusao": round(acoes_concluidas * 100 / total_acoes, 1) if total_acoes else 0,
         "fila_prioritaria": fila_prioritaria, "maior_atencao": maior_atencao,
-        "por_turma": por_turma, "importacoes": importacoes,
+        "por_turma": por_turma, "comparativo_anos": comparativo_anos,
+        "importacoes": importacoes,
         "ultima_importacao": ultima_importacao,
     })

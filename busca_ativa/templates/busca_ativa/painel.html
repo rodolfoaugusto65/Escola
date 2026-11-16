@@ -19,6 +19,28 @@
 .ba-panel{min-height:160px}
 .ba-table th{position:sticky;top:0;background:#f5f8fc;z-index:1}
 @media(max-width:760px){.ba-latest-import{grid-template-columns:1fr}.ba-dashboard-tabs{display:grid;grid-template-columns:1fr 1fr}.ba-dashboard-tabs button{text-align:left}}
+
+:root{--ba-ink:#1c314a;--ba-muted:#70839b;--ba-line:#e3eaf2;--ba-blue:#285fba;--ba-soft:#f3f7fc}
+.ba-shell{max-width:1540px;margin-inline:auto}
+.ba-hero{border-radius:20px!important;padding:25px 28px!important;background:linear-gradient(115deg,#102b45,#1c5278 62%,#2e6da6)!important;box-shadow:0 12px 32px #143b5c20!important}
+.ba-hero h1,.ba-hero h2,.ba-hero h3,.ba-hero .display-6{color:#fff!important;text-shadow:none!important}
+.ba-hero p,.ba-hero .text-muted{color:#e0efff!important}
+.ba-actions a,.ba-actions button{border-radius:10px!important}
+.ba-dashboard-tabs{background:#edf3fa!important;border:1px solid #dce6f1!important;padding:6px!important;border-radius:14px!important}
+.ba-dashboard-tabs button{color:#405570!important;padding:10px 14px!important;border-radius:10px!important}
+.ba-dashboard-tabs button.active{background:#fff!important;color:#2459bb!important;box-shadow:0 3px 12px #183c6418!important}
+.ba-latest-import{border-radius:15px!important;background:linear-gradient(110deg,#eef8ff,#f9fcff)!important;border-color:#c9e4f7!important}
+.ba-panel,.ba-card,.ba-stat,.ba-latest-import{box-shadow:0 6px 22px #193b5d0b!important;border:1px solid var(--ba-line)!important;border-radius:16px!important}
+.ba-panel{padding:18px!important;margin-bottom:14px!important;background:#fff!important}
+.ba-panel h2,.ba-panel h3,.ba-panel h4,.ba-panel h5{color:var(--ba-ink)!important;font-weight:800!important}
+.ba-panel table{width:100%;border-collapse:separate;border-spacing:0}
+.ba-panel table thead th{background:#f4f7fb!important;color:#6b7f98!important;font-size:10px!important;letter-spacing:.06em;text-transform:uppercase;padding:11px 10px!important;border-bottom:1px solid var(--ba-line)!important}
+.ba-panel table tbody td{padding:11px 10px!important;border-bottom:1px solid #edf1f6!important}
+.ba-panel table tbody tr:hover{background:#f8fbff!important}
+.ba-btn,.ba-panel .btn{border-radius:10px!important;font-weight:700!important}
+.ba-panel input,.ba-panel select,.ba-panel textarea{border-radius:10px!important;border-color:#d9e3ee!important}
+.ba-panel input:focus,.ba-panel select:focus,.ba-panel textarea:focus{border-color:#79a8d8!important;box-shadow:0 0 0 3px #3c82c31a!important}
+@media(max-width:700px){.ba-hero{padding:18px!important}.ba-dashboard-tabs{display:grid;grid-template-columns:1fr 1fr}.ba-panel{padding:13px!important}}
 </style>
 <div class="ba-wrap">
  <div class="ba-hero mb-3"><div class="ba-head mb-0"><div><div class="small text-uppercase fw-bold opacity-75 mb-2">GerEdu · acompanhamento escolar</div><h2 class="mb-1">Busca Ativa e Infrequência</h2><p>Visão integrada de alertas, providências, frequência e histórico dos estudantes.</p></div><div class="ba-actions"><a class="ba-btn" style="background:#ffd166;color:#18324a" href="{% url 'busca_ativa:dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a><a class="ba-btn" style="background:#fff;color:#174c72" href="{% url 'busca_ativa:importar' %}"><i class="bi bi-cloud-upload me-1"></i> Importar dados</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:relatorio' %}">Relatórios</a></div></div></div>
