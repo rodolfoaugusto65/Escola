@@ -49,11 +49,15 @@
 .ba-dashboard-tabs button.ba-tab-priority .ba-tab-count{background:#fff!important;color:#b42336!important}
 .ba-panel[data-ba-pane="prioridade"]{border:1px solid #f0c5ca!important;box-shadow:0 9px 28px #b4233610!important}
 .ba-panel[data-ba-pane="prioridade"] .ba-section-title h5{color:#a61f32!important}
+
+.ba-work-latest{background:linear-gradient(110deg,#155b86,#2c83b5)!important;color:#fff!important;border:1px solid #155b86!important;box-shadow:0 5px 15px #155b8626!important;font-weight:850!important;padding-inline:16px!important}
+.ba-work-latest:hover{background:linear-gradient(110deg,#10496e,#246f9d)!important;color:#fff!important}
 </style>
 <div class="ba-wrap">
  <div class="ba-hero mb-3"><div class="ba-head mb-0"><div><div class="small text-uppercase fw-bold opacity-75 mb-2">GerEdu · acompanhamento escolar</div><h2 class="mb-1">Busca Ativa e Infrequência</h2><p>Visão integrada de alertas, providências, frequência e histórico dos estudantes.</p></div><div class="ba-actions"><a class="ba-btn" style="background:#ffd166;color:#18324a" href="{% url 'busca_ativa:dashboard' %}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a><a class="ba-btn" style="background:#fff;color:#174c72" href="{% url 'busca_ativa:importar' %}"><i class="bi bi-cloud-upload me-1"></i> Importar dados</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:relatorio' %}">Relatórios</a></div></div></div>
  <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Abas de Busca Ativa">
   <a class="ba-btn ba-work-25" href="{% url 'busca_ativa:relatorio_25mais' %}"><i class="bi bi-exclamation-octagon-fill me-1"></i>Fila de trabalho 25%+ <span class="ba-work-badge">{{ total_criticos }}</span></a>
+  <a class="ba-btn ba-work-latest" href="{% url 'busca_ativa:fila_ultimos_lancamentos' %}"><i class="bi bi-person-check-fill me-1"></i>Conferir últimos lançamentos</a>
   <a class="ba-btn light" href="{% url 'busca_ativa:painel' %}">Painel geral</a>
   <a class="ba-btn light" href="{% url 'busca_ativa:alertas_operacionais' %}">Alertas e prazos</a>
   <a class="ba-btn light" href="{% url 'busca_ativa:lancamentos_atuais' %}">Lançamentos atuais</a>

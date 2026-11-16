@@ -317,6 +317,46 @@ def lancamentos_atuais(request):
 
 @login_required
 @user_passes_test(gerencial)
+def fila_ultimos_lancamentos(request):
+    """Fila de conferência individual dos estudantes da importação mais recente."""
+    from turmas.models import Turma
+    importacao = ImportacaoInfrequencia.objects.order_by("-criado_em").first()
+    registros = HistoricoSituacaoInfrequencia.objects.none()
+    if importacao:
+        acao_depois_da_importacao = AcaoBuscaAtiva.objects.filter(
+            aluno_id=OuterRef("aluno_id"),
+            criado_em__gte=importacao.criado_em,
+        ).exclude(status="Cancelada")
+        registros = HistoricoSituacaoInfrequencia.objects.filter(
+            importacao=importacao
+        ).select_related("aluno", "aluno__turma").annotate(
+            possui_acao_registrada=Exists(acao_depois_da_importacao)
+        ).filter(possui_acao_registrada=False)
+    q = request.GET.get("q", "").strip()
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    if q:
+        registros = registros.filter(
+            Q(aluno__nome__icontains=q) | Q(matricula__icontains=q)
+        )
+    if turno:
+        registros = registros.filter(aluno__turma__turno=turno)
+    if turma:
+        registros = registros.filter(aluno__turma_id=turma)
+    total = registros.count()
+    pagina = Paginator(registros.order_by("-percentual_considerado", "aluno__nome"), 50).get_page(
+        request.GET.get("page")
+    )
+    total_importado = HistoricoSituacaoInfrequencia.objects.filter(importacao=importacao).count() if importacao else 0
+    return render(request, "busca_ativa/fila_ultimos_lancamentos.html", {
+        "importacao": importacao, "registros": pagina, "total": total,
+        "total_importado": total_importado, "q": q, "turno": turno, "turma": turma,
+        "turmas": Turma.objects.all().order_by("nome"), "turnos": Turma.TURNOS,
+    })
+
+
+@login_required
+@user_passes_test(gerencial)
 def ficha_aluno(request, aluno_id):
     aluno = get_object_or_404(Aluno.objects.select_related("turma"), pk=aluno_id)
     situacao = SituacaoInfrequencia.objects.select_related("importacao").filter(aluno=aluno).order_by("-ano_letivo").first()

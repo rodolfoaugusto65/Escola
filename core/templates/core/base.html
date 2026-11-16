@@ -2025,6 +2025,14 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende.gd-away{position:fixed!important;width:22px!important;height:22px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;z-index:2147483000!important}
 #gereduDuende.gd-away .gd-summon{position:fixed!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;font-size:12px!important}
 @media(max-width:600px){#gereduDuende{width:58px!important;height:82px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:54px!important;height:78px!important}#gereduDuende .gd-portal{width:54px!important;height:78px!important}#gereduDuende .gd-dialog{bottom:88px!important}#gereduDuende .gd-speech{right:48px!important;bottom:30px!important;width:210px!important;min-width:180px!important}}
+
+#gereduDuende{width:104px!important;height:146px!important;right:10px!important;bottom:10px!important;overflow:visible!important;contain:none!important;clip-path:none!important}
+#gereduDuende .gd-launcher{width:98px!important;height:138px!important;max-width:98px!important;max-height:138px!important;overflow:visible!important;clip-path:none!important}
+#gereduDuende #gd3dCanvas{width:98px!important;height:138px!important;max-width:98px!important;max-height:138px!important;overflow:visible!important}
+#gereduDuende .gd-portal{width:98px!important;height:138px!important}
+#gereduDuende .gd-dialog{bottom:150px!important}
+#gereduDuende .gd-speech{right:88px!important;bottom:48px!important;width:245px!important;min-width:200px!important}
+@media(max-width:600px){#gereduDuende{width:82px!important;height:116px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:76px!important;height:108px!important;max-width:76px!important;max-height:108px!important}#gereduDuende .gd-portal{width:76px!important;height:108px!important}#gereduDuende .gd-dialog{bottom:120px!important}#gereduDuende .gd-speech{right:68px!important;bottom:38px!important;width:220px!important;min-width:180px!important}}
 </style>
 <div id="gereduDuende">
  <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
@@ -2246,7 +2254,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(36,launcher.clientWidth/launcher.clientHeight,.1,30);
-  camera.position.set(0,1.48,6.2);
+  camera.position.set(0,1.48,5.5);
   camera.lookAt(0,1.48,0);
   scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
   const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
@@ -2306,7 +2314,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   model.add(headGroup);
   // Pequena mochila/folha nas costas.
   sphere('backpack',.24,[0,1.18,-.34],gold,[.8,1,.5]);
-  model.scale.setScalar(.48);
+  model.scale.setScalar(.64);
   model.position.set(0,-.08,0);
   scene.add(model);
   const get=n=>model.getObjectByName(n);

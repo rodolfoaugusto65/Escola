@@ -119,3 +119,13 @@
 - Mascote reduzido e reenquadrado no canvas 3D; removida restauração de posição antiga que causava corte; início fixo no canto inferior direito e arraste preservado.
 - Nota TXT: `NOTAS_VERSAO_2026-11-16-r24.txt`.
 - Migration `0021_comunicado_fila_prioritaria_r24.py` publica a nota no sistema.
+
+
+## r25 — 16/11/2026
+- Nova aba "Conferir últimos lançamentos" ao lado da fila 25%+.
+- A fila acompanha todos os estudantes vinculados da importação mais recente, independentemente do percentual.
+- Cada aluno sai da fila após uma ação não cancelada ser registrada depois do upload atual; ações antigas ou canceladas não contam.
+- Nova importação abre uma nova rodada de conferência sem apagar histórico.
+- Mascote ampliado após o ajuste excessivo de redução da r24; corpo inteiro continua enquadrado.
+- Nota TXT: `NOTAS_VERSAO_2026-11-16-r25.txt`.
+- Migration `0022_comunicado_fila_ultimos_lancamentos_r25.py` publica a nota no sistema.
