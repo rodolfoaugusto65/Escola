@@ -148,7 +148,7 @@ def painel(request):
     base = base.order_by("-percentual_considerado_db", "aluno__nome")
     pendentes = base
     total_estudantes = base.count()
-    pagina_situacoes = Paginator(base, 50).get_page(request.GET.get("page"))
+    pagina_situacoes = Paginator(base, 15).get_page(request.GET.get("page"))
     from turmas.models import Turma
     turmas = Turma.objects.all().order_by("nome")
     turnos = getattr(Turma, "TURNOS", [])

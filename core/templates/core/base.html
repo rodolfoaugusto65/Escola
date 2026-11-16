@@ -1905,7 +1905,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 {% if user.is_authenticated %}
 <style>
 #gereduDuende{position:fixed;right:24px;bottom:18px;z-index:4200;font-family:inherit;touch-action:none;user-select:none}
-#gereduDuende .gd-launcher{width:118px;height:166px;padding:0;border:0;background:transparent;cursor:grab;position:relative;filter:drop-shadow(0 9px 12px #102b4730);transform-origin:50% 85%}
+#gereduDuende .gd-launcher{width:184px;height:260px;padding:0;border:0;background:transparent;cursor:grab;position:relative;filter:drop-shadow(0 9px 12px #102b4730);transform-origin:50% 85%}
 #gereduDuende .gd-launcher:active{cursor:grabbing}
 
 #gereduDuende .gd-dancer-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 7px #142b3b35);transform:translateZ(12px)}
@@ -1921,7 +1921,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-launcher:hover .gd-dancer-img{filter:drop-shadow(0 13px 12px #142b3b55) saturate(1.08)}
 #gereduDuende .gd-launcher.gd-clicked{animation:gdClickBounce .55s ease}
 @keyframes gdClickBounce{0%,100%{transform:scale(1)}35%{transform:scale(1.12) rotate(-5deg)}70%{transform:scale(.97) rotate(4deg)}}
-#gereduDuende .gd-portal{width:118px;height:166px;border-radius:48% 52% 46% 54%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(ellipse at center,rgba(255,255,255,.06) 0 28%,rgba(255,214,102,.35) 42%,rgba(67,190,137,.8) 56%,rgba(125,222,175,.3) 68%,transparent 76%);filter:drop-shadow(0 0 16px #ffd76a)}
+#gereduDuende .gd-portal{width:184px;height:260px;border-radius:48% 52% 46% 54%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(ellipse at center,rgba(255,255,255,.06) 0 28%,rgba(255,214,102,.35) 42%,rgba(67,190,137,.8) 56%,rgba(125,222,175,.3) 68%,transparent 76%);filter:drop-shadow(0 0 16px #ffd76a)}
 #gereduDuende .gd-portal:before{border-color:#ffe6a1 #70d6a0 #ffe6a1 #70d6a0}
 #gereduDuende .gd-portal:after{border-color:#fff3bf transparent #8be1b4 #8be1b4}
 #gereduDuende.gd-vanishing .gd-portal,#gereduDuende.gd-returning .gd-portal{animation-duration:1.05s}
@@ -1948,7 +1948,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 #gereduDuende .gd-arm-right{transform-origin:106px 111px;animation:gdGesture 4.2s ease-in-out infinite}
 #gereduDuende .gd-body{transform-origin:80px 115px;animation:gdBreathe 3s ease-in-out infinite}
 #gereduDuende .gd-shadow{animation:gdShadow 3s ease-in-out infinite}
-#gereduDuende .gd-dialog{position:absolute;right:0;bottom:174px;width:min(370px,calc(100vw - 28px));background:#fff;border:1px solid #dbe5ef;border-radius:18px;box-shadow:0 18px 55px #0f274733;overflow:hidden;display:none;z-index:4}
+#gereduDuende .gd-dialog{position:absolute;right:8px;bottom:268px;width:min(390px,calc(100vw - 28px));background:#fff;border:1px solid #dbe5ef;border-radius:18px;box-shadow:0 18px 55px #0f274733;overflow:hidden;display:none;z-index:4}
 #gereduDuende.gd-open .gd-dialog{display:block;animation:gdDialogIn .24s ease-out}
 #gereduDuende .gd-dialog-head{padding:13px 16px;background:linear-gradient(120deg,#244c3e,#367c61);color:#fff;display:flex;align-items:center;justify-content:space-between}
 #gereduDuende .gd-dialog-body{padding:15px;color:#25364a;font-size:14px;line-height:1.5}
@@ -1985,6 +1985,29 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 @keyframes gdAppear{0%{opacity:0;transform:scale(.02) translateY(8px) rotate(-180deg)}65%{opacity:1;transform:scale(1.12) translateY(-5px) rotate(8deg)}100%{opacity:1;transform:scale(1) translateY(0) rotate(0)}}
 @media(max-width:600px){#gereduDuende{right:8px;bottom:8px}#gereduDuende .gd-launcher{width:88px;height:126px}#gereduDuende .gd-dialog{bottom:132px;right:-2px}#gereduDuende .gd-speech{right:78px;bottom:76px}}
 @media(prefers-reduced-motion:reduce){#gereduDuende *{animation:none!important;transition:none!important}}
+
+#gereduDuende{width:190px;height:270px;overflow:visible}
+#gereduDuende .gd-launcher{width:184px;height:260px;overflow:visible;display:block;isolation:isolate}
+#gereduDuende #gd3dCanvas{width:100%!important;height:100%!important;display:block;overflow:visible}
+#gereduDuende .gd-portal{width:184px;height:260px}
+#gereduDuende .gd-coins{inset:-22px}
+#gereduDuende .gd-dialog{right:0;bottom:270px;width:min(390px,calc(100vw - 32px))}
+#gereduDuende .gd-speech{width:290px;max-width:min(290px,calc(100vw - 36px));min-width:240px;right:145px;bottom:112px;white-space:normal;overflow-wrap:normal;word-break:normal;line-height:1.42;font-size:13px}
+#gereduDuende .gd-speech span{display:block;padding-right:4px}#gereduDuende .gd-welcome-count{display:block;margin-top:5px;color:#2e704c;font-weight:700}
+#gereduDuende .gd-summon{width:54px;height:54px;display:none;align-items:center;justify-content:center;font-size:30px;line-height:1;border:2px solid #f9e4a4;background:radial-gradient(circle at 32% 25%,#fffbd8,#a6d66d 38%,#2d8a4d 76%);box-shadow:0 5px 22px #28633d66;animation:gdCloverPulse 2.4s ease-in-out infinite}
+#gereduDuende.gd-away{width:60px;height:60px;right:18px;bottom:18px}
+#gereduDuende.gd-away .gd-summon{display:flex;position:relative;inset:auto}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal,#gereduDuende.gd-away .gd-coins{display:none}
+#gereduDuende.gd-away .gd-summon:after{content:"";position:absolute;inset:-8px;border:2px dashed #8ccf8d;border-radius:50%;animation:gdCloverOrbit 8s linear infinite}
+#gereduDuende .gd-hide-now,#gereduDuende .gd-dance-now{border:1px solid #d6e8d8;border-radius:10px;background:#edf7ef;color:#24523e;padding:9px 10px;font-weight:700;font-size:12px}
+#gereduDuende .gd-hide-now:hover,#gereduDuende .gd-dance-now:hover{background:#dff0e2}
+#gereduDuende.gd-vanishing .gd-launcher{animation:gdMagicVanish 1.15s cubic-bezier(.2,.7,.1,1) forwards}
+#gereduDuende.gd-returning .gd-launcher{animation:gdMagicAppear 1.2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gdMagicVanish{0%{opacity:1;transform:translateY(0) rotate(0) scale(1);filter:drop-shadow(0 0 0 #f9d56b)}35%{transform:translateY(-18px) rotate(-12deg) scale(1.08);filter:drop-shadow(0 0 20px #ffe17b)}65%{opacity:.9;transform:translateY(8px) rotate(35deg) scale(.55)}100%{opacity:0;transform:translateY(18px) rotate(180deg) scale(.03);filter:drop-shadow(0 0 28px #ffe17b)}}
+@keyframes gdMagicAppear{0%{opacity:0;transform:translateY(16px) rotate(-180deg) scale(.03);filter:drop-shadow(0 0 28px #ffe17b)}45%{opacity:1;transform:translateY(-12px) rotate(18deg) scale(1.12);filter:drop-shadow(0 0 22px #ffe17b)}100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+@keyframes gdCloverPulse{0%,100%{transform:scale(1) rotate(-5deg)}50%{transform:scale(1.08) rotate(7deg)}}
+@keyframes gdCloverOrbit{to{transform:rotate(360deg)}}
+@media(max-width:600px){#gereduDuende{width:132px;height:190px;right:6px;bottom:8px}#gereduDuende .gd-launcher{width:128px;height:184px}#gereduDuende .gd-dialog{bottom:194px;right:0}#gereduDuende .gd-speech{right:90px;bottom:75px;width:240px;min-width:220px}#gereduDuende .gd-portal{width:128px;height:184px}}
 </style>
 <div id="gereduDuende">
  <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
@@ -2005,6 +2028,10 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
    {% if comunicado_pendente %}
    <div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff5e6;border:1px solid #f3d39b;color:#875314;font-size:12px">🔔 Há uma atualização do GerEdu aguardando sua confirmação de leitura.</div>
    {% endif %}
+   <div class="gd-actions" style="grid-template-columns:1fr 1fr">
+    <button type="button" class="gd-hide-now" id="gdHideNow">✨ Fazer o duende desaparecer</button>
+    <button type="button" class="gd-dance-now" id="gdDanceNow">💃 Dançar comigo</button>
+   </div>
    <div class="gd-preferences">
     <label for="gdHideAfter"><strong>Tempo para desaparecer</strong></label>
     <select id="gdHideAfter" aria-label="Tempo para o duende desaparecer">
@@ -2024,12 +2051,12 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   </div>
  </div>
  <div class="gd-speech" id="gdSpeech">
-  <span>Olá, {{ user.first_name|default:user.username|escape }}! Seja bem-vindo(a) ao GerEdu. Precisa de uma mãozinha?</span>
+  <span>Olá, {{ user.first_name|default:user.username|escape }}! Seja bem-vindo(a) ao GerEdu! {% if data_fim_letivo %}Faltam <strong>{{ dias_letivos_restantes|default:"—" }} dias letivos</strong> para encerrarmos o ano, até {{ data_fim_letivo|date:"d/m/Y" }}.{% else %}Vamos começar? Estou aqui para ajudar!{% endif %} Precisa de uma mãozinha?</span>
   <button type="button" class="gd-speech-close" id="gdSpeechClose" aria-label="Fechar balão de boas-vindas">×</button>
  </div>
  <div class="gd-portal" id="gdPortal" aria-hidden="true"></div>
  <div class="gd-coins" aria-hidden="true">{% for coin in "12345678" %}<i class="gd-coin"></i>{% endfor %}</div>
- <button type="button" class="gd-summon" id="gdSummon" aria-label="Trazer o duende de volta">✦</button>
+ <button type="button" class="gd-summon" id="gdSummon" aria-label="Trazer o duende de volta">☘</button>
  <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
   <canvas id="gd3dCanvas" class="gd-character gd-dancer-img" aria-label="Mascote 3D interativo do GerEdu"></canvas><span id="gd3dFallback" class="gd-3d-fallback" hidden>Duende do GerEdu</span>
  </button>
@@ -2047,6 +2074,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
  const portal=document.getElementById('gdPortal');
  const hideSelect=document.getElementById('gdHideAfter');
  const summon=document.getElementById('gdSummon');
+ const hideNow=document.getElementById('gdHideNow');
+ const danceNow=document.getElementById('gdDanceNow');
  let drag=null,dragged=false,portalBusy=false,animationTimer=null,lastDodge=0,hideTimer=null;
  function setOpen(open){
   root.classList.toggle('gd-open',open);
@@ -2078,17 +2107,41 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   if(hideTimer)clearTimeout(hideTimer);
   try{localStorage.setItem('gereduDuendeHideAfter',String(seconds));}catch(_){}
   root.classList.remove('gd-away');
-  if(seconds>0)hideTimer=setTimeout(()=>{root.classList.add('gd-away');setOpen(false);},seconds*1000);
+  if(seconds>0)hideTimer=setTimeout(()=>magicalHide(),seconds*1000);
  }
  let savedDuration='0';try{savedDuration=localStorage.getItem('gereduDuendeHideAfter')||'0';}catch(_){}
  if(hideSelect){hideSelect.value=savedDuration;setAway(parseInt(savedDuration,10)||0);hideSelect.addEventListener('change',()=>setAway(parseInt(hideSelect.value,10)||0));}
- if(summon)summon.addEventListener('click',()=>{root.classList.remove('gd-away');setAway(parseInt(hideSelect?.value||'0',10)||0);setOpen(true);});
+ function magicalHide(){
+  if(animationTimer)clearTimeout(animationTimer);
+  portalBusy=false;
+  portalBusy=true;setOpen(false);
+  root.classList.remove('gd-returning','gd-hidden');root.classList.add('gd-vanishing');
+  setTimeout(()=>{
+   root.classList.remove('gd-vanishing');root.classList.add('gd-hidden','gd-away');
+   portalBusy=false;
+  },1150);
+ }
+ function magicalReturn(openDialog=false){
+  root.classList.remove('gd-away','gd-hidden','gd-vanishing');
+  root.classList.add('gd-returning');
+  setAway(parseInt(hideSelect?.value||'0',10)||0);
+  setTimeout(()=>root.classList.remove('gd-returning'),1250);
+  if(openDialog)setOpen(true);
+ }
+ if(hideNow)hideNow.addEventListener('click',magicalHide);
+ if(summon)summon.addEventListener('click',()=>magicalReturn(true));
+ if(danceNow)danceNow.addEventListener('click',()=>{launcher.dispatchEvent(new Event('dblclick'));setOpen(false);});
  const naturalDays=document.getElementById('gdCalendarNaturalDays');
  if(naturalDays&&naturalDays.dataset.end){
   const parts=naturalDays.dataset.end.split('-').map(Number),endDate=new Date(parts[0],parts[1]-1,parts[2]);
   const now=new Date();now.setHours(0,0,0,0);
   const diff=Math.max(0,Math.ceil((endDate-now)/86400000));
   naturalDays.textContent=diff+' dias corridos até o encerramento do calendário letivo.';
+  const welcome=speech?.querySelector('span');
+  if(welcome && !welcome.dataset.calendarAdded){
+   welcome.dataset.calendarAdded='1';
+   welcome.insertAdjacentHTML('beforeend',' <span class="gd-welcome-count">São '+diff+' dias corridos pela frente. Vamos aproveitar bem o período letivo!</span>');
+  }
  }
  function portalCycle(){
   if(portalBusy||drag||root.classList.contains('gd-open')||root.classList.contains('gd-away')){animationTimer=setTimeout(portalCycle,4000);return;}
@@ -2164,7 +2217,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
   const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
   renderer.setSize(launcher.clientWidth,launcher.clientHeight,false);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -2172,8 +2225,8 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(32,launcher.clientWidth/launcher.clientHeight,.1,30);
-  camera.position.set(0,1.55,7.3);
+  const camera=new THREE.PerspectiveCamera(37,launcher.clientWidth/launcher.clientHeight,.1,30);
+  camera.position.set(0,1.53,4.8);
   camera.lookAt(0,1.48,0);
   scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
   const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
@@ -2184,7 +2237,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
   const loader=new GLTFLoader();
   const gltf=await loader.loadAsync("{% static 'models/duende_geredu.glb' %}");
   const model=gltf.scene;
-  model.scale.setScalar(.84);
+  model.scale.setScalar(.96);
   model.position.set(0,-.02,0);
   scene.add(model);
   const get=n=>model.getObjectByName(n);
@@ -2193,6 +2246,7 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
     const p=new THREE.Group();p.position.set(...point);model.add(p);p.attach(obj);return p;
   };
   const headPivot=pivot('head',[0,1.95,0]);
+  const hatPivot=pivot('hat',[0,2.36,0]);
   const leftArm=pivot('left_arm',[-.30,1.45,0]);
   const rightArm=pivot('right_arm',[.30,1.45,0]);
   const leftLeg=pivot('left_leg',[-.18,.42,0]);
@@ -2277,13 +2331,14 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
     modelRoot.position.x=smooth(modelRoot.position.x,walking?wanderTarget:0,dt*(walking?.7:1.8));
     modelRoot.position.y=smooth(modelRoot.position.y,resting?-.22:0,dt*1.8)+ (walking?Math.abs(wave)*.055:dance?bounce*.10:Math.sin(t*1.2)*.018);
     modelRoot.rotation.y=smooth(modelRoot.rotation.y,targetX*.24+(walking?Math.sin(t*1.1)*.22:0),dt*3);
+    if(hatPivot)hatPivot.rotation.z=Math.sin(t*2.4)*(dance?.08:walking?.045:.018);
     if(headPivot){
       headPivot.rotation.y=smooth(headPivot.rotation.y,targetX*.32+Math.sin(t*1.1)*.035,dt*4);
       headPivot.rotation.x=smooth(headPivot.rotation.x,targetY*.18+(resting?.13:Math.sin(t*2)*.018),dt*4);
       headPivot.rotation.z=Math.sin(t*1.8)*.035+(walking?Math.sin(t*5)*.04:0);
     }
-    if(leftArm){leftArm.rotation.z=dance?Math.sin(t*5)*.75:walking?Math.sin(t*7)*.48:resting?.20:Math.sin(t*1.7)*.12;}
-    if(rightArm){rightArm.rotation.z=dance?-Math.sin(t*5+.8)*.75:walking?-Math.sin(t*7)*.48:resting?-.20:-Math.sin(t*1.7)*.12;}
+    if(leftArm){leftArm.rotation.z=dance?Math.sin(t*5)*1.05:walking?Math.sin(t*7)*.62:resting?.28:Math.sin(t*1.7)*.16;leftArm.rotation.x=dance?Math.sin(t*3.7)*.24:0;}
+    if(rightArm){rightArm.rotation.z=dance?-Math.sin(t*5+.8)*1.05:walking?-Math.sin(t*7)*.62:resting?-.28:-Math.sin(t*1.7)*.16;rightArm.rotation.x=dance?Math.cos(t*3.7)*.24:0;}
     if(leftLeg)leftLeg.rotation.x=walking?Math.sin(t*7)*.62:dance?Math.sin(t*5)*.25:0;
     if(rightLeg)rightLeg.rotation.x=walking?-Math.sin(t*7)*.62:dance?-Math.sin(t*5)*.25:0;
     if(leftBoot)leftBoot.rotation.x=walking?Math.sin(t*7)*.35:0;

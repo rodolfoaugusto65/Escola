@@ -69,3 +69,14 @@
 - Após inatividade, o mascote passeia pela parte inferior da tela, muda de posição gradualmente e depois descansa/deita; desperta com interação.
 - Mantidos portal, moedas, temporizador, boas-vindas, diálogos e calendário.
 - Incluídos `core/static/models/duende_geredu.glb`, nota TXT r20 e migration `0018_comunicado_duende_3d_rotinas_r20`.
+
+
+## r21 — 16/11/2026
+- Mascote 3D ampliado com novo enquadramento para evitar corte do personagem e balão de boas-vindas mais largo.
+- Boas-vindas agora combinam nome do usuário, dias letivos e dias corridos restantes até o fim do calendário.
+- Botão para desaparecer com passe mágico e permanecer como trevo de quatro folhas; trevo reativa o mascote com animação.
+- Atalho para convidar o duende a dançar.
+- Painel Busca Ativa organizado em abas internas com fila, prazos, prioridade e importações/backup.
+- Último upload destacado no painel com arquivo, data, ano letivo e totais de vínculo.
+- Fila principal reduzida para 15 estudantes por página.
+- Nota TXT `NOTAS_VERSAO_2026-11-16-r21.txt` e migration `0019_comunicado_mascote_busca_ativa_r21`.

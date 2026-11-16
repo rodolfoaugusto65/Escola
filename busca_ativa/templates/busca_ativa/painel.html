@@ -2,6 +2,23 @@
 {% block content %}
 <style>
 .ba-wrap{max-width:1500px;margin:auto;padding:8px 4px 28px}.ba-hero{position:relative;overflow:hidden;padding:26px 28px;border-radius:20px;background:linear-gradient(120deg,#102a43,#174c72 58%,#2563a6);color:#fff;box-shadow:0 14px 36px #173b5b22}.ba-hero:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-75px;top:-125px;background:#ffffff12}.ba-hero h2{font-weight:800;letter-spacing:-.035em}.ba-hero p{color:#dbeafe;margin:5px 0 0}.ba-actions{display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1}.ba-actions .ba-btn{font-size:13px}.ba-card{transition:transform .18s ease,box-shadow .18s ease}.ba-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px #1d355714}.ba-card strong{letter-spacing:-.04em}.ba-section-title{display:flex;align-items:center;gap:10px}.ba-section-title .ba-symbol{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#eef4ff;color:#3158a5}.ba-filter{align-items:center}.ba-table tbody tr:hover{background:#f8fbff}.ba-panel{box-shadow:0 8px 26px #1d35570a}.ba-head{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-bottom:20px}.ba-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.ba-card,.ba-panel{background:#fff;border:1px solid #e7edf5;border-radius:15px;padding:18px;box-shadow:0 7px 24px #1d35570b}.ba-card small{color:#718096}.ba-card strong{display:block;font-size:29px;margin-top:5px}.ba-panel{margin-bottom:16px}.ba-table{width:100%;border-collapse:collapse}.ba-table th,.ba-table td{padding:12px;border-bottom:1px solid #edf1f6;text-align:left}.ba-table th{font-size:11px;color:#77869b;text-transform:uppercase}.ba-pill{padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.ba-red{background:#fff0f0;color:#bd3448}.ba-amber{background:#fff5e4;color:#a66b08}.ba-green{background:#e9f7ef;color:#14764f}.ba-btn{display:inline-block;padding:9px 13px;border-radius:9px;background:#365ee8;color:#fff;text-decoration:none;font-weight:600}.ba-btn.light{background:#f1f4fa;color:#33445d}.ba-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.ba-filter input,.ba-filter select{padding:9px;border:1px solid #dce3ed;border-radius:8px}@media(max-width:760px){.ba-cards{grid-template-columns:1fr}.ba-panel{overflow:auto}}
+
+.ba-dashboard-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:6px;background:#eaf0f8;border:1px solid #dce5f0;border-radius:14px}
+.ba-dashboard-tabs button{border:0;border-radius:10px;background:transparent;color:#445872;padding:10px 15px;font-weight:750;font-size:13px;transition:.18s}
+.ba-dashboard-tabs button.active{background:#fff;color:#2454c6;box-shadow:0 3px 12px #183c641c}
+.ba-dashboard-tabs button:hover{background:#ffffffb8}
+.ba-tab-count{display:inline-grid;place-items:center;min-width:21px;height:21px;margin-left:5px;padding:0 5px;border-radius:20px;background:#e7edf7;color:#435875;font-size:11px}
+.ba-cards[data-ba-pane],.ba-panel[data-ba-pane]{display:none;animation:baPaneIn .22s ease}.ba-cards[data-ba-pane].active{display:grid}.ba-panel[data-ba-pane].active{display:block}
+.ba-tab-pane.active{display:block}
+@keyframes baPaneIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ba-latest-import{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 19px;margin:0 0 14px;border:1px solid #b8dcf5;border-radius:15px;background:linear-gradient(110deg,#edf8ff,#f7fbff);box-shadow:0 5px 18px #1e5b8610}
+.ba-latest-import .ba-import-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#3275a5;font-weight:850}
+.ba-latest-import .ba-import-file{font-size:16px;font-weight:800;color:#1d4261;overflow-wrap:anywhere}
+.ba-latest-import .ba-import-meta{font-size:12px;color:#55728b}
+.ba-latest-import .ba-import-number{font-size:22px;font-weight:900;color:#1b679c}
+.ba-panel{min-height:160px}
+.ba-table th{position:sticky;top:0;background:#f5f8fc;z-index:1}
+@media(max-width:760px){.ba-latest-import{grid-template-columns:1fr}.ba-dashboard-tabs{display:grid;grid-template-columns:1fr 1fr}.ba-dashboard-tabs button{text-align:left}}
 </style>
 <div class="ba-wrap">
  <div class="ba-hero mb-3"><div class="ba-head mb-0"><div><div class="small text-uppercase fw-bold opacity-75 mb-2">GerEdu · acompanhamento escolar</div><h2 class="mb-1">Busca Ativa e Infrequência</h2><p>Visão integrada de alertas, providências, frequência e histórico dos estudantes.</p></div><div class="ba-actions"><a class="ba-btn" style="background:#fff;color:#174c72" href="{% url 'busca_ativa:importar' %}"><i class="bi bi-cloud-upload me-1"></i> Importar dados</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:acompanhamentos' %}">Acompanhamentos</a><a class="ba-btn" style="background:#ffffff20;color:#fff" href="{% url 'busca_ativa:relatorio' %}">Relatórios</a></div></div></div>
@@ -15,12 +32,29 @@
   <a class="ba-btn light" href="{% url 'busca_ativa:importar' %}">Importar planilha</a>
  </nav>
  <div class="d-flex flex-wrap gap-2 mb-3"><a class="ba-btn light" href="{% url 'busca_ativa:compensacao' %}">Compensação de ausências</a><a class="ba-btn light" href="{% url 'busca_ativa:relatorios_personalizados' %}">Relatórios personalizados</a><a class="ba-btn light" href="{% url 'busca_ativa:estatisticas_consultas' %}">Estatísticas de consultas</a><a class="ba-btn light" href="{% url 'consulta_frequencia_codigo' %}" target="_blank" rel="noopener">Página do estudante</a></div>
- <div class="ba-cards">
+ {% if importacoes %}
+ <section class="ba-latest-import" aria-label="Último upload realizado">
+  <div><div class="ba-import-title"><i class="bi bi-cloud-check me-1"></i> Último upload · dados atualmente integrados</div>
+   <div class="ba-import-file">{{ importacoes.0.arquivo }}</div>
+   <div class="ba-import-meta">{{ importacoes.0.criado_em|date:"d/m/Y H:i" }} · Ano letivo {{ importacoes.0.ano_letivo }} · Enviado por {{ importacoes.0.importado_por.get_full_name|default:importacoes.0.importado_por.username|default:"Usuário não identificado" }}</div>
+  </div>
+  <div class="text-md-end"><div class="ba-import-number">{{ importacoes.0.total_registros }}</div><div class="ba-import-meta">linhas no arquivo</div><div class="ba-import-meta"><strong>{{ importacoes.0.vinculados }}</strong> vinculados · <strong>{{ importacoes.0.nao_vinculados }}</strong> sem vínculo</div></div>
+ </section>
+ {% else %}
+ <section class="ba-latest-import"><div><div class="ba-import-title">Ainda não há upload</div><div class="ba-import-file">Importe a planilha oficial para atualizar os dados de infrequência.</div></div><a class="ba-btn" href="{% url 'busca_ativa:importar' %}">Importar agora</a></section>
+ {% endif %}
+ <nav class="ba-dashboard-tabs" aria-label="Seções do painel de acompanhamento">
+  <button type="button" class="active" data-ba-tab="resumo">Visão geral <span class="ba-tab-count">{{ total_estudantes }}</span></button>
+  <button type="button" data-ba-tab="prazos">Prazos e acompanhamentos</button>
+  <button type="button" data-ba-tab="prioridade">Prioridade 25%+</button>
+  <button type="button" data-ba-tab="importacoes">Importações e backup</button>
+ </nav>
+ <div class="ba-cards" data-ba-pane="resumo">
   <div class="ba-card"><small>Alertas críticos · 25% ou mais</small><strong>{{ total_criticos }}</strong><span class="ba-pill ba-red">Prioridade de atendimento</span></div>
   <div class="ba-card"><small>Faixa de atenção · 10% a 24,9%</small><strong>{{ total_atencao }}</strong><span class="ba-pill ba-amber">Acompanhar</span></div>
   <div class="ba-card"><small>Providências com prazo ativo</small><strong>{{ acoes_pendentes }}</strong><span class="ba-pill ba-green">Em acompanhamento</span></div>
  </div>
- <section class="ba-panel">
+ <section class="ba-panel" data-ba-pane="resumo">
   <div class="ba-head"><div class="ba-section-title"><span class="ba-symbol"><i class="bi bi-exclamation-triangle"></i></span><div><h5 class="mb-0">Pendências de infrequência sem prazo ativo</h5><small class="text-muted">Lista de alertas que ainda precisam de providência ou revisão. Consulte a tela de acompanhamentos para ver quem já possui ações registradas.</small></div></div></div>
   <form class="ba-filter" method="get">
    <input name="q" value="{{ q }}" placeholder="Nome ou matrícula">
@@ -37,7 +71,7 @@
   </tbody></table></div>
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3"><small class="text-muted">{{ total_estudantes }} estudante(s) · Página {{ pagina_situacoes.number }} de {{ pagina_situacoes.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if pagina_situacoes.has_previous %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}{% if turno %}turno={{ turno|urlencode }}&{% endif %}{% if turma %}turma={{ turma|urlencode }}&{% endif %}{% if percentual_min %}percentual_min={{ percentual_min|urlencode }}&{% endif %}{% if percentual_max %}percentual_max={{ percentual_max|urlencode }}&{% endif %}page={{ pagina_situacoes.previous_page_number }}">Anterior</a>{% endif %}{% if pagina_situacoes.has_next %}<a class="btn btn-outline-secondary" href="?{% if q %}q={{ q|urlencode }}&{% endif %}{% if faixa %}faixa={{ faixa }}&{% endif %}{% if turno %}turno={{ turno|urlencode }}&{% endif %}{% if turma %}turma={{ turma|urlencode }}&{% endif %}{% if percentual_min %}percentual_min={{ percentual_min|urlencode }}&{% endif %}{% if percentual_max %}percentual_max={{ percentual_max|urlencode }}&{% endif %}page={{ pagina_situacoes.next_page_number }}">Próxima</a>{% endif %}</div></div>
  </section>
- <section class="ba-panel">
+ <section class="ba-panel" data-ba-pane="prazos">
   <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-alarm"></i></span><h5 class="mb-0">Prazos vencidos — exigem revisão</h5></div>
   <p class="small text-muted">Ações ainda abertas cujo prazo de retorno já passou. O histórico permanece disponível na ficha do estudante.</p>
   {% for a in acoes_vencidas %}
@@ -47,7 +81,7 @@
    </div>
   {% empty %}<p class="text-muted mb-0">Nenhum prazo vencido.</p>{% endfor %}
  </section>
- <section class="ba-panel">
+ <section class="ba-panel" data-ba-pane="prazos">
   <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-clipboard-check"></i></span><h5 class="mb-0">Estudantes com acompanhamento em andamento</h5></div>
   <p class="small text-muted">Estudantes que já possuem providências abertas ou dentro do prazo. Eles não são duplicados na fila de novas ações.</p>
   {% for a in acoes_ativas %}
@@ -57,7 +91,7 @@
    </div>
   {% empty %}<p class="text-muted mb-0">Nenhum acompanhamento ativo.</p>{% endfor %}
  </section>
- <section class="ba-panel">
+ <section class="ba-panel" data-ba-pane="prioridade">
   <div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-flag"></i></span><h5 class="mb-0">Prioridade de atendimento — 25% ou mais</h5></div>
   <p class="small text-muted">Fila de estudantes com infrequência crítica que ainda precisam de uma nova providência.</p>
   {% for s in alunos_prioridade %}
@@ -67,7 +101,7 @@
    </div>
   {% empty %}<p class="text-muted mb-0">Nenhum estudante na fila crítica no momento.</p>{% endfor %}
  </section>
- <section class="ba-panel">
+ <section class="ba-panel" data-ba-pane="importacoes">
   <div class="ba-head"><div><h5>Backup e recuperação da Busca Ativa</h5><small class="text-muted">Recupere o banco do sistema local ou baixe uma cópia dos dados integrados ao GerEdu.</small></div>
   <a class="ba-btn light" href="{% url 'busca_ativa:baixar_backup' %}">Baixar backup (.db)</a></div>
   <form id="baBackupForm" method="post" enctype="multipart/form-data" action="{% url 'busca_ativa:importar_backup' %}" class="ba-filter">
@@ -77,10 +111,20 @@
   <div id="baBackupLoading" class="alert alert-info mt-2 d-none" role="status"><span class="spinner-border spinner-border-sm me-2"></span>Enviando e validando o banco. Não feche esta página.</div>
   <small class="text-muted">A associação dos estudantes é feita por matrícula/código GED. Registros sem correspondência são preservados no arquivo original e informados no resultado da importação.</small>
  </section>
- <section class="ba-panel"><div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-arrow-repeat"></i></span><h5 class="mb-0">Alertas de recorrência</h5></div>{% for h in ultimos_repetidos %}<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom py-2"><div><b>{{ h.aluno.nome|default:"Aluno não vinculado" }}</b> <small class="text-muted">· {{ h.matricula }} · {{ h.importado_em|date:"d/m/Y H:i" }}</small><div class="small text-muted">Reapareceu em nova planilha · {{ h.percentual_considerado|floatformat:2 }}% de infrequência</div></div>{% if h.aluno_id %}<a class="ba-btn light" href="{% url 'busca_ativa:ficha' h.aluno_id %}">Abrir ficha</a>{% endif %}</div>{% empty %}<p class="text-muted mb-0">Nenhum estudante reapareceu em novas importações até o momento.</p>{% endfor %}</section>
- <section class="ba-panel"><div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-clock-history"></i></span><h5 class="mb-0">Importações recentes e histórico preservado</h5></div>{% for i in importacoes %}<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-2"><div><b>{{ i.arquivo }}</b><div class="small text-muted">{{ i.criado_em|date:"d/m/Y H:i" }} · {{ i.vinculados }} vinculados · {{ i.nao_vinculados }} sem correspondência · {{ i.estudantes_repetidos }} estudantes recorrentes</div></div><a class="ba-btn light" href="{% url 'busca_ativa:historico_importacao' i.id %}">Ver histórico e alertas</a></div>{% empty %}<p class="text-muted">Nenhuma importação realizada.</p>{% endfor %}</section>
+ <section class="ba-panel" data-ba-pane="importacoes"><div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-arrow-repeat"></i></span><h5 class="mb-0">Alertas de recorrência</h5></div>{% for h in ultimos_repetidos %}<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom py-2"><div><b>{{ h.aluno.nome|default:"Aluno não vinculado" }}</b> <small class="text-muted">· {{ h.matricula }} · {{ h.importado_em|date:"d/m/Y H:i" }}</small><div class="small text-muted">Reapareceu em nova planilha · {{ h.percentual_considerado|floatformat:2 }}% de infrequência</div></div>{% if h.aluno_id %}<a class="ba-btn light" href="{% url 'busca_ativa:ficha' h.aluno_id %}">Abrir ficha</a>{% endif %}</div>{% empty %}<p class="text-muted mb-0">Nenhum estudante reapareceu em novas importações até o momento.</p>{% endfor %}</section>
+ <section class="ba-panel" data-ba-pane="importacoes"><div class="ba-section-title mb-2"><span class="ba-symbol"><i class="bi bi-clock-history"></i></span><h5 class="mb-0">Importações recentes e histórico preservado</h5></div>{% for i in importacoes %}<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-2"><div><b>{{ i.arquivo }}</b><div class="small text-muted">{{ i.criado_em|date:"d/m/Y H:i" }} · {{ i.vinculados }} vinculados · {{ i.nao_vinculados }} sem correspondência · {{ i.estudantes_repetidos }} estudantes recorrentes</div></div><a class="ba-btn light" href="{% url 'busca_ativa:historico_importacao' i.id %}">Ver histórico e alertas</a></div>{% empty %}<p class="text-muted">Nenhuma importação realizada.</p>{% endfor %}</section>
 </div>
 <script>
-(()=>{const f=document.getElementById('baBackupForm'),i=document.getElementById('baBackupFile'),n=document.getElementById('baBackupName'),b=document.getElementById('baBackupSubmit'),l=document.getElementById('baBackupLoading');if(!f)return;i.addEventListener('change',()=>{n.textContent=i.files.length?i.files[0].name+' · '+(i.files[0].size/1048576).toFixed(2)+' MB':'Nenhum arquivo selecionado.'});f.addEventListener('submit',e=>{if(!i.files.length){e.preventDefault();return}if(!confirm('Importar este banco? O histórico existente será preservado e providências duplicadas serão ignoradas.')){e.preventDefault();return}b.disabled=true;b.textContent='Enviando...';l.classList.remove('d-none')})})();
+(()=> {
+ const tabs=[...document.querySelectorAll('[data-ba-tab]')], panes=[...document.querySelectorAll('[data-ba-pane]')];
+ function activate(name){
+  tabs.forEach(t=>t.classList.toggle('active',t.dataset.baTab===name));
+  panes.forEach(p=>p.classList.toggle('active',p.dataset.baPane===name));
+  try{sessionStorage.setItem('baPainelAba',name)}catch(_){}
+ }
+ tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.baTab)));
+ let initial='resumo';try{const saved=sessionStorage.getItem('baPainelAba');if(tabs.some(t=>t.dataset.baTab===saved))initial=saved}catch(_){}
+ activate(initial);
+ const f=document.getElementById('baBackupForm'),i=document.getElementById('baBackupFile'),n=document.getElementById('baBackupName'),b=document.getElementById('baBackupSubmit'),l=document.getElementById('baBackupLoading');if(!f)return;i.addEventListener('change',()=>{n.textContent=i.files.length?i.files[0].name+' · '+(i.files[0].size/1048576).toFixed(2)+' MB':'Nenhum arquivo selecionado.'});f.addEventListener('submit',e=>{if(!i.files.length){e.preventDefault();return}if(!confirm('Importar este banco? O histórico existente será preservado e providências duplicadas serão ignoradas.')){e.preventDefault();return}b.disabled=true;b.textContent='Enviando...';l.classList.remove('d-none')})})();
 </script>
 {% endblock %}
