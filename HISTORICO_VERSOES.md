@@ -98,3 +98,24 @@
 - Busca Ativa: unificação visual de cabeçalho, navegação por abas, cartões, tabelas e controles.
 - Sem mudanças no banco de dados; sem migration.
 - Nota TXT: `NOTAS_VERSAO_2026-11-16-r23.txt`.
+
+
+## r24 — 16/11/2026
+- Fila de trabalho do relatório 25%+ passou para a primeira posição e recebeu destaque visual.
+- Primeira aba interna do painel operacional agora é a fila prioritária 25%+.
+- Regra da fila ajustada: somente providências abertas com prazo vigente retiram temporariamente o estudante; ações vencidas ou sem prazo permanecem visíveis para revisão.
+- Conclusão posterior à última importação continua sendo respeitada; nova sinalização em importação posterior recoloca o estudante.
+- Mascote reduzido e reenquadrado no canvas 3D; removida restauração de posição antiga que causava corte; início fixo no canto inferior direito e arraste preservado.
+- Nota TXT: `NOTAS_VERSAO_2026-11-16-r24.txt`.
+- Migration `0021_comunicado_fila_prioritaria_r24.py` publica a nota no sistema.
+
+
+## r24 — 16/11/2026
+- Fila de trabalho do relatório 25%+ passou para a primeira posição e recebeu destaque visual.
+- Primeira aba interna do painel operacional agora é a fila prioritária 25%+.
+- Regra da fila ajustada: somente providências abertas com prazo vigente retiram temporariamente o estudante; ações vencidas ou sem prazo permanecem visíveis para revisão.
+- Conclusão posterior à última importação continua sendo respeitada; nova sinalização em importação posterior recoloca o estudante.
+- Tela 25%+ reorganizada como central de trabalho, com filtros, status da providência e acesso direto à ficha.
+- Mascote reduzido e reenquadrado no canvas 3D; removida restauração de posição antiga que causava corte; início fixo no canto inferior direito e arraste preservado.
+- Nota TXT: `NOTAS_VERSAO_2026-11-16-r24.txt`.
+- Migration `0021_comunicado_fila_prioritaria_r24.py` publica a nota no sistema.

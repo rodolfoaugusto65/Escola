@@ -108,7 +108,7 @@ def painel(request):
         aluno_id=OuterRef("aluno_id"), status="Concluída"
     ).order_by("-atualizado_em")
     acao_vigente = AcaoBuscaAtiva.objects.filter(
-        aluno_id=OuterRef("aluno_id")
+        aluno_id=OuterRef("aluno_id"), prazo__gte=today
     ).exclude(status__in=["Concluída", "Cancelada"])
     base = situacoes.annotate(
         ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
@@ -188,7 +188,7 @@ def painel(request):
 @login_required
 @user_passes_test(gerencial)
 def relatorio_25mais(request):
-    """Fila exclusiva do relatório oficial de 25%+, sem misturar com os demais alertas."""
+    """Fila de trabalho prioritária baseada no relatório 25%+ mais recente."""
     hoje = timezone.localdate()
     qs = SituacaoInfrequencia.objects.filter(
         ano_letivo=hoje.year, consta_relatorio_25=True
@@ -202,10 +202,16 @@ def relatorio_25mais(request):
         qs = qs.filter(aluno__turma__turno=turno)
     if turma:
         qs = qs.filter(aluno__turma_id=turma)
-
-    # Quem já recebeu providência aberta/em andamento sai da fila de novas cobranças.
-    acao_aberta = AcaoBuscaAtiva.objects.filter(
-        aluno_id=OuterRef("aluno_id")
+    # Só sai da fila quando existe ação aberta com prazo ainda vigente.
+    # Ação vencida ou sem prazo não resolve a pendência: o estudante continua visível.
+    acao_no_prazo = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__gte=hoje
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    acao_vencida = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__lt=hoje
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    acao_sem_prazo = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__isnull=True
     ).exclude(status__in=["Concluída", "Cancelada"])
     ultima_importacao = HistoricoSituacaoInfrequencia.objects.filter(
         aluno_id=OuterRef("aluno_id"), ano_letivo=hoje.year
@@ -214,21 +220,24 @@ def relatorio_25mais(request):
         aluno_id=OuterRef("aluno_id"), status="Concluída"
     ).order_by("-atualizado_em")
     qs = qs.annotate(
-        tem_acao_aberta=Exists(acao_aberta),
+        tem_acao_no_prazo=Exists(acao_no_prazo),
+        tem_acao_vencida=Exists(acao_vencida),
+        tem_acao_sem_prazo=Exists(acao_sem_prazo),
         ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
         concluida_em=Subquery(ultima_conclusao.values("atualizado_em")[:1]),
     ).annotate(
         concluido_apos_integracao=Q(concluida_em__isnull=False) &
         Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
     )
-    qs = qs.filter(tem_acao_aberta=False).exclude(concluido_apos_integracao=True)
+    qs = qs.filter(tem_acao_no_prazo=False).exclude(concluido_apos_integracao=True)
     qs = qs.order_by("-percentual_relatorio_25", "-percentual_geral_final", "aluno__nome")
     from turmas.models import Turma
+    total = qs.count()
     pagina = Paginator(qs, 50).get_page(request.GET.get("page"))
     return render(request, "busca_ativa/relatorio_25mais.html", {
         "situacoes": pagina, "q": q, "turno": turno, "turma": turma,
         "turmas": Turma.objects.all().order_by("nome"),
-        "turnos": Turma.TURNOS, "total": qs.count(),
+        "turnos": Turma.TURNOS, "total": total, "ano_letivo": hoje.year,
     })
 
 
@@ -250,7 +259,7 @@ def painel_alertas(request):
     proximas = acoes.filter(prazo__gte=hoje, prazo__lte=hoje + timedelta(days=7)).order_by("prazo", "aluno__nome")
     sem_prazo = acoes.filter(prazo__isnull=True).order_by("-data", "aluno__nome")
     prioridade = SituacaoInfrequencia.objects.filter(ano_letivo=hoje.year, consta_relatorio_25=True).select_related("aluno", "aluno__turma")
-    acao_aberta = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id")).exclude(status__in=["Concluída", "Cancelada"])
+    acao_aberta = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), prazo__gte=hoje).exclude(status__in=["Concluída", "Cancelada"])
     ultima_integracao = HistoricoSituacaoInfrequencia.objects.filter(aluno_id=OuterRef("aluno_id"), ano_letivo=hoje.year).order_by("-importado_em")
     ultima_conclusao = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), status="Concluída").order_by("-atualizado_em")
     prioridade = prioridade.annotate(
