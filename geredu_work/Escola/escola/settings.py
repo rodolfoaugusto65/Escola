@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "conselho",
     "busca_ativa",
     "acompanhamento_avaliacoes",
+    "mapeamento_aprendizagem",
 ]
 
 

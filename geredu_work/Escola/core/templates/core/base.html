@@ -352,6 +352,7 @@ hx-push-url="true">
 </a>
 
 <a href="{% url 'consulta_frequencia_codigo' %}" target="_blank"><i data-lucide="search-check"></i><span>Consulta do estudante</span></a>
+<a href="{% url 'mapeamento_aprendizagem:painel' %}"><i data-lucide="book-open-check"></i><span>Mapeamento da aprendizagem</span></a>
 {% if user.is_authenticated and user.is_superuser or user.pode_gerenciar_usuarios %}
 <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><i data-lucide="chart-no-axes-combined"></i><span>Avaliações e Participação</span></a>
 {% endif %}

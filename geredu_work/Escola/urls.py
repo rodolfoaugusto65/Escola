@@ -26,6 +26,7 @@ urlpatterns = [
     path("conselho/", include("conselho.urls")),
     path("busca-ativa/", include("busca_ativa.urls")),
     path("avaliacoes/", include("acompanhamento_avaliacoes.urls")),
+    path("mapeamento-aprendizagem/", include("mapeamento_aprendizagem.urls")),
     path("consulta-frequencia/", busca_ativa_views.consulta_por_codigo, name="consulta_frequencia_codigo"),
     path("consulta-frequencia/<str:token>/", busca_ativa_views.consulta_publica, name="consulta_frequencia_publica"),
     path("transferencias/", include("transferencias.urls")),

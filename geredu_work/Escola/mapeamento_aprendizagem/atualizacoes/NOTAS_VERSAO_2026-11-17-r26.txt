@@ -1,0 +1,16 @@
+VERSAO: 2026.11.17.01
+TITULO: Módulo de Mapeamento e Monitoramento da Aprendizagem
+
+TEXTO:
+- Criado o módulo Mapeamento da Aprendizagem no GerEdu, com acesso pelo menu principal.
+- A tela permite selecionar ano letivo, turma e turno conforme o cadastro oficial de Turmas do GerEdu.
+- A lista de estudantes é carregada diretamente pela relação Aluno.turma; nome e matrícula não são redigitados nem associados apenas por semelhança de nomes.
+- A tela apresenta identificação pedagógica, indicador PAEDE, situação escolar, professor de Língua Portuguesa, diagnóstico e níveis dos quatro bimestres, professor de Matemática, diagnóstico e níveis dos quatro bimestres e observações.
+- Os níveis seguem a estrutura da aba Mapeamento da planilha de referência: Nível 01 a Nível 05.
+- A professora pode selecionar estudantes individualmente ou selecionar todos os estudantes exibidos, preencher os campos e salvar os registros.
+- Os registros são persistidos no banco de dados, associados ao estudante, turma e ano letivo, com identificação de quem criou e atualizou.
+- Criada exportação XLSX baseada no arquivo de referência, preenchendo a aba Mapeamento e preservando as demais abas, fórmulas, cabeçalhos, mesclagens e estilos.
+- A exportação pode ser feita para a turma selecionada ou para todos os registros do ano letivo.
+- A integração direta com a planilha online do Google Drive não foi ativada nesta etapa. O arquivo XLSX exportado será a etapa intermediária para conferência e posterior integração com o Drive.
+- Os arquivos EE (MAT) e EE (PORT) foram analisados. Eles identificam a escola e os estudantes por códigos institucionais, mas não trazem a letra da turma e o turno no conjunto de colunas analisado; por isso, o vínculo de turma do GerEdu é usado como fonte de verdade para evitar classificação incorreta.
+- Não foram alterados os cadastros existentes de alunos ou turmas. Foi criado um novo app e uma nova tabela, sem sobrescrever históricos de outros módulos.

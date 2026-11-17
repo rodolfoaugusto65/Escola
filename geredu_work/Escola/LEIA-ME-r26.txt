@@ -1,0 +1,33 @@
+GEREDU r26 — MAPEAMENTO E MONITORAMENTO DA APRENDIZAGEM
+
+O QUE FOI ADICIONADO
+- Novo módulo acessível pelo menu: Mapeamento da Aprendizagem.
+- Seleção de ano letivo e turma do cadastro oficial de Turmas.
+- Carregamento dos estudantes pela relação Aluno.turma.
+- Formulário individual com PAEDE, situação, professor e níveis de diagnóstico/bimestres de LP e Matemática, além de observações.
+- Seleção individual ou em lote.
+- Salvamento no banco por aluno e ano letivo.
+- Exportação XLSX baseada na planilha de Monitoramento enviada, preenchendo a aba Mapeamento.
+
+INSTALAÇÃO
+1. Faça backup do PostgreSQL e do projeto antes de aplicar.
+2. Copie os arquivos deste patch preservando a estrutura de pastas.
+3. Execute:
+   python manage.py migrate
+   python manage.py check
+   python manage.py collectstatic --noinput
+4. Reinicie o serviço e valide em /mapeamento-aprendizagem/.
+
+COMO USAR
+1. Abra Mapeamento da Aprendizagem no menu.
+2. Selecione ano letivo e turma.
+3. Marque os estudantes que serão mapeados.
+4. Preencha os campos pedagógicos por estudante.
+5. Salve os mapeamentos.
+6. Exporte a planilha XLSX para conferência.
+
+IMPORTANTE
+- A exportação preenche a aba Mapeamento do modelo enviado e mantém as demais abas do arquivo.
+- A planilha online do Google Drive ainda não é atualizada diretamente nesta versão. O arquivo XLSX gerado é a saída para conferência; a integração autenticada com o Drive será uma etapa posterior.
+- Os arquivos de listas EE (MAT) e EE (PORT) têm códigos institucionais e nomes, mas não informam diretamente a turma/letra e turno nos campos identificados. Por isso, o módulo usa o vínculo de turma do GerEdu como referência para não atribuir estudante à turma errada.
+- Nenhum cadastro de aluno ou turma existente é sobrescrito.
