@@ -1,0 +1,38 @@
+{% extends base_template %}
+{% block title %}Acompanhamento de Avaliações | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="chart-no-axes-combined"></i><h5>Acompanhamento de Avaliações</h5>{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><h3 class="fw-bold mb-1">Painel de participação</h3><p class="text-muted mb-0">Acompanhe a realização das avaliações e as pendências por turma.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history" class="me-1"></i> Histórico</a><a class="btn btn-primary" href="{% url 'acompanhamento_avaliacoes:importar' %}"><i data-lucide="file-up" class="me-1"></i> Importar planilhas</a></div>
+  </div>
+  {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">{{ message }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-4"><div class="row g-2 align-items-end">
+    <div class="col-lg-5"><label class="form-label small fw-semibold">Avaliação</label><select class="form-select" name="avaliacao"><option value="">Última importação geral</option>{% for a in avaliacoes %}<option value="{{ a.id }}" {% if filtro_avaliacao == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nome }}</option>{% endfor %}</select></div>
+    <div class="col-lg-2"><label class="form-label small fw-semibold">Ano/série</label><input class="form-control" name="ano" value="{{ filtro_ano }}" placeholder="Ex.: 6º Ano"></div>
+    <div class="col-lg-2"><label class="form-label small fw-semibold">Turma</label><input class="form-control" name="turma" value="{{ filtro_turma }}" placeholder="Ex.: vesp-a"></div>
+    <div class="col-lg-2"><label class="form-label small fw-semibold">Aluno ou matrícula</label><input class="form-control" name="q" value="{{ busca }}" placeholder="Pesquisar"></div>
+    <div class="col-lg-1 d-grid"><button class="btn btn-dark">Filtrar</button></div>
+  </div></form>
+  {% if ultima %}
+  <div class="d-flex justify-content-between flex-wrap mb-3"><div><span class="text-muted small">Dados da importação mais recente</span><div class="fw-semibold">{{ ultima.avaliacao.nome }}</div></div><div class="text-muted small">{{ ultima.criado_em|date:'d/m/Y H:i' }} · {{ ultima.arquivo }}</div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Registros</div><div class="display-6 fw-bold">{{ total }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Realizaram</div><div class="display-6 fw-bold text-success">{{ resumo.realizados|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Pendentes / ausentes</div><div class="display-6 fw-bold text-danger">{{ resumo.pendentes|add:resumo.ausentes|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Participação</div><div class="display-6 fw-bold text-primary">{{ percentual }}%</div><div class="progress mt-2" style="height:8px"><div class="progress-bar bg-primary" style="width:{{ percentual }}%"></div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-xl-7"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><h6 class="fw-bold">Evolução entre importações</h6><p class="text-muted small">Cada ponto representa uma nova planilha enviada. Os registros anteriores permanecem no histórico.</p><canvas id="evolucaoChart" height="115"></canvas></div></div>
+    <div class="col-xl-5"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><h6 class="fw-bold">Participação por turma</h6><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Ano/série</th><th>Turma</th><th>Realizaram</th><th>Pendentes</th><th>%</th></tr></thead><tbody>{% for t in por_turma %}<tr><td>{{ t.ano_serie }}</td><td>{{ t.turma }}</td><td class="text-success fw-semibold">{{ t.realizados }}</td><td class="text-danger">{{ t.pendentes }}</td><td>{% widthratio t.realizados t.total 100 %}%</td></tr>{% empty %}<tr><td colspan="5" class="text-muted">Nenhum dado encontrado.</td></tr>{% endfor %}</tbody></table></div></div></div>
+  </div>
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4"><div class="d-flex justify-content-between align-items-center mb-2"><div><h6 class="fw-bold mb-0">Alunos que precisam de acompanhamento</h6><small class="text-muted">Pendentes, ausentes ou com situação não reconhecida na planilha.</small></div><span class="badge text-bg-danger">{{ pendentes_lista|length }} exibidos</span></div><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Aluno</th><th>Matrícula</th><th>Ano/série</th><th>Turma</th><th>Situação</th><th>Entrega</th></tr></thead><tbody>{% for r in pendentes_lista %}<tr><td class="fw-semibold">{{ r.nome_aluno }}</td><td>{{ r.matricula }}</td><td>{{ r.ano_serie }}</td><td>{{ r.turma }}</td><td><span class="badge {% if r.situacao == 'pendente' %}text-bg-warning{% elif r.situacao == 'ausente' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ r.get_situacao_display }}</span></td><td>{{ r.entregue_em|default:'—' }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-success py-4">Nenhuma pendência encontrada nos filtros selecionados.</td></tr>{% endfor %}</tbody></table></div></div>
+  {% else %}
+  <div class="card border-0 shadow-sm rounded-4 p-5 text-center"><i data-lucide="file-spreadsheet" style="width:48px;height:48px" class="text-primary mx-auto mb-3"></i><h5 class="fw-bold">Ainda não há avaliações importadas</h5><p class="text-muted">Envie as planilhas dos anos/séries para iniciar o acompanhamento histórico.</p><a class="btn btn-primary mx-auto" href="{% url 'acompanhamento_avaliacoes:importar' %}">Importar primeira planilha</a></div>
+  {% endif %}
+</div>
+{% if ultima %}<script>
+(function(){const el=document.getElementById('evolucaoChart');if(!el||!window.Chart)return;new Chart(el,{type:'line',data:{labels:{{ grafico_labels|safe }},datasets:[{label:'Realização (%)',data:{{ grafico_percentuais|safe }},borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.12)',fill:true,tension:.3}]},options:{responsive:true,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:true}}}})})();
+</script>{% endif %}
+{% endblock %}

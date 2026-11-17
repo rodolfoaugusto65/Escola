@@ -1,0 +1,20 @@
+<style>
+body { font-family: Arial; }
+.box { border:1px solid #000; padding:10px; margin-bottom:10px;}
+</style>
+
+<h2 style="text-align:center">
+RELATÓRIO DE OCORRÊNCIAS - {{ aluno.nome }}
+</h2>
+
+{% for o in ocorrencias %}
+<div class="box">
+<b>Data:</b> {{ o.data }}<br>
+<b>Tipo:</b> {{ o.get_tipo_ocorrencia_display }}<br>
+<b>Status:</b> {{ o.get_status_display }}<br>
+<b>Descrição:</b><br>
+{{ o.descricao }}<br>
+<b>Providências:</b><br>
+{{ o.providencias }}
+</div>
+{% endfor %}

@@ -1,0 +1,10 @@
+VERSAO: 2026.11.13.16
+TITULO: Duende GerEdu redesenhado com portal e balões fecháveis
+
+TEXTO:
+- Mascote redesenhado como criatura fantástica original, com orelhas grandes, olhos expressivos, corpo esguio, túnica e gestos animados.
+- Adicionada animação periódica de portal: o duende desaparece e reaparece com efeitos de energia.
+- Balão de fala pode ser fechado pelo botão próprio ou clicando sobre ele.
+- Janela de ajuda pode ser fechada pelo botão, pela tecla Esc ou clicando fora dela.
+- Mantida a possibilidade de arrastar o mascote pela tela.
+- Mantida a notificação obrigatória global de atualizações e o painel de calendário letivo.

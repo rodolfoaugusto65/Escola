@@ -1,0 +1,10 @@
+VERSAO: 2026.11.13.6
+TITULO: GerEdu r6 — relatórios de avaliações e acompanhamento
+TEXTO:
+- Comparativo das aplicações/importações dentro do período selecionado.
+- Filtros por ano letivo, avaliação, aplicação, turma, turno, ano/série e situação.
+- Indicadores de realizados, pendentes, ausentes e outras situações.
+- Lista de conferência em sala para estudantes pendentes e ausentes.
+- Exportação separada da lista de pendências ou de todos os estudantes filtrados.
+- Histórico de cada aplicação preservado; aplicações distintas não são somadas como se fossem alunos diferentes.
+- A nota é publicada automaticamente pela migration 0009 e exibida individualmente até a confirmação de leitura.

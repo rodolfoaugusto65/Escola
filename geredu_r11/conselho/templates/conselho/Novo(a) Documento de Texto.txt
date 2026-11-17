@@ -1,0 +1,18 @@
+<h1>Ata do Conselho</h1>
+
+<p>Turma: {{ conselho.turma }}</p>
+<p>Bimestre: {{ conselho.bimestre }}</p>
+
+<h3>Casos Críticos</h3>
+<ul>
+    {% for a in criticos %}
+        <li>{{ a.aluno }} - {{ a.diagnostico }}</li>
+    {% endfor %}
+</ul>
+
+<h3>Encaminhamentos</h3>
+<ul>
+    {% for a in prioritarios %}
+        <li>{{ a.aluno }} - {{ a.sugestao }}</li>
+    {% endfor %}
+</ul>

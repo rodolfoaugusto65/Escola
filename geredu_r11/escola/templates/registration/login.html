@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+  <h2>Entrar no sistema</h2>
+
+  {% if form.errors %}
+    <p class="error">Usuário ou senha inválidos. Tente novamente.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="id_username">CPF ou usuário:</label>
+      <input type="text" name="username" id="id_username" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <label for="id_password">Senha:</label>
+      <input type="password" name="password" id="id_password" required>
+    </div>
+
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p><a href="{% url 'password_reset' %}">Esqueceu sua senha?</a></p>
+</div>
+
+<style>
+  .login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,.1);
+  }
+  .form-group { margin-bottom: 1rem; }
+  label { display: block; margin-bottom: .5rem; }
+  input { width: 100%; padding: .5rem; }
+  button {
+    width: 100%;
+    padding: .75rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover { background: #0056b3; }
+  .error { color: red; margin-bottom: 1rem; }
+</style>
+{% endblock %}

@@ -1,0 +1,12 @@
+VERSAO: 2026.11.16.22
+TITULO: Novo mascote 3D compacto e dashboard complementar da Busca Ativa
+
+TEXTO:
+- Reduzido o mascote para uma presença visual discreta no canto da tela, com enquadramento 3D proporcional.
+- Substituído o personagem anterior por um novo guardião da floresta 3D original, com corpo arredondado, expressão amigável, chapéu verde com detalhe de folha, cachecol, mochila e botas.
+- O novo personagem é montado com geometria 3D nativa do Three.js e mantém os comportamentos de olhar para o mouse, gesticular, dançar, descansar e reagir à interação.
+- Ao desaparecer, o mascote deixa somente um trevo de quatro folhas no canto inferior direito, com aproximadamente metade do tamanho anterior (30 px); clicar no trevo traz o personagem de volta.
+- Criado um dashboard analítico complementar da Busca Ativa, com filtros por ano letivo, turno e turma.
+- O dashboard apresenta estudantes monitorados, faixas de infrequência, providências abertas/concluídas/vencidas, distribuição por turma, últimos uploads e listas de prioridade.
+- O dashboard é uma nova rota independente. O painel operacional existente, suas abas, filtros, ações, importações, relatórios e histórico permanecem disponíveis e inalterados.
+- Não há alteração de modelos nem criação de migration de banco de dados.

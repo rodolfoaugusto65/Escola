@@ -1,0 +1,411 @@
+{% extends base_template %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h3 class="fw-bold mb-1">
+            Relatório Pedagógico
+        </h3>
+
+        <p class="text-muted mb-0">
+            Conselho de Classe - {{ conselho.turma }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a
+            hx-get="{% url 'conselho:detalhe' conselho.id %}"
+            hx-target="#mainContent"
+            hx-swap="innerHTML"
+            class="btn btn-outline-secondary">
+
+            Voltar
+        </a>
+
+        <button
+            onclick="window.print()"
+            class="btn btn-success">
+
+            🖨️ Imprimir
+        </button>
+
+    </div>
+
+</div>
+
+<!-- INDICADORES -->
+
+<div class="row g-3 mb-5">
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-primary">
+                {{ total_alunos }}
+            </h2>
+            <small>Total de Alunos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-danger">
+                {{ total_criticos }}
+            </h2>
+            <small>Críticos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-warning">
+                {{ total_faltosos }}
+            </h2>
+            <small>Faltosos</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-info">
+                {{ total_apa }}
+            </h2>
+            <small>APA</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-warning">
+                {{ total_busca_ativa }}
+            </h2>
+            <small>Busca Ativa</small>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h2 class="text-danger">
+                {{ total_afastados }}
+            </h2>
+            <small>Afastados</small>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+<!-- RECLASSIFICAÇÃO -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-danger">
+🔴 Reclassificação
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in reclassificacao %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- FAMÍLIA -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-warning">
+👨‍👩‍👧 Chamar Responsáveis
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in familia %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- APA -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-primary">
+🧠 Atendimento APA
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in apa %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- BAIXA APRENDIZAGEM -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-warning">
+📉 Baixa Aprendizagem
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in baixa_aprendizagem %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- FALTOSOS -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-danger">
+🚫 Alunos Faltosos
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in faltosos %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- BUSCA ATIVA -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-warning">
+🔍 Busca Ativa
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in busca_ativa %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- AFASTAMENTO -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-danger">
+🏥 Afastamento
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in afastados %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+<!-- RECOMPOSIÇÃO -->
+
+<div class="col-md-6">
+<div class="card shadow-sm border-0 h-100">
+<div class="card-body">
+
+<h5 class="fw-bold text-primary">
+📚 Plano de Recomposição Não Realizado
+</h5>
+
+<ul class="list-group list-group-flush">
+
+{% for a in plano_pendente %}
+<li class="list-group-item">
+
+<a href="{% url 'relatorio_aluno_completo' a.aluno.id %}">
+{{ a.aluno }}
+</a>
+
+</li>
+{% empty %}
+<li class="list-group-item text-muted">
+Nenhum aluno.
+</li>
+{% endfor %}
+
+</ul>
+
+</div>
+</div>
+</div>
+
+</div>
+
+<hr class="my-5">
+
+<h5 class="fw-bold">
+Encaminhamentos Pedagógicos
+</h5>
+
+<ul>
+<li>Intensificar ações de busca ativa.</li>
+<li>Realizar contato com as famílias.</li>
+<li>Fortalecer ações de recomposição.</li>
+<li>Acompanhar estudantes PAED e APA.</li>
+<li>Monitorar alunos críticos e faltosos.</li>
+</ul>
+
+<hr class="my-5">
+
+<h5 class="fw-bold">
+Assinaturas dos Professores
+</h5>
+
+{% for i in "123456789"|make_list %}
+<div class="mb-4">
+_______________________________________________
+</div>
+{% endfor %}
+
+<div class="row mt-5">
+
+<div class="col-md-6 text-center">
+<hr>
+Coordenação
+</div>
+
+<div class="col-md-6 text-center">
+<hr>
+Direção
+</div>
+
+</div>
+
+</div>
+
+<style>
+@media print{
+    .btn{
+        display:none !important;
+    }
+}
+</style>
+
+{% endblock %}

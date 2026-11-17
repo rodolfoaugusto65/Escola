@@ -1,0 +1,40 @@
+CORRECAO DO UPLOAD DE AVALIACOES E BACKUP DA BUSCA ATIVA
+
+CAUSA IDENTIFICADA
+O traceback mostra que boto3 tentou executar head_object com Bucket=None.
+Isso acontece quando AWS_STORAGE_BUCKET_NAME não foi carregada no ambiente.
+O erro ocorre antes de transferir o arquivo para o R2.
+
+O QUE FOI ALTERADO
+- O settings.py agora valida as quatro variaveis obrigatorias do Cloudflare R2.
+- Quando todas existem, o armazenamento padrao continua sendo o R2.
+- Quando DEBUG=True e o R2 nao esta configurado, os arquivos sao gravados localmente em Escola/media/.
+  Isso permite testar importacoes no computador sem credenciais R2.
+- Quando DEBUG=False e falta qualquer variavel, o Django interrompe a inicializacao com mensagem clara.
+  Isso evita gravar arquivos em disco efemero no Railway e perder o historico.
+- MEDIA_ROOT e MEDIA_URL foram definidos para o armazenamento local.
+
+COMO APLICAR
+1. Faça backup do projeto.
+2. Copie Escola/escola/settings.py deste pacote para escola/settings.py do seu projeto.
+3. Para teste local, mantenha DEBUG=True no .env. Sem R2 configurado, os uploads irao para Escola/media/.
+4. Para usar R2 localmente, configure no .env:
+   AWS_ACCESS_KEY_ID=...
+   AWS_SECRET_ACCESS_KEY=...
+   AWS_STORAGE_BUCKET_NAME=nome-exato-do-bucket
+   AWS_S3_ENDPOINT_URL=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+   AWS_S3_REGION_NAME=auto
+5. Reinicie o servidor Django depois de alterar o .env.
+6. Faça um teste com uma copia de uma planilha e depois com uma copia do banco SQLite da Busca Ativa.
+7. Confira se os arquivos apareceram em media/ (modo local) ou no bucket R2 (modo nuvem), e se os registros constam no historico.
+
+IMPORTANTE
+- Nao altere nem apague as migracoes existentes para aplicar esta correcao.
+- Esta correcao nao exige migrate, pois altera apenas configuracao de storage.
+- O fallback local e somente para DEBUG=True. Em producao, o R2 precisa estar configurado.
+- Nao envie o arquivo .env ao GitHub. Nunca compartilhe as chaves do R2.
+- O arquivo local media/ deve ser incluido no backup local; no Railway, use R2.
+
+VALIDACAO
+A sintaxe Python do settings.py foi compilada. A verificacao Django e os testes reais de upload
+precisam ser executados no ambiente local do projeto, que possui as dependencias instaladas.

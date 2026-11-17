@@ -1,0 +1,10 @@
+VERSAO: 2026.11.13.15
+TITULO: Notificações globais, mascote interativo e calendário letivo
+
+TEXTO:
+- Notificações de atualização passam a ser verificadas automaticamente em qualquer tela autenticada.
+- O aviso aparece sem precisar abrir a aba de atualizações e permanece até a confirmação de leitura.
+- Após confirmar uma atualização, a próxima pendente é exibida automaticamente.
+- O mascote do GerEdu recebeu visual original de super-herói, com gestos e janela de diálogo.
+- O mascote pode ser clicado e arrastado para qualquer posição da tela; a posição é lembrada no navegador.
+- O assistente informa os dias letivos restantes e a data prevista para encerramento do calendário escolar ativo.

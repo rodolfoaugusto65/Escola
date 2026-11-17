@@ -1,0 +1,16 @@
+VERSAO: 2026.11.16.24
+TITULO: Fila prioritária 25%+ como primeira tela de trabalho e correção de enquadramento do mascote
+
+TEXTO:
+- A fila oficial do relatório 25%+ passa a ser a primeira opção e a mais destacada na navegação da Busca Ativa.
+- A aba interna de prioridade 25%+ também passa a ser a primeira seção aberta por padrão no painel operacional.
+- A fila considera os estudantes sinalizados no relatório complementar 25%+ mais recente do ano letivo corrente.
+- Um estudante só sai da fila quando existe providência não concluída/não cancelada com prazo vigente (prazo igual ou posterior à data atual).
+- Ações vencidas ou sem prazo não retiram o estudante da fila; aparecem identificadas para revisão. Quando o prazo vence sem conclusão, o estudante volta a aparecer na fila.
+- A conclusão registrada após a última importação continua sendo considerada como atendimento realizado; nova sinalização em importação posterior faz o estudante retornar à fila.
+- A tela 25%+ foi reorganizada como central de trabalho, com regra de funcionamento, filtros, status da providência, acesso direto à ficha e paginação.
+- Corrigida a restauração de posição antiga do mascote, que podia colocá-lo parcialmente fora da tela.
+- O mascote foi reduzido novamente; câmera 3D e escala ajustadas para enquadrar o corpo inteiro dentro do canvas. O personagem inicia no canto inferior direito e pode continuar sendo arrastado.
+- O trevo de retorno permanece fixo no extremo inferior direito quando o mascote desaparece.
+- Preservados os fluxos, históricos, importações, fichas e ações existentes.
+- Não há alteração de modelos nem migration de estrutura do banco de dados.

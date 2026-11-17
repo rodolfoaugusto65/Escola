@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block content %}
+<style>
+.ba-progress-wrap{max-width:760px;margin:36px auto}.ba-progress-card{border:1px solid #e5eaf1;border-radius:18px;background:#fff;padding:28px;box-shadow:0 10px 32px rgba(20,35,60,.07)}.ba-progress-track{height:16px;background:#e9eef6;border-radius:20px;overflow:hidden}.ba-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#315be8,#16a085);border-radius:20px;transition:width .25s ease}.ba-stat{border:1px solid #e8edf4;border-radius:12px;padding:14px;background:#f9fbfe}.ba-stat strong{display:block;font-size:24px;color:#24334b}.ba-spin{width:34px;height:34px;border:4px solid #e4eaf4;border-top-color:#315be8;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<div class="container ba-progress-wrap"><section class="ba-progress-card">
+ <div class="d-flex align-items-center gap-3 mb-3"><div class="ba-spin" id="spinner"></div><div><h3 class="mb-1" id="statusTitle">Preparando importação...</h3><p class="text-muted mb-0">{{ job.arquivo }}</p></div></div>
+ <p class="text-muted">O sistema está processando os registros em pequenos lotes. Você pode acompanhar o avanço nesta tela. Evite atualizar ou fechar a página até a conclusão.</p>
+ <div class="d-flex justify-content-between mb-2"><strong>Progresso</strong><strong id="percent">0%</strong></div><div class="ba-progress-track"><div class="ba-progress-fill" id="progress"></div></div>
+ <div class="row g-2 mt-3"><div class="col-4"><div class="ba-stat"><small class="text-muted">Processados</small><strong id="processed">0</strong><small class="text-muted">de {{ job.total }}</small></div></div><div class="col-4"><div class="ba-stat"><small class="text-muted">Vinculados</small><strong id="linked">0</strong></div></div><div class="col-4"><div class="ba-stat"><small class="text-muted">Sem vínculo</small><strong id="unlinked">0</strong></div></div></div>
+ <div id="message" class="alert alert-info mt-3 mb-0">Iniciando processamento...</div>
+ <div class="d-flex gap-2 mt-3"><a id="backButton" class="btn btn-primary d-none" href="{% url 'busca_ativa:painel' %}">Voltar ao painel</a><button id="retryButton" class="btn btn-outline-primary d-none" type="button">Tentar continuar</button></div>
+</section></div>
+<script>
+(function(){
+ const endpoint=window.location.href; const csrf=document.querySelector('[name=csrfmiddlewaretoken]')?.value || (document.cookie.split('; ').find(x=>x.startsWith('csrftoken='))||'').split('=')[1];
+ const progress=document.getElementById('progress'), percent=document.getElementById('percent'), processed=document.getElementById('processed'), linked=document.getElementById('linked'), unlinked=document.getElementById('unlinked'), message=document.getElementById('message'), title=document.getElementById('statusTitle'), spinner=document.getElementById('spinner'), back=document.getElementById('backButton'), retry=document.getElementById('retryButton');
+ let running=false;
+ function update(d){const p=d.percentual||0;progress.style.width=p+'%';percent.textContent=p+'%';processed.textContent=d.processados||0;linked.textContent=d.vinculados||0;unlinked.textContent=d.nao_vinculados||0;}
+ async function step(){if(running)return;running=true;retry.classList.add('d-none');try{const r=await fetch(endpoint,{method:'POST',headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'});const d=await r.json();update(d);if(!r.ok||d.status==='erro'){throw new Error(d.erro||'Falha ao processar o arquivo.');}if(d.status==='concluida'){title.textContent='Importação concluída';spinner.classList.add('d-none');message.className='alert alert-success mt-3 mb-0';message.textContent='Arquivo processado. '+(d.vinculados||0)+' registro(s) vinculados e '+(d.nao_vinculados||0)+' sem correspondência. Os dados anteriores foram preservados.';back.classList.remove('d-none');return;}title.textContent='Importando dados...';message.textContent='Lote processado. Continuando automaticamente...';setTimeout(()=>{running=false;step();},180);}catch(e){running=false;title.textContent='Não foi possível concluir';spinner.classList.add('d-none');message.className='alert alert-danger mt-3 mb-0';message.textContent=e.message;retry.classList.remove('d-none');}}
+ retry.addEventListener('click',()=>{spinner.classList.remove('d-none');title.textContent='Retomando importação...';message.className='alert alert-info mt-3 mb-0';message.textContent='Continuando do último lote salvo...';step();});
+ step();
+})();
+</script>
+{% endblock %}

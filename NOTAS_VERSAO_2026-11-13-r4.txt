@@ -1,0 +1,66 @@
+GEREDU — NOTAS DA VERSÃO
+Versão: 2026.11.13-r4 — Busca Ativa em abas, alertas e cobrança de avaliações
+Data: 13/11/2026
+
+REGRA DESTA ATUALIZAÇÃO
+Atualização aditiva sobre a versão r3. Não remove telas, modelos, importações, snapshots,
+históricos, relatórios, backups ou ações existentes. Não há migração de banco nesta revisão.
+
+BUSCA ATIVA — NAVEGAÇÃO E ABAS
+- O painel geral ganhou atalhos dedicados para Alertas e prazos, Relatório 25%+, Lançamentos
+  atuais, Acompanhamentos, histórico/relatórios e importação.
+- Nova tela "Central de alertas e prazos": ações vencidas, prazos dos próximos 7 dias,
+  providências sem prazo e estudantes do relatório 25%+ sem nova providência.
+- Nova tela exclusiva "Relatório 25%+": fila operacional baseada no indicador da planilha
+  complementar (consta_relatorio_25), com filtros por turno, turma e estudante.
+- Nova tela "Lançamentos atuais": fotografia completa do arquivo importado mais recentemente,
+  com filtros por turma, turno e faixa. Os snapshots anteriores continuam preservados.
+- A tela de acompanhamentos recebeu filtros adicionais por turma e situação do prazo.
+- A conclusão de uma ação passa a considerar a data de atualização do status; se uma importação
+  posterior voltar a sinalizar o estudante, ele pode retornar à fila de atendimento.
+- Quando uma nova planilha 25%+ é concluída, a lista corrente é sincronizada com a nova fotografia:
+  estudantes que não constam mais deixam de aparecer na fila atual, sem apagar os snapshots
+  históricos das importações anteriores.
+
+AVALIAÇÕES
+- O detalhe de cada importação agora permite filtrar por turno além de ano/série, turma, situação,
+  estudante e período.
+- Inclui ação para visualizar somente quem não realizou/está pendente/ausente e exportar CSV para
+  cobrança, respeitando os filtros de turma e turno selecionados.
+- Os dados de importações anteriores permanecem no histórico.
+
+CONSULTA PÚBLICA DE FREQUÊNCIA
+- Exibe a data/hora da importação mais recente que contém o estudante.
+- Mostra faltas, percentual de ausências, estimativa de presença e alertas visuais graduados.
+- A comunicação informa que a frequência mínima legal é de 75% das horas letivas e orienta a
+  família a procurar a escola imediatamente quando a situação for crítica.
+- O texto esclarece que a situação final depende dos registros consolidados e de justificativas
+  formalmente aceitas; não afirma reprovação automática nem cria ameaça sem base normativa.
+
+BASE NORMATIVA UTILIZADA NO TEXTO AO RESPONSÁVEL
+- Lei Federal nº 9.394/1996 (LDB), art. 24, VI: frequência mínima de 75% do total de horas letivas
+  para aprovação.
+- Portaria nº 584/2025/GS/SEDUC/MT: art. 7º, II (controle da frequência e mínimo de 75%);
+  art. 9º (solicitação de justificativa de faltas dentro do bimestre, com documentação);
+  art. 17, XI (comunicação aos pais/responsáveis das ausências).
+- Portaria nº 248/2024/GS/SEDUC/MT: Programa Nenhum Estudante a Menos, com ações de identificação
+  de risco, prevenção do abandono e fortalecimento do vínculo família-escola.
+Fontes oficiais:
+https://www.iomat.mt.gov.br/portal/edicoes/download/18529
+https://www3.seduc.mt.gov.br/documents/8125245/16806793/Portaria%2B248-2024.pdf/1b631687-698c-1946-187a-992f1571eccb
+https://www.presidencia.gov.br/ccivil_03/leis/l9394.htm
+
+INSTALAÇÃO E VALIDAÇÃO
+- Não há migração nova nesta versão.
+- Faça backup do PostgreSQL antes de publicar.
+- Mescle a pasta Escola no projeto local e confira o diff no Git.
+- Execute no ambiente do projeto: python manage.py check
+- Execute os testes: python manage.py test acompanhamento_avaliacoes busca_ativa
+- Confira as telas de alertas, 25%+, lançamentos atuais, consulta pública e detalhe de avaliação.
+- Publique pelo GitHub/Railway somente após a validação local.
+
+VALIDAÇÃO NESTE PACOTE
+- A sintaxe dos dois módulos Python alterados passou em py_compile.
+- Não foi possível executar manage.py check nem a suíte de testes neste ambiente porque Django
+  e as dependências do projeto não estão instalados aqui.
+- Portanto, o pacote ainda requer validação funcional no ambiente local antes do deploy.

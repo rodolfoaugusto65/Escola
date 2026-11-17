@@ -1,0 +1,83 @@
+{% extends "core/base.html" %}
+{% load mapeamento_extras %}
+{% block title %}Mapeamento da Aprendizagem | GerEdu{% endblock %}
+{% block content %}
+<style>
+.ma-wrap{max-width:1680px;margin:auto;padding:18px 8px 42px;color:#20334b}
+.ma-hero{background:linear-gradient(115deg,#102b45,#1e5d86 68%,#2c78a8);color:#fff;border-radius:20px;padding:23px 26px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;box-shadow:0 12px 30px #173b5c20}
+.ma-hero h1{font-size:25px;font-weight:850;margin:0}.ma-hero p{margin:6px 0 0;color:#e0efff}
+.ma-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:30px;background:#ffffff20;font-size:12px;font-weight:750}
+.ma-panel{background:#fff;border:1px solid #e2eaf2;border-radius:16px;padding:17px;margin-top:15px;box-shadow:0 6px 20px #173b5c08}
+.ma-filters{display:grid;grid-template-columns:130px minmax(250px,1fr) minmax(220px,1fr) auto;gap:11px;align-items:end}
+.ma-label{font-size:12px;font-weight:750;color:#60738b;margin-bottom:6px;display:block}
+.ma-control{width:100%;min-height:40px;border:1px solid #d9e3ee;border-radius:10px;padding:8px 11px;background:#fff;color:#20334b}
+.ma-btn{border:0;border-radius:10px;padding:10px 15px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.ma-primary{background:#17689a;color:#fff}.ma-primary:hover{background:#10547e;color:#fff}
+.ma-export{background:#167a59;color:#fff}.ma-export:hover{background:#106548;color:#fff}
+.ma-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.ma-stat{padding:14px 16px;border:1px solid #e3ebf2;border-radius:13px;background:#f9fbfd}.ma-stat small{display:block;color:#71839a;font-weight:700}.ma-stat strong{font-size:24px;font-weight:850}
+.ma-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ma-student{border:1px solid #e1e9f1;border-radius:15px;background:#fff;margin-top:13px;overflow:hidden}
+.ma-student-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;background:#f5f8fb;border-bottom:1px solid #e5ebf1}
+.ma-student-name{font-size:15px;font-weight:850}.ma-muted{font-size:12px;color:#73849a}
+.ma-fields{padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ma-mini{border:1px solid #e6edf3;border-radius:12px;padding:12px;min-width:0}
+.ma-mini h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:850;margin:0 0 10px;color:#47627c}
+.ma-mini.lp{border-top:3px solid #2979ad}.ma-mini.mt{border-top:3px solid #23866a}.ma-mini.general{border-top:3px solid #9aaabd}
+.ma-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ma-field{min-width:0}.ma-field .ma-label{font-size:10px;margin-bottom:4px}.ma-field .ma-control{min-height:36px;font-size:12px;padding:6px 8px}
+.ma-wide{grid-column:1/-1}
+.ma-student input[type=checkbox]{width:17px;height:17px;accent-color:#17689a}
+.ma-empty{padding:38px;text-align:center;color:#70839a}
+.ma-sticky{position:sticky;bottom:10px;z-index:5;background:#ffffffed;backdrop-filter:blur(12px);border:1px solid #dbe5ef;border-radius:14px;padding:11px 14px;margin-top:14px;box-shadow:0 8px 25px #193c5b1c;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media(max-width:1100px){.ma-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.ma-fields{grid-template-columns:1fr 1fr}.ma-mini.general{grid-column:1/-1}}
+@media(max-width:650px){.ma-filters,.ma-stats,.ma-fields{grid-template-columns:1fr}.ma-mini.general{grid-column:auto}.ma-hero{padding:18px}.ma-hero h1{font-size:21px}}
+</style>
+<div class="ma-wrap">
+ <header class="ma-hero">
+  <div><div class="ma-chip mb-2"><i data-lucide="book-open-check" style="width:15px"></i> GEREDU · ACOMPANHAMENTO PEDAGÓGICO</div><h1>Mapeamento da Aprendizagem</h1><p>Preencha os campos pedagógicos por estudante e exporte a aba Mapeamento da planilha oficial.</p></div>
+  {% if turma %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}&turma={{ turma.id }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar esta turma</a>{% else %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar ano</a>{% endif %}
+ </header>
+ <section class="ma-panel">
+  <form method="get" class="ma-filters">
+   <div><label class="ma-label">Ano letivo</label><select class="ma-control" name="ano">{% for a in anos %}<option value="{{ a }}" {% if ano == a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></div>
+   <div><label class="ma-label">Turma</label><select class="ma-control" name="turma"><option value="">Selecione uma turma</option>{% for t in turmas %}<option value="{{ t.id }}" {% if turma and turma.id == t.id %}selected{% endif %}>{{ t.etapa }} · {{ t.ano_escolar }} {{ t.nome }} · {{ t.get_turno_display }}</option>{% endfor %}</select></div>
+   <div><label class="ma-label">Localizar estudante</label><input class="ma-control" name="q" value="{{ q }}" placeholder="Nome ou matrícula"></div>
+   <button class="ma-btn ma-primary" type="submit"><i data-lucide="filter" style="width:16px"></i> Carregar turma</button>
+  </form>
+  {% if turma %}
+  <div class="ma-stats">
+   <div class="ma-stat"><small>Turma selecionada</small><strong>{{ turma.ano_escolar }} {{ turma.nome }}</strong><div class="ma-muted">{{ turma.etapa }} · {{ turma.get_turno_display }}</div></div>
+   <div class="ma-stat"><small>Estudantes cadastrados</small><strong>{{ total_alunos }}</strong><div class="ma-muted">Vínculo direto com a turma no GerEdu</div></div>
+   <div class="ma-stat"><small>Mapeamentos salvos</small><strong>{{ total_preenchidos }}</strong><div class="ma-muted">Registros do ano e turma selecionados</div></div>
+  </div>
+  {% endif %}
+ </section>
+ {% if turma %}
+ <form method="post" id="ma-form">
+  {% csrf_token %}<input type="hidden" name="acao" value="salvar"><input type="hidden" name="ano" value="{{ ano }}"><input type="hidden" name="turma" value="{{ turma.id }}"><input type="hidden" name="q" value="{{ q }}">
+  <div class="ma-panel ma-toolbar"><div><strong>Estudantes da turma</strong><div class="ma-muted">Os dados de nome, matrícula, ano, turma e turno são obtidos automaticamente do cadastro.</div></div><label class="d-flex align-items-center gap-2 small fw-bold"><input type="checkbox" id="ma-all"> Selecionar todos exibidos</label></div>
+  {% for aluno in alunos %}
+  {% with registro=registros|get_item:aluno.id %}
+  <article class="ma-student">
+   <div class="ma-student-head"><div class="d-flex align-items-center gap-3"><input type="checkbox" name="selecionados" value="{{ aluno.id }}" class="ma-select" {% if registro %}checked{% endif %}><div><div class="ma-student-name">{{ aluno.nome }}</div><div class="ma-muted">Matrícula {{ aluno.matricula }} · {{ turma.ano_escolar }} {{ turma.nome }} · {{ turma.get_turno_display }}</div></div></div>{% if registro %}<span class="badge text-bg-success">Mapeamento salvo</span>{% else %}<span class="badge text-bg-secondary">Novo</span>{% endif %}</div>
+   <div class="ma-fields">
+    <section class="ma-mini general"><h3>Estudantes · identificação</h3><div class="ma-grid2">
+     <div class="ma-field"><label class="ma-label">PAEDE</label><select class="ma-control" name="paede_{{ aluno.id }}"><option value="NÃO" {% if registro.paede == "NÃO" or not registro and not aluno.aluno_paed %}selected{% endif %}>NÃO</option><option value="SIM" {% if registro.paede == "SIM" or not registro and aluno.aluno_paed %}selected{% endif %}>SIM</option></select></div>
+     <div class="ma-field"><label class="ma-label">Situação</label><select class="ma-control" name="situacao_{{ aluno.id }}"><option value="Matriculado" {% if registro.situacao == "Matriculado" or not registro and not aluno.transferido %}selected{% endif %}>Matriculado</option><option value="Transferido" {% if registro.situacao == "Transferido" or not registro and aluno.transferido %}selected{% endif %}>Transferido</option></select></div>
+    </div></section>
+    <section class="ma-mini lp"><h3>Língua Portuguesa</h3><div class="ma-grid2"><div class="ma-field ma-wide"><label class="ma-label">Professor(a) de Língua Portuguesa</label><input class="ma-control" name="professor_lp_{{ aluno.id }}" value="{{ registro.professor_lp|default:'' }}"></div>{% for campo,label in lp_campos %}<div class="ma-field"><label class="ma-label">{{ label }}</label><select class="ma-control" name="{{ campo }}_{{ aluno.id }}"><option value="">Selecione</option>{% for n in niveis %}{% if n %}<option value="{{ n }}" {% if registro and registro|get_field:campo == n %}selected{% endif %}>{{ n }}</option>{% endif %}{% endfor %}</select></div>{% endfor %}</div></section>
+    <section class="ma-mini mt"><h3>Matemática</h3><div class="ma-grid2"><div class="ma-field ma-wide"><label class="ma-label">Professor(a) de Matemática</label><input class="ma-control" name="professor_mt_{{ aluno.id }}" value="{{ registro.professor_mt|default:'' }}"></div>{% for campo,label in mt_campos %}<div class="ma-field"><label class="ma-label">{{ label }}</label><select class="ma-control" name="{{ campo }}_{{ aluno.id }}"><option value="">Selecione</option>{% for n in niveis %}{% if n %}<option value="{{ n }}" {% if registro and registro|get_field:campo == n %}selected{% endif %}>{{ n }}</option>{% endif %}{% endfor %}</select></div>{% endfor %}</div></section>
+    <div class="ma-field ma-wide"><label class="ma-label">Observações</label><textarea class="ma-control" style="height:auto;min-height:58px" name="observacoes_{{ aluno.id }}" placeholder="Observações pedagógicas...">{{ registro.observacoes|default:'' }}</textarea></div>
+   </div>
+  </article>
+  {% endwith %}
+  {% empty %}<div class="ma-panel ma-empty">Nenhum estudante encontrado nesta turma.</div>{% endfor %}
+  {% if alunos %}<div class="ma-sticky"><div class="small text-muted"><strong id="ma-count">0</strong> estudante(s) selecionado(s) para salvar</div><button class="ma-btn ma-primary" type="submit"><i data-lucide="save" style="width:16px"></i> Salvar mapeamentos selecionados</button></div>{% endif %}
+ </form>
+ {% else %}<div class="ma-panel ma-empty"><i data-lucide="users" style="width:32px;height:32px"></i><h3 class="mt-2">Selecione uma turma para começar</h3><p>O GerEdu carregará os estudantes diretamente do cadastro oficial de turmas.</p></div>{% endif %}
+</div>
+<script>
+(()=>{const all=document.getElementById('ma-all');const checks=[...document.querySelectorAll('.ma-select')];const count=document.getElementById('ma-count');function update(){if(count)count.textContent=checks.filter(c=>c.checked).length;if(all)all.checked=checks.length>0&&checks.every(c=>c.checked)}if(all)all.addEventListener('change',()=>{checks.forEach(c=>c.checked=all.checked);update()});checks.forEach(c=>c.addEventListener('change',update));update()})();
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+VERSAO: 2026.11.13.17
+TITULO: Duende do GerEdu redesenhado e boas-vindas personalizadas
+
+TEXTO:
+- Mascote redesenhado com aparência mais simpática, proporções equilibradas, túnica clara e chapéu pontudo verde com fivela.
+- Corrigida a sequência de animação do portal: o duende desaparece, o portal surge e o personagem reaparece após a passagem.
+- Animação organizada em ciclos temporizados, com pausa quando o usuário arrasta ou abre a janela de ajuda.
+- Botões de fechar adicionados aos balões de fala e à janela de diálogo.
+- O duende dá boas-vindas pelo primeiro nome do usuário; quando não houver primeiro nome cadastrado, utiliza o nome de usuário.
+- Mantidas a janela de ajuda, a informação do calendário letivo e a possibilidade de arrastar o personagem.

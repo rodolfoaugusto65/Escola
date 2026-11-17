@@ -1,0 +1,561 @@
+{% extends base_template %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<!-- ================= HEADER ================= -->
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 page-header">
+
+<div>
+
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-1">
+<i data-lucide="alert-triangle"></i>
+Gestão de Ocorrências
+</h3>
+
+<div class="text-muted small">
+Monitoramento disciplinar da escola
+</div>
+
+</div>
+
+<div class="d-flex gap-2">
+
+<a href="{% url 'criar_ocorrencia' %}" class="btn btn-success btn-modern">
+<i data-lucide="plus"></i>
+Nova Ocorrência
+</a>
+
+</div>
+
+</div>
+
+
+<!-- ================= DASHBOARD ================= -->
+
+<div class="row g-4 mb-4 dashboard-cards">
+
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card total-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Total</div>
+<div class="dashboard-value">{{ total }}</div>
+<div class="dashboard-sub">Ocorrências registradas</div>
+</div>
+</div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card open-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Abertas</div>
+<div class="dashboard-value">{{ abertas }}</div>
+<div class="dashboard-sub">Aguardando análise</div>
+</div>
+</div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card progress-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Em andamento</div>
+<div class="dashboard-value">{{ andamento }}</div>
+<div class="dashboard-sub">Em processo</div>
+</div>
+</div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+<div class="card dashboard-card resolved-card">
+<div class="card-body text-center">
+<div class="dashboard-title">Resolvidas</div>
+<div class="dashboard-value">{{ resolvidas }}</div>
+<div class="dashboard-sub">Casos concluídos</div>
+</div>
+</div>
+</div>
+
+</div>
+
+
+<!-- ================= FILTROS ================= -->
+
+<div class="card modern-card shadow-sm mb-4 filters-panel">
+
+<div class="card-body">
+
+<form method="get" class="row g-3 align-items-end">
+
+<!-- BUSCA -->
+<div class="col-md-3">
+
+<label class="filter-label">
+<i data-lucide="search"></i> Busca
+</label>
+
+<input name="busca"
+value="{{ request.GET.busca }}"
+class="form-control"
+placeholder="Código, aluno ou matrícula">
+
+</div>
+
+
+<!-- TURMA -->
+<div class="col-md-2">
+
+<label class="filter-label">
+<i data-lucide="layers"></i> Turma
+</label>
+
+<select name="turma" class="form-select">
+
+<option value="">Todas</option>
+
+{% for t in turmas %}
+<option value="{{ t.id }}"
+{% if request.GET.turma == t.id|stringformat:"s" %}selected{% endif %}>
+{{ t }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<!-- ALUNO -->
+<div class="col-md-2">
+
+<label class="filter-label">
+<i data-lucide="user"></i> Aluno
+</label>
+
+<select name="aluno" class="form-select">
+
+<option value="">Todos</option>
+
+{% for a in alunos %}
+<option value="{{ a.id }}"
+{% if request.GET.aluno == a.id|stringformat:"s" %}selected{% endif %}>
+{{ a.nome }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<!-- SITUAÇÃO -->
+<div class="col-md-2">
+
+<label class="filter-label">
+<i data-lucide="flag"></i> Situação
+</label>
+
+<select name="status" class="form-select">
+
+<option value="">Todas</option>
+
+<option value="ABERTA"
+{% if request.GET.status == "ABERTA" %}selected{% endif %}>
+Abertas
+</option>
+
+<option value="ANDAMENTO"
+{% if request.GET.status == "ANDAMENTO" %}selected{% endif %}>
+Em andamento
+</option>
+
+<option value="RESOLVIDA"
+{% if request.GET.status == "RESOLVIDA" %}selected{% endif %}>
+Resolvidas
+</option>
+
+</select>
+
+</div>
+
+
+<!-- DATA -->
+<div class="col-md-2">
+
+<label class="filter-label">
+<i data-lucide="calendar"></i> Data
+</label>
+
+<input type="date"
+name="data"
+value="{{ request.GET.data }}"
+class="form-control">
+
+</div>
+
+
+<!-- BOTÕES -->
+<div class="col-md-3 d-flex gap-2">
+
+<button class="btn btn-primary btn-modern w-100">
+<i data-lucide="search"></i>
+Buscar
+</button>
+
+<a href="{% url 'lista_ocorrencias' %}"
+class="btn btn-outline-secondary btn-modern">
+Limpar
+</a>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<!-- ================= AÇÕES ================= -->
+
+<div class="d-flex justify-content-between flex-wrap mb-3 gap-2">
+
+<div class="d-flex gap-2 flex-wrap">
+
+<a href="{% url 'dashboard_ocorrencias' %}" class="btn btn-info btn-modern text-white">
+<i data-lucide="bar-chart"></i> Dashboard
+</a>
+
+<a href="{% url 'relatorio_ocorrencias' %}" class="btn btn-dark btn-modern">
+<i data-lucide="file-text"></i> Relatório
+</a>
+
+<a href="{% url 'dashboard_enterprise' %}" class="btn btn-primary btn-modern">
+<i data-lucide="building"></i> Enterprise
+</a>
+
+</div>
+
+<div class="d-flex gap-2 flex-wrap">
+
+<a href="{% url 'export_excel_ocorrencias' %}" class="btn btn-success btn-modern">
+<i data-lucide="download"></i> Excel
+</a>
+
+<a href="{% url 'imprimir_pdf_enterprise' %}" class="btn btn-outline-dark btn-modern">
+<i data-lucide="printer"></i> PDF
+</a>
+
+</div>
+
+</div>
+
+
+<!-- ================= TABELA ================= -->
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-0">
+
+{% if page_obj %}
+
+<!-- CONTROLE DE QUANTIDADE -->
+
+<div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+
+<div class="text-muted small">
+Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }}
+de {{ page_obj.paginator.count }} ocorrências
+</div>
+
+<form method="get" class="d-flex align-items-center gap-2">
+
+<label class="small text-muted">Mostrar:</label>
+
+<select name="mostrar"
+class="form-select form-select-sm"
+onchange="this.form.submit()">
+
+<option value="10" {% if mostrar == 10 %}selected{% endif %}>10</option>
+<option value="25" {% if mostrar == 25 %}selected{% endif %}>25</option>
+<option value="50" {% if mostrar == 50 %}selected{% endif %}>50</option>
+<option value="100" {% if mostrar == 100 %}selected{% endif %}>100</option>
+
+</select>
+
+</form>
+
+</div>
+
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle mb-0">
+
+<thead>
+
+<tr>
+
+<th class="sortable">
+<a href="?ordenar=codigo">
+Código
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="sortable">
+<a href="?ordenar=aluno__nome">
+Aluno
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>Turma</th>
+
+<th class="sortable">
+<a href="?ordenar=tipo_ocorrencia">
+Tipo
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th>Status</th>
+
+<th class="sortable">
+<a href="?ordenar=data">
+Data
+<i data-lucide="arrow-up-down"></i>
+</a>
+</th>
+
+<th class="text-center">
+Ações
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for o in page_obj %}
+
+<tr class="hover-row">
+
+<td class="fw-semibold text-primary">
+{{ o.codigo }}
+</td>
+
+<td>{{ o.aluno.nome }}</td>
+
+<td>{{ o.turma }}</td>
+
+<td class="text-center">
+
+<span class="tipo-badge
+{% if o.tipo_ocorrencia == 'DISCIPLINAR' %}tipo-disciplinar
+{% elif o.tipo_ocorrencia == 'ATRASO' %}tipo-atraso
+{% elif o.tipo_ocorrencia == 'UNIFORME' %}tipo-uniforme
+{% else %}tipo-outros{% endif %}">
+
+{% if o.tipo_ocorrencia == 'DISCIPLINAR' %}
+<i data-lucide="alert-triangle"></i>
+
+{% elif o.tipo_ocorrencia == 'ATRASO' %}
+<i data-lucide="clock"></i>
+
+{% elif o.tipo_ocorrencia == 'UNIFORME' %}
+<i data-lucide="user"></i>
+
+{% else %}
+<i data-lucide="file"></i>
+{% endif %}
+
+{{ o.get_tipo_ocorrencia_display }}
+
+</span>
+
+</td>
+
+<td class="text-center">
+
+<span class="status-badge
+{% if o.status == 'ABERTA' %}status-open
+{% elif o.status == 'ANDAMENTO' %}status-progress
+{% else %}status-resolved{% endif %}">
+
+{% if o.status == 'ABERTA' %}
+<i data-lucide="alert-circle"></i>
+
+{% elif o.status == 'ANDAMENTO' %}
+<i data-lucide="clock"></i>
+
+{% else %}
+<i data-lucide="check-circle"></i>
+{% endif %}
+
+{{ o.get_status_display }}
+
+</span>
+
+</td>
+
+<td>
+{{ o.data|date:"d/m/Y" }}
+</td>
+<td class="text-center">
+
+<div class="d-flex justify-content-center gap-2">
+
+<a href="{% url 'detalhe_ocorrencia' o.pk %}"
+class="btn btn-icon btn-info-soft"
+data-bs-toggle="tooltip"
+title="Visualizar ocorrência">
+
+<i data-lucide="eye"></i>
+
+</a>
+
+
+<a href="{% url 'editar_ocorrencia' o.pk %}"
+class="btn btn-icon btn-warning-soft"
+data-bs-toggle="tooltip"
+title="Editar ocorrência">
+
+<i data-lucide="edit-3"></i>
+
+</a>
+
+
+<a href="{% url 'imprimir_ocorrencia' o.pk %}"
+target="_blank"
+class="btn btn-icon btn-dark-soft"
+data-bs-toggle="tooltip"
+title="Imprimir ocorrência">
+
+<i data-lucide="printer"></i>
+
+</a>
+
+
+<a href="{% url 'imprimir_por_aluno' o.aluno.id %}"
+target="_blank"
+class="btn btn-icon btn-secondary-soft"
+data-bs-toggle="tooltip"
+title="Histórico do aluno">
+
+<i data-lucide="file-text"></i>
+
+</a>
+
+
+<button
+class="btn btn-icon btn-danger-soft btn-excluir"
+data-url="{% url 'excluir_ocorrencia' o.pk %}"
+data-permissao="{{ user.pode_gerenciar_usuarios }}"
+data-tipo="{{ user.get_perfil_display }}"
+data-usuario="{{ user.get_full_name|default:user.username }}"
+data-bs-toggle="tooltip"
+title="Excluir ocorrência">
+
+<i data-lucide="trash-2"></i>
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- PAGINAÇÃO -->
+
+<div class="p-3">
+
+<nav>
+
+<ul class="pagination justify-content-center mb-0">
+
+{% if page_obj.has_previous %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.previous_page_number }}">
+Anterior
+</a>
+</li>
+
+{% endif %}
+
+
+{% for num in page_obj.paginator.page_range %}
+
+{% if page_obj.number == num %}
+
+<li class="page-item active">
+<span class="page-link">{{ num }}</span>
+</li>
+
+{% else %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ num }}">
+{{ num }}
+</a>
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+
+{% if page_obj.has_next %}
+
+<li class="page-item">
+<a class="page-link"
+href="?page={{ page_obj.next_page_number }}">
+Próximo
+</a>
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+</div>
+
+
+{% else %}
+
+<div class="p-5 text-center text-muted">
+
+<i data-lucide="alert-triangle"
+style="width:50px;height:50px;"></i>
+
+<p class="mt-3 mb-0">
+Nenhuma ocorrência encontrada.
+</p>
+
+</div>
+
+{% endif %}
+
+</div>
+</div>
+
+</div>
+
+
+{% endblock %}

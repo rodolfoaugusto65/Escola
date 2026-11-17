@@ -351,6 +351,13 @@ transition:left .3s ease;
  <a href="{% url 'busca_ativa:calendario_letivo' %}"><i data-lucide="calendar-days"></i><span>Calendário letivo</span></a>
 </details>
 
+{% if user.is_authenticated %}
+<details class="sidebar-group">
+ <summary><i data-lucide="book-open-check"></i><span>Acompanhamento pedagógico</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a href="{% url 'mapeamento_aprendizagem:painel' %}"><i data-lucide="clipboard-pen-line"></i><span>Mapeamento da Aprendizagem</span></a>
+</details>
+{% endif %}
+
 {% if user.is_authenticated and user.is_superuser or user.pode_gerenciar_usuarios %}
 <details class="sidebar-group">
  <summary><i data-lucide="clipboard-list"></i><span>Busca ativa</span><i data-lucide="chevron-down" class="group-chevron"></i>{% if total_alertas_infrequencia %}<span class="badge bg-danger ms-auto">{{ total_alertas_infrequencia }}</span>{% endif %}</summary>

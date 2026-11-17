@@ -1,0 +1,28 @@
+GEREDU — AJUSTES DE BUSCA ATIVA E AVALIAÇÕES
+Data: 11/11/2026
+
+ALTERAÇÕES:
+1. Fila da Busca Ativa: estudantes com ação dentro do prazo deixam a fila de novos atendimentos e permanecem na tela de Acompanhamentos.
+2. Prazo de retorno passa a ser obrigatório ao registrar nova ação, com validação para não aceitar datas anteriores a hoje.
+3. Ações com status Concluída suprimem o alerta atual; o estudante volta à fila se uma importação posterior gerar novo registro de infrequência.
+4. Filtros da fila: nome/matrícula, turno, turma, faixa e percentual mínimo/máximo de infrequência.
+5. Inclusão de controles de impressão nos relatórios de ações, acompanhamentos e detalhe da avaliação.
+6. O histórico das importações e das ações anteriores não é apagado nem substituído.
+
+VALIDAÇÃO:
+- Arquivo busca_ativa/views.py passou por compilação sintática.
+- Não foi possível executar os testes Django nem validar consultas contra o banco neste ambiente.
+- Não foram criadas migrações nesta etapa.
+
+ANTES DO RAILWAY:
+1. Faça backup do banco PostgreSQL e do armazenamento R2.
+2. Extraia o ZIP incremental sobre a raiz do projeto ou use o ZIP completo.
+3. Execute:
+   python manage.py check
+   python manage.py test busca_ativa
+   python manage.py test acompanhamento_avaliacoes
+4. Teste uma ação com prazo futuro, uma ação vencida e uma ação concluída seguida de nova importação.
+5. Confira os filtros e a impressão nos navegadores usados pela escola.
+
+OBSERVAÇÃO:
+A mensagem aos responsáveis por WhatsApp/SMS e relatórios administrativos em PDF assináveis exigem validação do campo de telefone, texto institucional e layout final. Não foi ativado envio automático de mensagens nesta atualização; a escola deve revisar e autorizar o contato antes do envio.

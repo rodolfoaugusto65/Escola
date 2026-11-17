@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+ <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div><h2 class="fw-bold mb-1">Alerta oficial — relatório 25%+</h2><p class="text-muted mb-0">Estudantes sinalizados na planilha complementar mais recente e que ainda precisam de providência.</p></div>
+  <a class="btn btn-outline-secondary" href="{% url 'busca_ativa:painel' %}">Voltar ao painel</a>
+ </div>
+ <div class="alert alert-danger"><strong>Prioridade máxima:</strong> confira os registros, atualize os contatos e documente as providências. A tela é atualizada conforme novas planilhas e ações são lançadas.</div>
+ <form method="get" class="card card-body shadow-sm border-0 mb-3"><div class="row g-2 align-items-end">
+  <div class="col-md-3"><label class="form-label">Estudante/matrícula</label><input class="form-control" name="q" value="{{ q }}"></div>
+  <div class="col-md-2"><label class="form-label">Turno</label><select class="form-select" name="turno"><option value="">Todos</option>{% for v,l in turnos %}<option value="{{ v }}" {% if turno == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><label class="form-label">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for t in turmas %}<option value="{{ t.id }}" {% if turma == t.id|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <div class="col-md-2 d-grid"><button class="btn btn-primary">Filtrar</button></div><div class="col-md-2 d-grid"><a class="btn btn-light" href="{% url 'busca_ativa:relatorio_25mais' %}">Limpar</a></div>
+ </div></form>
+ <div class="row g-3 mb-3"><div class="col-md-4"><div class="card border-0 shadow-sm p-3"><small class="text-muted">Estudantes aguardando providência</small><div class="display-6 fw-bold text-danger">{{ total }}</div></div></div><div class="col-md-8"><div class="card border-0 shadow-sm p-3"><small class="text-muted">Orientação</small><div>Ao registrar uma ação na ficha, o estudante sai desta fila de novas providências e passa para a aba Acompanhamentos. O histórico não é apagado.</div></div></div></div>
+ <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Estudante</th><th>Turma/turno</th><th>Faltas</th><th>% relatório 25%+</th><th>Atualização</th><th></th></tr></thead><tbody>
+ {% for s in situacoes %}<tr><td><strong>{{ s.aluno.nome }}</strong><br><small class="text-muted">{{ s.aluno.matricula }}</small></td><td>{{ s.aluno.turma|default:"—" }}<br><small>{{ s.aluno.turma.get_turno_display|default:"" }}</small></td><td>{{ s.faltas_final|floatformat:0 }}</td><td><span class="badge text-bg-danger">{{ s.percentual_relatorio_25 }}%</span></td><td>{{ s.atualizado_em|date:"d/m/Y H:i" }}</td><td><a class="btn btn-sm btn-primary" href="{% url 'busca_ativa:ficha' s.aluno_id %}">Registrar providência</a></td></tr>
+ {% empty %}<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum estudante aguardando providência no relatório 25%+.</td></tr>{% endfor %}
+ </tbody></table></div>
+ <div class="card-footer bg-white d-flex justify-content-between"><small>{{ total }} registro(s)</small><div>{% if situacoes.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ situacoes.previous_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Anterior</a>{% endif %} {% if situacoes.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ situacoes.next_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Próxima</a>{% endif %}</div></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h3>📊 Dashboard de Ocorrências</h3>
+
+<h5>Status</h5>
+<ul>
+{% for s in por_status %}
+<li>{{ s.status }} — {{ s.total }}</li>
+{% endfor %}
+</ul>
+
+<h5>Tipos</h5>
+<ul>
+{% for t in por_tipo %}
+<li>{{ t.tipo_ocorrencia }} — {{ t.total }}</li>
+{% endfor %}
+</ul>
+
+<h5>Últimas ocorrências</h5>
+<table class="table">
+<tr>
+<th>Aluno</th>
+<th>Tipo</th>
+<th>Status</th>
+<th>Data</th>
+</tr>
+
+{% for o in recentes %}
+<tr>
+<td>{{ o.aluno }}</td>
+<td>{{ o.get_tipo_ocorrencia_display }}</td>
+<td>{{ o.get_status_display }}</td>
+<td>{{ o.data }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<a href="{% url 'lista_ocorrencias' %}" class="btn btn-secondary">
+⬅ Voltar
+</a>
+
+{% endblock %}

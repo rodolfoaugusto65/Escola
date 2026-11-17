@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ importacao.avaliacao.nome }}</title>
+<style>
+@page { size: A4 portrait; margin: 16mm 18mm; }
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; font-size: 12pt; }
+h1 { font-size: 16pt; text-align: center; margin: 0 0 18pt; font-weight: 700; }
+.subtitulo { text-align: center; font-size: 11pt; margin: 0 0 20pt; }
+ol { margin: 0; padding-left: 28px; }
+li { padding: 5px 0; border-bottom: 1px solid #ddd; min-height: 25px; break-inside: avoid; }
+@media screen { body { max-width: 800px; margin: 24px auto; padding: 28px; border: 1px solid #ddd; } .acoes { margin-bottom: 20px; text-align: right; } button { padding: 9px 16px; cursor: pointer; } }
+@media print { .acoes { display: none !important; } }
+</style>
+</head>
+<body>
+<div class="acoes"><button type="button" onclick="window.print()">Imprimir</button></div>
+<h1>{{ importacao.avaliacao.nome }}</h1>
+<p class="subtitulo">Relação de estudantes</p>
+<ol>
+{% for estudante in estudantes %}<li>{{ estudante.nome_aluno }}</li>{% empty %}<li>Nenhum estudante encontrado para os filtros selecionados.</li>{% endfor %}
+</ol>
+</body>
+</html>

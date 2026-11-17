@@ -1,0 +1,8 @@
+VERSAO: 2026.11.13.12
+TITULO: Organização da administração do GerEdu
+
+TEXTO:
+- A tela Atualizações do sistema foi movida para o menu Administração.
+- O atalho foi removido do painel e das abas da Busca Ativa.
+- O acesso permanece restrito a usuários com permissão de gerenciamento.
+- Nenhuma funcionalidade de publicação de comunicados foi removida.

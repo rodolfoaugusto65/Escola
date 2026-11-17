@@ -1,0 +1,175 @@
+{% extends "core/base.html" %}
+
+{% block title %}Editar Frequência{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<div class="card modern-card shadow-sm">
+
+<div class="card-header">
+<h5 class="mb-0 fw-semibold">
+<i data-lucide="calendar-check"></i>
+Editar Frequência
+</h5>
+</div>
+
+<div class="card-body">
+
+<form method="post" id="formFrequencia">
+
+{% csrf_token %}
+
+<div class="row g-3 mb-3">
+
+<div class="col-md-6">
+
+<label class="form-label fw-semibold">
+Turma
+</label>
+
+<input
+type="text"
+class="form-control"
+value="{{ frequencia.turma }}"
+readonly>
+
+</div>
+
+<div class="col-md-6">
+
+<label class="form-label fw-semibold">
+Data
+</label>
+
+<input
+type="text"
+class="form-control"
+value="{{ frequencia.data|date:'d/m/Y' }}"
+readonly>
+
+</div>
+
+</div>
+
+
+<hr>
+
+
+<h6 class="fw-bold mb-3">
+Lista de alunos
+</h6>
+
+
+<div class="table-responsive">
+
+<table class="table modern-table align-middle">
+
+<thead>
+
+<tr>
+<th style="width:120px">Matrícula</th>
+<th>Aluno</th>
+<th class="text-center" style="width:160px">Presente</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for r in registros %}
+
+<tr>
+
+<td>{{ r.aluno.matricula }}</td>
+
+<td>{{ r.aluno.nome }}</td>
+
+<td class="text-center">
+
+<input
+type="checkbox"
+name="presente_{{ r.aluno.id }}"
+{% if r.presente %}checked{% endif %}
+class="form-check-input"
+style="transform:scale(1.3);">
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<hr class="my-4">
+
+
+<div class="d-flex gap-2">
+
+<button
+type="button"
+onclick="confirmarSalvar()"
+class="btn btn-primary btn-modern d-flex align-items-center gap-2 shadow-sm">
+
+<i data-lucide="save"></i>
+Salvar alterações
+
+</button>
+
+
+<a
+href="{% url 'lista_frequencia' %}"
+class="btn btn-secondary btn-modern d-flex align-items-center gap-2 shadow-sm">
+<i data-lucide="arrow-left"></i>
+Cancelar
+</a>
+
+</div>
+
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function confirmarSalvar(){
+
+Swal.fire({
+
+icon: "warning",
+title: "Tem certeza?",
+text: "Deseja salvar as alterações da frequência?",
+showCancelButton: true,
+confirmButtonText: "Sim, salvar",
+cancelButtonText: "Cancelar",
+confirmButtonColor: "#2563eb",
+cancelButtonColor: "#6c757d"
+
+}).then((result)=>{
+
+if(result.isConfirmed){
+
+document.getElementById("formFrequencia").submit()
+
+}
+
+})
+
+}
+
+</script>
+
+{% endblock %}

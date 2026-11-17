@@ -1,0 +1,16 @@
+VERSAO: 2026.11.16.23
+TITULO: Comparativo por ano letivo, mascote compacto e identidade visual unificada da Busca Ativa
+
+TEXTO:
+- Dashboard agora apresenta um comparativo histórico por ano letivo, com total de estudantes monitorados, faixa crítica 25%+, atenção e regularidade.
+- O comparativo histórico considera todos os anos importados e mantém os filtros de turno e turma, independentemente do ano selecionado nos indicadores principais.
+- A tabela de turmas também identifica o ano letivo, evitando agrupar ou apresentar turmas sem contexto temporal.
+- Mascote reduzido novamente: palco aproximado de 88 x 124 px no desktop e menor em telas estreitas, com escala 3D e câmera ajustadas para enquadrar o personagem inteiro.
+- Corrigido o comportamento de passeio: o mascote não altera mais sua posição para fora da área visível; o movimento acontece dentro do próprio palco 3D.
+- Ao desaparecer, o mascote deixa o trevo no extremo inferior direito da janela, com aproximadamente 22 x 22 px no desktop.
+- O botão de retorno permanece fixo no canto mesmo em telas menores.
+- Busca Ativa recebeu identidade visual mais unificada, com cabeçalho, abas, cartões, tabelas, filtros e botões harmonizados.
+- Preservados os fluxos operacionais, rotas, filtros, importações, históricos e providências existentes.
+- Não há alteração de modelos nem migration de banco de dados.
+
+- Migration `0020_comunicado_dashboard_mascote_r23.py` publica a nota TXT no sistema para notificação aos usuários.

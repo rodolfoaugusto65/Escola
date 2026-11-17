@@ -1,0 +1,107 @@
+{% extends base_template %}
+{% block title %}Acompanhamento de Avaliações | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="clipboard-list"></i><h5>Acompanhamento de Avaliações</h5>{% endblock %}
+{% block content %}
+{% if imprimir %}
+<div class="folha-aplicacao">
+  <header class="folha-cabecalho">
+    <h2>Relação de estudantes</h2>
+    <p><strong>Prova:</strong> {{ selecionada.avaliacao.nome }}</p>
+    <p><strong>Data de aplicação:</strong> {{ selecionada.criado_em|date:'d/m/Y' }}</p>
+  </header>
+  {% for grupo in grupos_impressao %}
+  <section class="grupo-turma">
+    <h3>Turma: {{ grupo.turma }}</h3>
+    <ol>{% for nome in grupo.estudantes %}<li>{{ nome }}</li>{% endfor %}</ol>
+  </section>
+  {% empty %}<p>Nenhum estudante encontrado para os filtros selecionados.</p>{% endfor %}
+</div>
+<style>
+@page{size:A4 portrait;margin:15mm}
+body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif}
+.folha-aplicacao{max-width:180mm;margin:0 auto;font-size:11pt}
+.folha-cabecalho{text-align:center;border-bottom:1px solid #999;padding-bottom:8mm;margin-bottom:8mm}
+.folha-cabecalho h2{font-size:16pt;margin:0 0 7mm}
+.folha-cabecalho p{margin:2mm 0}
+.grupo-turma{break-inside:avoid;margin-bottom:8mm}
+.grupo-turma h3{font-size:12pt;background:#f1f1f1;padding:3mm;margin:0 0 3mm}
+.grupo-turma ol{margin:0;padding-left:9mm;columns:1}
+.grupo-turma li{padding:1.5mm 0;break-inside:avoid}
+@media print{.no-print,nav,aside,.sidebar,.topbar,footer{display:none!important}.folha-aplicacao{max-width:none;margin:0}.grupo-turma h3{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+<script>window.addEventListener('load',()=>window.print())</script>
+{% else %}
+<div class="container-fluid py-3 acompanhamento-avaliacoes">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><h3 class="fw-bold mb-1">Acompanhamento das avaliações</h3><p class="text-muted mb-0">Consulte cada aplicação, acompanhe pendências e prepare listas de sala.</p></div>
+    <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:painel' %}">Painel</a><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}">Histórico</a></div>
+  </div>
+
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3"><div><h5 class="fw-bold mb-0">Localizar aplicação</h5><small class="text-muted">Defina primeiro a avaliação e a data de importação.</small></div><a class="btn btn-sm btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:relatorios' %}">Limpar filtros</a></div>
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-lg-4"><label class="form-label">Avaliação</label><select class="form-select" name="avaliacao"><option value="">Todas as avaliações</option>{% for a in avaliacoes %}<option value="{{ a.id }}" {% if filtro_avaliacao == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nome }} · {{ a.ano_letivo }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-2"><label class="form-label">Ano letivo</label><select class="form-select" name="ano_letivo"><option value="">Todos</option>{% for v in anos_letivos %}<option value="{{ v }}" {% if filtro_ano_letivo == v|stringformat:'s' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-lg-2"><label class="form-label">Importada desde</label><input class="form-control" type="date" name="data_inicio" value="{{ data_inicio }}"></div>
+      <div class="col-6 col-lg-2"><label class="form-label">Importada até</label><input class="form-control" type="date" name="data_fim" value="{{ data_fim }}"></div>
+      <div class="col-12 col-lg-2 d-grid"><button class="btn btn-primary"><i data-lucide="search" class="me-1"></i> Buscar</button></div>
+      <div class="col-12"><label class="form-label">Aplicação específica</label><select class="form-select" name="aplicacao"><option value="">Mais recente do período</option>{% for imp in aplicacoes %}<option value="{{ imp.id }}" {% if filtro_aplicacao == imp.id|stringformat:'s' %}selected{% endif %}>{{ imp.avaliacao.nome }} · {{ imp.criado_em|date:'d/m/Y H:i' }} · {{ imp.total_registros }} registros</option>{% endfor %}</select></div>
+    </div>
+    <details class="mt-3"><summary class="fw-semibold text-primary">Abrir filtros da lista de estudantes</summary>
+      <div class="row g-3 mt-1">
+        <div class="col-6 col-lg-2"><label class="form-label">Ano/série</label><select class="form-select" name="ano"><option value="">Todos</option>{% for v in anos_disponiveis %}<option value="{{ v }}" {% if ano_filtro == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+        <div class="col-6 col-lg-2"><label class="form-label">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for v in turmas_disponiveis %}<option value="{{ v }}" {% if turma_filtro == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+        <div class="col-6 col-lg-2"><label class="form-label">Turno</label><select class="form-select" name="turno"><option value="">Todos</option>{% for v,label in turnos_disponiveis %}<option value="{{ v }}" {% if turno_filtro == v %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-6 col-lg-2"><label class="form-label">Situação</label><select class="form-select" name="situacao"><option value="">Todas</option><option value="pendente" {% if situacao_filtro == 'pendente' %}selected{% endif %}>Pendente</option><option value="ausente" {% if situacao_filtro == 'ausente' %}selected{% endif %}>Ausente</option><option value="outro" {% if situacao_filtro == 'outro' %}selected{% endif %}>Outra</option><option value="realizado" {% if situacao_filtro == 'realizado' %}selected{% endif %}>Realizado</option></select></div>
+        <div class="col-6 col-lg-2"><label class="form-label">Realização desde</label><input class="form-control" type="date" name="realizacao_inicio" value="{{ realizacao_inicio }}"></div>
+        <div class="col-6 col-lg-2"><label class="form-label">Realização até</label><input class="form-control" type="date" name="realizacao_fim" value="{{ realizacao_fim }}"></div>
+        <div class="col-12 col-lg-6"><label class="form-label">Estudante ou matrícula</label><input class="form-control" name="q" value="{{ busca }}" placeholder="Pesquisar estudante"></div>
+      </div>
+    </details>
+  </form>
+
+  {% if comparativo %}
+  <details class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <summary class="fw-bold">Histórico comparativo das aplicações <span class="text-muted fw-normal">({{ comparativo|length }} registros)</span></summary>
+    <p class="small text-muted mt-2">Cada importação é exibida separadamente; os números não são somados entre aplicações diferentes.</p>
+    <div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Importação</th><th>Prova</th><th>Registros</th><th>Realizados</th><th>Pendentes</th><th>Ausentes</th><th>Participação</th><th></th></tr></thead><tbody>
+    {% for app in comparativo %}<tr><td class="text-nowrap">{{ app.criado_em|date:'d/m/Y H:i' }}</td><td>{{ app.avaliacao.nome }}</td><td>{{ app.total_registros }}</td><td class="text-success">{{ app.qtd_realizados }}</td><td class="text-warning">{{ app.qtd_pendentes }}</td><td class="text-danger">{{ app.qtd_ausentes|add:app.qtd_outros }}</td><td>{% widthratio app.qtd_realizados app.total_registros 100 %}%</td><td><a class="btn btn-sm btn-outline-primary" href="?avaliacao={{ app.avaliacao_id }}&aplicacao={{ app.id }}">Abrir</a></td></tr>{% endfor %}
+    </tbody></table></div>
+  </details>
+  {% endif %}
+
+  {% if selecionada %}
+  <section class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2"><div><small class="text-muted">Aplicação selecionada</small><h4 class="fw-bold mb-1">{{ selecionada.avaliacao.nome }}</h4><div class="text-muted small">Data de aplicação/importação: {{ selecionada.criado_em|date:'d/m/Y H:i' }} · {{ selecionada.arquivo }}</div></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-danger btn-sm" href="?{{ request.GET.urlencode }}&lista=pendencias&csv=1">Exportar pendentes/ausentes (CSV)</a><a class="btn btn-outline-primary btn-sm" href="?{{ request.GET.urlencode }}&lista=todos&csv=1">Exportar todos (CSV)</a><a class="btn btn-outline-secondary btn-sm" target="_blank" href="?{{ request.GET.urlencode }}&imprimir=1">Imprimir relação</a></div></div>
+  </section>
+  <details class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <summary class="fw-bold">Indicadores da aplicação <span class="text-muted fw-normal">· {{ resumo.total|default:0 }} estudantes</span></summary>
+    <div class="row g-2 mt-2">
+      <div class="col-6 col-xl"><div class="indicador"><small>Filtrados</small><strong>{{ resumo.total|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-success"><small>Realizados</small><strong>{{ resumo.realizados|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-warning"><small>Pendentes</small><strong>{{ resumo.pendentes|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-danger"><small>Ausentes / outras</small><strong>{{ resumo.ausentes|add:resumo.outros|default:0 }}</strong></div></div>
+      <div class="col-6 col-xl"><div class="indicador text-primary"><small>Participação</small><strong>{{ percentual_realizacao }}%</strong></div></div>
+    </div>
+  </details>
+  <details class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+    <summary class="fw-bold">Resumo das pendências por turma e turno <span class="badge text-bg-danger">{{ total_pendencias }}</span></summary>
+    <div class="table-responsive mt-3"><table class="table table-sm mb-0"><thead><tr><th>Ano/série</th><th>Turma</th><th class="text-end">Pendentes / ausentes</th></tr></thead><tbody>{% for item in agrupado %}<tr><td>{{ item.ano_serie }}</td><td>{{ item.turma|default:'Não identificada' }}</td><td class="text-end fw-bold text-danger">{{ item.total }}</td></tr>{% empty %}<tr><td colspan="3" class="text-success">Nenhuma pendência.</td></tr>{% endfor %}</tbody></table></div>
+    <div class="d-flex flex-wrap gap-2 mt-3">{% for item in agrupado_turno %}<span class="badge rounded-pill text-bg-light border">{{ item.turno_label }}: {{ item.total }}</span>{% endfor %}</div>
+  </details>
+  <section class="card border-0 shadow-sm rounded-4 p-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h5 class="fw-bold mb-0">Relação de estudantes</h5><small class="text-muted">Use a lista de pendências para busca ativa ou todos para conferência da aplicação.</small></div><span class="badge text-bg-light">{{ lista_exibicao_total }} estudante(s)</span></div>
+    <div class="d-flex flex-wrap gap-2 mb-3"><a class="btn btn-sm {% if lista_tipo == 'pendencias' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="?{{ request.GET.urlencode }}&lista=pendencias">Pendentes e ausentes</a><a class="btn btn-sm {% if lista_tipo == 'todos' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?{{ request.GET.urlencode }}&lista=todos">Todos os estudantes</a><a class="btn btn-sm btn-outline-secondary ms-auto" href="?{{ request.GET.urlencode }}&imprimir=1" target="_blank">Imprimir lista filtrada</a></div>
+    <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Estudante</th><th>Matrícula</th><th>Ano/série</th><th>Turma</th><th>Situação</th><th>Data da realização</th></tr></thead><tbody>{% for r in registros %}<tr><td class="fw-semibold">{{ r.nome_aluno }}</td><td>{{ r.matricula }}</td><td>{{ r.ano_serie }}</td><td>{{ r.turma }}</td><td><span class="badge {% if r.situacao == 'ausente' %}text-bg-danger{% elif r.situacao == 'pendente' %}text-bg-warning{% elif r.situacao == 'realizado' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ r.get_situacao_display }}</span></td><td>{{ r.realizado_em|date:'d/m/Y H:i'|default:'—' }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">Nenhum estudante encontrado.</td></tr>{% endfor %}</tbody></table></div>
+    {% if registros.has_other_pages %}<div class="d-flex justify-content-between mt-3"><small class="text-muted">Página {{ registros.number }} de {{ registros.paginator.num_pages }}</small><div class="btn-group btn-group-sm">{% if registros.has_previous %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.previous_page_number }}">Anterior</a>{% endif %}{% if registros.has_next %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ registros.next_page_number }}">Próxima</a>{% endif %}</div></div>{% endif %}
+  </section>
+  {% else %}<div class="alert alert-info">Não há aplicações para os filtros selecionados.</div>{% endif %}
+</div>
+<style>
+.acompanhamento-avaliacoes .indicador{height:100%;min-height:88px;padding:14px 16px;border:1px solid #e6eaf0;border-radius:14px;background:#fff;display:flex;flex-direction:column;justify-content:space-between}
+.acompanhamento-avaliacoes .indicador small{color:#667085}.acompanhamento-avaliacoes .indicador strong{font-size:1.65rem;line-height:1.1}
+.acompanhamento-avaliacoes details>summary{cursor:pointer;list-style:none;user-select:none}.acompanhamento-avaliacoes details>summary::-webkit-details-marker{display:none}.acompanhamento-avaliacoes details>summary:after{content:'＋';float:right;color:#667085}.acompanhamento-avaliacoes details[open]>summary:after{content:'−'}
+@media(max-width:768px){.acompanhamento-avaliacoes .indicador{min-height:76px}}
+</style>
+{% endif %}
+{% endblock %}

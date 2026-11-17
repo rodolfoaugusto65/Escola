@@ -1,0 +1,30 @@
+GEREDU — ATUALIZAÇÃO r7
+Data: 13/11/2026
+Base: r6
+
+MELHORIAS NO ACOMPANHAMENTO DAS AVALIAÇÕES
+- A lista de acompanhamento agora alterna entre pendentes/ausentes e todos os estudantes da aplicação.
+- A impressão gera a lista completa filtrada, sem limitar à página atualmente exibida.
+- A folha de conferência inclui data de realização e campos para confirmação em sala e visto/assinatura.
+- Incluído resumo de pendências por turno, além do agrupamento por ano/série e turma.
+- A análise de uma linha do comparativo abre diretamente a aplicação escolhida, sem duplicar o parâmetro de seleção na URL.
+- Ampliado para até 500 o conjunto de aplicações exibido no seletor e no comparativo, facilitando consultas de períodos anteriores.
+- A exportação CSV continua respeitando a aplicação e os filtros selecionados.
+
+PRESERVAÇÃO
+- Nenhum modelo ou migration foi alterado.
+- Nenhum histórico ou registro de avaliação é apagado ou sobrescrito.
+- Alterações concentradas na view de relatórios e no template de relatórios.
+
+VALIDAÇÃO
+- Compilação sintática do módulo Python: aprovada.
+- Balanceamento básico das tags de controle do template: aprovado.
+- Testes funcionais Django não executados neste ambiente, pois Django não está instalado.
+
+IMPLANTAÇÃO
+1. Faça backup do PostgreSQL.
+2. Aplique o patch sobre a versão r6 ou substitua pelo pacote completo r7.
+3. Não há migration nova para esta atualização.
+4. Execute: python manage.py check
+5. Execute: python manage.py test acompanhamento_avaliacoes
+6. Teste relatórios com uma aplicação antiga e uma recente, incluindo impressão e CSV.

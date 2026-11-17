@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% block title %}Fila prioritária 25%+ | Busca Ativa{% endblock %}
+{% block content %}
+<style>
+.ba25-wrap{max-width:1600px;margin:auto;padding:18px 8px 34px;color:#20334b}
+.ba25-hero{background:linear-gradient(115deg,#102b45,#1c5278 65%,#2e6da6);color:#fff;border-radius:20px;padding:22px 25px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;box-shadow:0 12px 30px #143b5c20}
+.ba25-hero h2{font-weight:850;margin:0}.ba25-hero p{color:#e0efff;margin:5px 0 0}
+.ba25-hero .btn{background:#fff;color:#174d73;border:0;font-weight:750;border-radius:10px;padding:10px 15px}
+.ba25-callout{margin:14px 0;padding:15px 18px;border:1px solid #f0c4ca;background:#fff4f5;color:#8d2432;border-radius:14px}
+.ba25-metrics{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin:14px 0}
+.ba25-metric{background:#fff;border:1px solid #e5eaf1;border-radius:14px;padding:15px;box-shadow:0 5px 18px #1b355609}
+.ba25-metric small{display:block;color:#71839a;font-weight:700}.ba25-metric strong{font-size:28px;color:#b42336}
+.ba25-filter{background:#fff;border:1px solid #e2e9f1;border-radius:14px;padding:15px;margin-bottom:14px;box-shadow:0 5px 18px #1b355609}
+.ba25-table{background:#fff;border:1px solid #e3eaf1;border-radius:15px;overflow:hidden;box-shadow:0 6px 20px #1b35560a}
+.ba25-table table{margin:0}.ba25-table thead th{background:#f3f7fb;color:#6e8097;text-transform:uppercase;font-size:10px;letter-spacing:.06em;padding:12px;border-bottom:1px solid #e4eaf1;white-space:nowrap}
+.ba25-table tbody td{padding:12px;border-bottom:1px solid #edf1f5;vertical-align:middle}
+.ba25-table tbody tr:hover{background:#fffafb}
+.ba25-pill{display:inline-block;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:800}
+.ba25-pill.red{background:#ffebee;color:#b42336}.ba25-pill.amber{background:#fff3da;color:#8a5a00}.ba25-pill.blue{background:#eaf4ff;color:#245e91}
+.ba25-action{background:#b42336;color:#fff;border:0;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
+.ba25-action:hover{background:#951b2a;color:#fff}
+@media(max-width:800px){.ba25-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.ba25-metrics{grid-template-columns:1fr}.ba25-hero{padding:18px}.ba25-wrap{padding-inline:2px}}
+</style>
+<div class="ba25-wrap">
+ <header class="ba25-hero">
+  <div><div class="small fw-bold text-uppercase opacity-75 mb-2">GerEdu · Central de trabalho</div><h2>Fila prioritária · Relatório 25%+</h2><p>Todos os estudantes sinalizados no relatório complementar mais recente que ainda precisam de providência.</p></div>
+  <a class="btn" href="{% url 'busca_ativa:painel' %}">Painel de acompanhamento</a>
+ </header>
+ <div class="ba25-callout"><strong>Regra da fila:</strong> o estudante permanece nesta lista até existir uma providência registrada com prazo vigente. Ações vencidas ou sem prazo não retiram o estudante da fila. Quando o prazo vence sem conclusão, ele volta a aparecer. O histórico não é apagado.</div>
+ <form method="get" class="ba25-filter"><div class="row g-2 align-items-end">
+  <div class="col-md-3"><label class="form-label">Estudante/matrícula</label><input class="form-control" name="q" value="{{ q }}" placeholder="Digite nome ou matrícula"></div>
+  <div class="col-md-2"><label class="form-label">Turno</label><select class="form-select" name="turno"><option value="">Todos</option>{% for v,l in turnos %}<option value="{{ v }}" {% if turno == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><label class="form-label">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for t in turmas %}<option value="{{ t.id }}" {% if turma == t.id|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <div class="col-md-2 d-grid"><button class="btn btn-danger">Filtrar fila</button></div><div class="col-md-2 d-grid"><a class="btn btn-light" href="{% url 'busca_ativa:relatorio_25mais' %}">Limpar</a></div>
+ </div></form>
+ <div class="ba25-metrics">
+  <div class="ba25-metric"><small>Estudantes aguardando providência · {{ ano_letivo }}</small><strong>{{ total }}</strong></div>
+  <div class="ba25-metric"><small>Como trabalhar nesta tela</small><div class="mt-2">Abra a ficha, registre a providência, defina responsável e prazo de retorno. Enquanto a ação estiver dentro do prazo, o estudante fica na aba Acompanhamentos. Se o prazo vencer sem conclusão, ele retorna automaticamente à fila prioritária.</div></div>
+ </div>
+ <div class="ba25-table"><div class="table-responsive"><table class="table table-hover align-middle">
+  <thead><tr><th>Estudante</th><th>Turma/turno</th><th>Faltas</th><th>% relatório 25%+</th><th>Situação da providência</th><th>Atualização</th><th></th></tr></thead>
+  <tbody>
+  {% for s in situacoes %}
+  <tr>
+   <td><strong>{{ s.aluno.nome }}</strong><br><small class="text-muted">{{ s.aluno.matricula }}</small></td>
+   <td>{{ s.aluno.turma|default:"—" }}<br><small>{{ s.aluno.turma.get_turno_display|default:"" }}</small></td>
+   <td>{{ s.faltas_final|floatformat:0 }}</td>
+   <td><span class="ba25-pill red">{{ s.percentual_relatorio_25 }}%</span></td>
+   <td>{% if s.tem_acao_vencida %}<span class="ba25-pill amber">Ação vencida · revisar</span>{% elif s.tem_acao_sem_prazo %}<span class="ba25-pill amber">Ação sem prazo</span>{% else %}<span class="ba25-pill blue">Aguardando ação</span>{% endif %}</td>
+   <td>{{ s.atualizado_em|date:"d/m/Y H:i" }}</td>
+   <td><a class="ba25-action" href="{% url 'busca_ativa:ficha' s.aluno_id %}">{% if s.tem_acao_vencida or s.tem_acao_sem_prazo %}Revisar providência{% else %}Registrar providência{% endif %}</a></td>
+  </tr>
+  {% empty %}<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum estudante pendente no relatório 25%+ mais recente para os filtros selecionados.</td></tr>{% endfor %}
+  </tbody>
+ </table></div>
+ <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border-top"><small>{{ total }} registro(s)</small><div>{% if situacoes.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ situacoes.previous_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Anterior</a>{% endif %} {% if situacoes.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ situacoes.next_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Próxima</a>{% endif %}</div></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<h3>📋 Prontuário do Aluno</h3>
+
+<h5>{{ aluno.nome }}</h5>
+
+<table class="table table-striped">
+<tr>
+<th>Data</th>
+<th>Tipo</th>
+<th>Status</th>
+<th>Descrição</th>
+</tr>
+
+{% for o in ocorrencias %}
+<tr>
+<td>{{ o.data }}</td>
+<td>{{ o.get_tipo_ocorrencia_display }}</td>
+<td>{{ o.get_status_display }}</td>
+<td>{{ o.descricao }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

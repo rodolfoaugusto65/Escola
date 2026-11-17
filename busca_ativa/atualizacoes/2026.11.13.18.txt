@@ -1,0 +1,12 @@
+VERSAO: 2026.11.13.18
+TITULO: Duende 3D animado, dança, portal de moedas e temporizador
+
+TEXTO:
+- Mascote recebe animação contínua de dança com balanço, saltos, gestos e movimentos de cabeça e braços.
+- Portal mágico passa a ter dimensões equivalentes ao corpo do mascote.
+- Moedas douradas surgem em volta do duende durante o desaparecimento e a reaparição.
+- Adicionada preferência de tempo para o mascote desaparecer: sempre visível, 5, 15 ou 30 minutos, 1 ou 2 horas.
+- Quando o tempo termina, o duende se recolhe e deixa um botão mágico para trazê-lo de volta.
+- Preferência de visibilidade fica salva no navegador do usuário.
+- Calendário mostra dias letivos restantes e calcula também dias corridos até a data de encerramento cadastrada.
+- Mantidos arrastar, boas-vindas personalizadas, diálogos fecháveis e notificações globais.

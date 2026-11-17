@@ -1,0 +1,24 @@
+GEREDU r27 — CORREÇÃO DE PUBLICAÇÃO E EXPORTAÇÃO
+
+Base utilizada: arquivo Escola ultima versão.zip fornecido pelo usuário.
+Raiz correta do projeto: pasta Escola/ (onde estão manage.py, escola/settings.py e core/templates/core/base.html).
+
+Correções:
+- App registrado no settings.py principal.
+- URL registrada em escola/urls.py.
+- Link do módulo colocado diretamente na barra lateral para usuários autenticados.
+- Migração inicial cria a tabela RegistroMapeamento.
+- Migração seguinte publica o comunicado de atualização para o mecanismo existente de leitura obrigatória.
+- Exportação usa a planilha original enviada e preenche a aba Mapeamento nas colunas A:S.
+
+Aplicação:
+1. Faça backup do PostgreSQL.
+2. Aplique o patch dentro da pasta Escola/ preservando os caminhos.
+3. Execute python manage.py check
+4. Execute python manage.py showmigrations mapeamento_aprendizagem
+5. Execute python manage.py migrate
+6. Execute python manage.py collectstatic --noinput
+7. Reinicie o serviço Railway.
+8. Acesse /mapeamento-aprendizagem/ e confirme o link na barra lateral.
+
+Não substitua .env, credenciais, media/ ou banco de dados.

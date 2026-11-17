@@ -1,0 +1,14 @@
+VERSAO: 2026.11.16.21
+TITULO: Mascote com desaparecimento mágico, boas-vindas letivas e painel Busca Ativa por abas
+
+TEXTO:
+- Mascote ampliado e reposicionado para evitar corte da cabeça e do corpo no canvas 3D; câmera e enquadramento ajustados para exibir o personagem inteiro.
+- Balão de boas-vindas ampliado, com melhor largura e quebra de texto, exibindo o nome do usuário e os dias letivos restantes até o encerramento do calendário.
+- A notificação inicial também apresenta os dias corridos restantes, calculados no navegador a partir da data final cadastrada.
+- Adicionado botão explícito para o duende desaparecer com animação mágica de brilho, rotação, redução e partículas/moedas; quando oculto, permanece um botão de trevo de quatro folhas no canto da tela.
+- O botão de trevo faz o duende reaparecer com animação mágica; preservado o controle de tempo de visibilidade.
+- Adicionado comando para convidar o duende a dançar.
+- Painel de acompanhamento da Busca Ativa reorganizado em abas internas: Visão geral, Prazos e acompanhamentos, Prioridade 25%+ e Importações e backup.
+- Destaque visual para o último upload, com nome do arquivo, data/hora, ano letivo, total de linhas, vinculados e não vinculados.
+- A fila principal do painel passa a exibir 15 estudantes por página para ocupar melhor a área útil, mantendo os filtros e a paginação.
+- Preservadas as views, URLs, consultas, ações, histórico de importações, backup e regras de negócio existentes.

@@ -1,0 +1,28 @@
+# Segredos e configuracoes locais
+.env
+.env.*
+!.env.example
+
+# Bancos locais e backups (nao enviar ao GitHub)
+*.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+
+# Dados pessoais e arquivos enviados por usuarios
+media/
+private/
+backups/
+
+# Ambientes e arquivos Python gerados
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Arquivos de build/log
+staticfiles/
+*.log
+.DS_Store
+Thumbs.db

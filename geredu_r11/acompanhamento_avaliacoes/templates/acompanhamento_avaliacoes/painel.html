@@ -1,0 +1,73 @@
+{% extends base_template %}
+{% block title %}Acompanhamento de Avaliações | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="chart-no-axes-combined"></i><h5>Acompanhamento de Avaliações</h5>{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><h3 class="fw-bold mb-1">Painel de participação</h3><p class="text-muted mb-0">Acompanhe a realização das avaliações e as pendências por turma.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-outline-primary" href="{% url 'acompanhamento_avaliacoes:relatorios' %}"><i data-lucide="clipboard-list" class="me-1"></i> Relatórios e listas</a><a class="btn btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history" class="me-1"></i> Histórico</a><a class="btn btn-primary" href="{% url 'acompanhamento_avaliacoes:importar' %}"><i data-lucide="file-up" class="me-1"></i> Importar planilhas</a></div>
+  </div>
+  {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">{{ message }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+  <form method="get" class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <div><h6 class="fw-bold mb-0"><i data-lucide="sliders-horizontal" class="me-1"></i> Filtros de acompanhamento</h6><small class="text-muted">Os indicadores, gráficos e listas acompanham os filtros aplicados.</small></div>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'acompanhamento_avaliacoes:painel' %}">Limpar filtros</a>
+    </div>
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-xl-4"><label class="form-label small fw-semibold">Avaliação</label><select class="form-select" name="avaliacao"><option value="">Mais recente</option>{% for a in avaliacoes %}<option value="{{ a.id }}" {% if filtro_avaliacao == a.id|stringformat:'s' %}selected{% endif %}>{{ a.nome }} · {{ a.ano_letivo }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Ano/série</label><select class="form-select" name="ano"><option value="">Todas</option>{% for item in anos_disponiveis %}<option value="{{ item }}" {% if filtro_ano == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for item in turmas_disponiveis %}<option value="{{ item }}" {% if filtro_turma == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Situação</label><select class="form-select" name="situacao"><option value="">Todas</option><option value="realizado" {% if filtro_situacao == 'realizado' %}selected{% endif %}>Realizado</option><option value="pendente" {% if filtro_situacao == 'pendente' %}selected{% endif %}>Aguardando</option><option value="ausente" {% if filtro_situacao == 'ausente' %}selected{% endif %}>Ausente</option><option value="outro" {% if filtro_situacao == 'outro' %}selected{% endif %}>Outra situação</option></select></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Aluno / matrícula</label><input class="form-control" name="q" value="{{ busca }}" placeholder="Digite para buscar"></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Realização a partir de</label><input class="form-control" type="date" name="data_inicio" value="{{ data_inicio }}"></div>
+      <div class="col-6 col-md-3 col-xl-2"><label class="form-label small fw-semibold">Realização até</label><input class="form-control" type="date" name="data_fim" value="{{ data_fim }}"></div>
+      <div class="col-12 col-md-3 col-xl-2 d-grid"><button class="btn btn-primary"><i data-lucide="filter" class="me-1"></i> Aplicar filtros</button></div>
+    </div>
+  </form>
+  {% if ultima %}
+  <div class="d-flex justify-content-between flex-wrap mb-3"><div><span class="text-muted small">Dados da importação mais recente</span><div class="fw-semibold">{{ ultima.avaliacao.nome }}</div></div><div class="text-muted small">{{ ultima.criado_em|date:'d/m/Y H:i' }} · {{ ultima.arquivo }}</div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Registros</div><div class="display-6 fw-bold">{{ total }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Realizaram</div><div class="display-6 fw-bold text-success">{{ resumo.realizados|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Pendentes / ausentes</div><div class="display-6 fw-bold text-danger">{{ resumo.pendentes|add:resumo.ausentes|default:0 }}</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="text-muted small">Participação</div><div class="display-6 fw-bold text-primary">{{ percentual }}%</div><div class="progress mt-2" style="height:8px"><div class="progress-bar bg-primary" style="width:{{ percentual }}%"></div></div></div></div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-12"><div class="card border-0 shadow-sm rounded-4 p-3 h-100"><div class="d-flex flex-wrap justify-content-between align-items-start gap-2"><div><h6 class="fw-bold mb-1">Evolução entre importações</h6><p class="text-muted small mb-0">Cada ponto representa uma nova importação. O histórico anterior permanece preservado.</p></div><span class="badge text-bg-light">{{ historico|length }} registros históricos</span></div><div class="pt-3"><canvas id="evolucaoChart" height="90"></canvas></div></div></div>
+  </div>
+  <section class="card border-0 shadow-sm rounded-4 p-3 mb-4" id="dias-realizacao">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h5 class="fw-bold mb-1">Calendário de realização</h5><p class="text-muted small mb-0">Quantidade de estudantes que concluíram a avaliação em cada dia, conforme a data registrada na planilha.</p></div><span class="badge text-bg-success">{{ realizacoes_por_dia|length }} dia(s) com realização</span></div>
+    {% if realizacoes_sem_data %}<div class="alert alert-warning py-2 small mb-3"><i data-lucide="info" class="me-1"></i>{{ realizacoes_sem_data }} realização(ões) sem data reconhecida na planilha. Confira as colunas de data/entrega para completar a análise diária.</div>{% endif %}
+    <div class="row g-3">
+      <div class="col-12 col-xl-7"><div class="av-turma-card"><canvas id="realizacoesDiaChart" height="120"></canvas></div></div>
+      <div class="col-12 col-xl-5"><div class="table-responsive" style="max-height:300px"><table class="table table-sm table-hover align-middle mb-0"><thead><tr><th>Dia</th><th class="text-end">Realizações</th></tr></thead><tbody>{% for d in realizacoes_por_dia %}<tr><td>{{ d.dia|date:'d/m/Y' }}</td><td class="text-end fw-semibold text-success">{{ d.total }}</td></tr>{% empty %}<tr><td colspan="2" class="text-center text-muted py-3">A planilha ainda não possui datas de realização reconhecidas.</td></tr>{% endfor %}</tbody></table></div></div>
+    </div>
+  </section>
+  <section class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+    <div class="mb-3"><h5 class="fw-bold mb-1">Dias de realização por turma</h5><p class="text-muted small mb-0">Distribuição diária para comparar o andamento entre as turmas.</p></div>
+    <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Ano/série</th><th>Turma</th><th>Data</th><th class="text-end">Alunos que realizaram</th></tr></thead><tbody>{% for item in realizacoes_por_turma_dia %}<tr><td>{{ item.ano_serie|default:'—' }}</td><td>{{ item.turma|default:'Não identificada' }}</td><td>{{ item.dia|date:'d/m/Y' }}</td><td class="text-end fw-semibold text-success">{{ item.total }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Sem datas de realização para apresentar.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+  <section class="card border-0 shadow-sm rounded-4 p-3 mb-4" id="resumo-turmas">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><h5 class="fw-bold mb-1">Acompanhamento por turma</h5><p class="text-muted small mb-0">Compare a realização, identifique as turmas com mais pendências e abra a lista filtrada.</p></div><span class="badge text-bg-primary">{{ por_turma|length }} turma(s)</span></div>
+    <div class="row g-3">
+      {% for t in por_turma %}
+      <div class="col-12 col-md-6 col-xxl-4"><article class="av-turma-card h-100">
+        <div class="d-flex justify-content-between align-items-start gap-2"><div><div class="small text-muted">{{ t.ano_serie|default:'Etapa não informada' }}</div><h6 class="fw-bold mb-0">Turma {{ t.turma|default:'Não identificada' }}</h6></div><span class="av-percentual {% if t.percentual >= 80 %}is-good{% elif t.percentual >= 50 %}is-mid{% else %}is-low{% endif %}">{{ t.percentual }}%</span></div>
+        <div class="progress my-3" role="progressbar" aria-valuenow="{{ t.percentual }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {% if t.percentual >= 80 %}bg-success{% elif t.percentual >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ t.percentual }}%"></div></div>
+        <div class="d-flex flex-wrap gap-3 small"><span><strong>{{ t.total }}</strong> alunos</span><span class="text-success"><strong>{{ t.realizados }}</strong> realizaram</span><span class="text-danger"><strong>{{ t.nao_realizados }}</strong> pendentes</span></div>
+        <a class="btn btn-sm btn-outline-primary mt-3" href="?avaliacao={{ filtro_avaliacao }}&ano={{ t.ano_serie|urlencode }}&turma={{ t.turma|urlencode }}#resumo-turmas">Ver alunos desta turma <i data-lucide="arrow-up-right" class="ms-1"></i></a>
+      </article></div>
+      {% empty %}<div class="col-12"><div class="text-center text-muted py-4">Não há turmas para os filtros selecionados.</div></div>{% endfor %}
+    </div>
+  </section>
+  <div class="card border-0 shadow-sm rounded-4 p-3 mb-4"><div class="d-flex justify-content-between align-items-center mb-2"><div><h6 class="fw-bold mb-0">Alunos que precisam de acompanhamento</h6><small class="text-muted">Pendentes, ausentes ou com situação não reconhecida na planilha.</small></div><span class="badge text-bg-danger">{{ pendentes_total }} pendentes</span></div><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Aluno</th><th>Matrícula</th><th>Ano/série</th><th>Turma</th><th>Situação</th><th>Entrega</th></tr></thead><tbody>{% for r in pendentes_lista %}<tr><td class="fw-semibold">{{ r.nome_aluno }}</td><td>{{ r.matricula }}</td><td>{{ r.ano_serie }}</td><td>{{ r.turma }}</td><td><span class="badge {% if r.situacao == 'pendente' %}text-bg-warning{% elif r.situacao == 'ausente' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ r.get_situacao_display }}</span></td><td>{{ r.entregue_em|default:'—' }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-success py-4">Nenhuma pendência encontrada nos filtros selecionados.</td></tr>{% endfor %}</tbody></table></div>
+    {% if pendentes_lista.has_other_pages %}<nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3" aria-label="Paginação de alunos pendentes"><small class="text-muted">Página {{ pendentes_lista.number }} de {{ pendentes_lista.paginator.num_pages }} · {{ pendentes_total }} registros</small><div class="btn-group btn-group-sm">{% if pendentes_lista.has_previous %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ pendentes_lista.previous_page_number }}">Anterior</a>{% endif %}{% if pendentes_lista.has_next %}<a class="btn btn-outline-secondary" href="?{{ request.GET.urlencode }}&pagina={{ pendentes_lista.next_page_number }}">Próxima</a>{% endif %}</div></nav>{% endif %}
+  </div>
+  {% else %}
+  <div class="card border-0 shadow-sm rounded-4 p-5 text-center"><i data-lucide="file-spreadsheet" style="width:48px;height:48px" class="text-primary mx-auto mb-3"></i><h5 class="fw-bold">Ainda não há avaliações importadas</h5><p class="text-muted">Envie as planilhas dos anos/séries para iniciar o acompanhamento histórico.</p><a class="btn btn-primary mx-auto" href="{% url 'acompanhamento_avaliacoes:importar' %}">Importar primeira planilha</a></div>
+  {% endif %}
+</div>
+{% if ultima %}<script>
+(function(){if(!window.Chart)return;const el=document.getElementById('evolucaoChart');if(el)new Chart(el,{type:'line',data:{labels:{{ grafico_labels|safe }},datasets:[{label:'Realização (%)',data:{{ grafico_percentuais|safe }},borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.12)',fill:true,tension:.3}]},options:{responsive:true,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:true}}}});const dias=document.getElementById('realizacoesDiaChart');if(dias)new Chart(dias,{type:'bar',data:{labels:{{ datas_labels|safe }},datasets:[{label:'Alunos que realizaram',data:{{ datas_valores|safe }},backgroundColor:'#16a34a',borderRadius:6}]},options:{responsive:true,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}})})();
+</script>{% endif %}
+{% endblock %}

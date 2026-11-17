@@ -1,0 +1,32 @@
+GEREDU — MENU LATERAL E HISTÓRICO DE ATUALIZAÇÕES
+Versão desta entrega: 2026.11.10.4
+
+1. MENU LATERAL
+- Recuperada a animação flutuante do ícone GerEdu, que havia sido desativada por uma regra CSS posterior.
+- Adicionadas animações discretas de brilho e movimento, respeitando prefers-reduced-motion.
+- Transições mais suaves ao recolher/expandir a barra, abrir grupos e passar pelos itens.
+- Tooltips com o nome dos itens quando o menu está recolhido.
+- Mantidos links, permissões, grupos, atalhos e comportamento HTMX existentes.
+
+2. HISTÓRICO PERSISTENTE DE VERSÕES
+O GerEdu já possui os modelos ComunicadoSistema e LeituraComunicado. Cada versão é armazenada no banco de dados e cada usuário confirma a leitura uma única vez. Os registros anteriores não são apagados.
+
+Foi adicionado o comando idempotente registrar_atualizacao. Para registrar esta entrega no banco LOCAL, execute na raiz do projeto:
+
+python manage.py registrar_atualizacao --versao 2026.11.10.4 --titulo "Menu lateral animado e histórico permanente de versões" --texto "O menu lateral recuperou o capelo em tamanho de destaque com animação flutuante e brilho ciano, ganhou acabamento em camadas, grupos mais legíveis, transições mais fluidas, melhor destaque dos itens ativos e dicas de identificação quando recolhido. Também foram refinados cartões, formulários, tabelas, cabeçalhos e responsividade dos módulos. O histórico de versões foi padronizado: cada implantação deve registrar sua versão, resumo das alterações e data no banco de dados. O comunicado será apresentado aos usuários até a confirmação de leitura."
+
+Para cada atualização futura, use obrigatoriamente uma NOVA versão e execute o mesmo comando com --versao, --titulo e --texto atualizados. O comando não duplica nem sobrescreve versões já registradas.
+
+Após publicar no Railway, execute o MESMO comando no ambiente de produção (Railway > serviço > terminal/shell), usando exatamente a mesma versão. Assim o histórico fica gravado no PostgreSQL de produção e os usuários recebem o comunicado. Não basta executar somente localmente: local e produção possuem bancos separados.
+
+3. ADMINISTRAÇÃO
+Os comunicados e o total de leituras ficam disponíveis no Django Admin em Busca Ativa > Comunicados do sistema. Os registros antigos permanecem disponíveis.
+
+4. VALIDAÇÃO
+- Executar: python manage.py check
+- Executar: python manage.py test busca_ativa
+- Abrir e recolher o menu, abrir grupos, conferir tooltips e testar em tela estreita.
+- Executar o comando de registro uma vez localmente e repetir para confirmar que ele não duplica a versão.
+- Antes do Railway: backup PostgreSQL, publicar código, executar o comando no banco de produção e confirmar o comunicado.
+
+Não substitua .env, banco de dados, media, credenciais ou arquivos do R2.

@@ -1,0 +1,10 @@
+VERSAO: 2026.11.13.10
+TITULO: GerEdu r10 — relatórios e impressão simplificados
+TEXTO:
+- Reorganização do acompanhamento das avaliações para reduzir a quantidade de informações exibidas simultaneamente.
+- Indicadores da aplicação recolhidos inicialmente e disponíveis sob demanda.
+- Histórico comparativo e resumo de pendências mantidos em seções expansíveis.
+- Impressão independente da interface administrativa, sem menus, indicadores, gráficos, tabelas de análise ou rodapés do sistema.
+- Folha de impressão A4 com somente prova, data de aplicação, turma e relação nominal dos estudantes.
+- Impressão agrupada por turma e respeitando os filtros e a lista escolhida (pendentes/ausentes ou todos).
+- A atualização é registrada automaticamente no sistema pela migration 0010, lendo este arquivo TXT.

@@ -1,0 +1,57 @@
+GEREDU - VERSAO ADITIVA r5
+Data: 13/11/2026
+Base: r4 (13/11/2026)
+
+1. ACOMPANHAMENTO DE AVALIACOES
+- Nova tela Relatorios e listas, acessivel pelo painel de Avaliacoes.
+- Filtros por avaliacao, periodo da importacao, aplicacao/importacao especifica, ano/serie, turma, turno, situacao, estudante/matricula e periodo de realizacao.
+- Indicadores de total, realizados, pendentes e ausentes/outras situacoes.
+- Resumo de pendencias por turma.
+- Lista especifica para conferencia em sala de estudantes pendentes/ausentes, com opcao de impressao.
+- Exportacao CSV da lista de pendentes/ausentes da aplicacao selecionada.
+- Historico de importacoes preservado; nenhum registro antigo e apagado.
+
+2. ATUALIZACOES DO SISTEMA VIA TXT
+- Nova tela Busca Ativa > Atualizacoes do sistema para enviar arquivo .txt UTF-8.
+- O sistema le VERSAO:, TITULO: e TEXTO: e publica o comunicado para exibicao aos usuarios.
+- Atualizacoes existentes da mesma versao sao atualizadas sem criar duplicidade.
+- Comando registrar_atualizacao agora recebe --arquivo caminho/atualizacao.txt e utiliza o mesmo formato.
+
+FORMATO DO TXT:
+VERSAO: 2026.11.13.5
+TITULO: Melhorias no acompanhamento
+TEXTO:
+- Relatorios de avaliacao por periodo e aplicacao.
+- Lista de ausentes para conferencia em sala.
+
+ARQUIVOS ALTERADOS/CRIADOS
+- acompanhamento_avaliacoes/views.py
+- acompanhamento_avaliacoes/urls.py
+- acompanhamento_avaliacoes/templates/acompanhamento_avaliacoes/painel.html
+- acompanhamento_avaliacoes/templates/acompanhamento_avaliacoes/relatorios.html (novo)
+- busca_ativa/views.py
+- busca_ativa/urls.py
+- busca_ativa/templates/busca_ativa/painel.html
+- busca_ativa/templates/busca_ativa/atualizacao_txt.html (novo)
+- busca_ativa/management/commands/registrar_atualizacao.py
+
+BANCO DE DADOS
+- Nenhuma migration nova.
+- Nenhuma tabela/campo novo.
+
+VALIDACAO REALIZADA
+- Compilacao sintatica dos modulos Python alterados: OK.
+- Conferencia basica de blocos dos templates: OK.
+- Django check e testes funcionais nao foram executados neste ambiente porque Django nao esta instalado.
+
+IMPLANTACAO RECOMENDADA
+1. Fazer backup do PostgreSQL e do projeto atual.
+2. Aplicar o patch incremental ou substituir pelo pacote completo.
+3. Executar localmente: python manage.py check
+4. Executar: python manage.py test acompanhamento_avaliacoes busca_ativa
+5. Testar a nova tela de relatorios com uma aplicacao real e validar a lista impressa/CSV.
+6. Testar o envio de TXT com uma versao de homologacao antes de publicar em producao.
+7. Somente depois enviar ao GitHub/Railway.
+
+ATENCAO
+A lista de pendencias representa a situacao registrada na aplicacao/importacao selecionada. Para confirmar ausencias presencialmente, a equipe deve conferir o estudante em sala e atualizar o fluxo escolar correspondente.

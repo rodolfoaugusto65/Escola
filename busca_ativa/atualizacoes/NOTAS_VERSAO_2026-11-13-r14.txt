@@ -1,0 +1,11 @@
+VERSAO: 2026.11.13.14
+TITULO: Notificações obrigatórias e Duende de ajuda do GerEdu
+
+TEXTO:
+- Corrigida a fila de comunicados para exibir atualizações ainda não confirmadas.
+- Cada usuário recebe a notificação até registrar a confirmação de leitura.
+- Se uma versão existente for republicada com conteúdo alterado, as confirmações anteriores são reiniciadas.
+- A publicação de uma atualização cria um comunicado para todos os usuários autenticados.
+- Adicionado o Duende do GerEdu como assistente visual permanente, com corpo ilustrado, gestos e janela de diálogo.
+- O assistente oferece atalhos para Avaliações, Busca Ativa e Administração.
+- Adicionado movimento discreto de esquiva do cursor, respeitando preferência por movimento reduzido.

@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+{% block content %}
+<style>
+.ba-import-wrap{max-width:1050px;margin:auto}.ba-import-card{border:1px solid #e5eaf1;border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(20,35,60,.06);padding:22px;height:100%}.ba-import-icon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:#eef3ff;color:#315be8;font-size:22px}.ba-upload-zone{border:1.5px dashed #b9c6d8;border-radius:12px;padding:18px;background:#f8faff}.ba-file-name{font-size:13px;color:#536176;margin-top:8px;overflow-wrap:anywhere}.ba-overlay{position:fixed;inset:0;background:rgba(13,25,45,.62);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}.ba-overlay.show{display:flex}.ba-overlay-box{width:min(440px,100%);background:#fff;border-radius:18px;padding:28px;text-align:center;box-shadow:0 20px 70px #0003}.ba-spinner{width:42px;height:42px;border:4px solid #e4eaf4;border-top-color:#315be8;border-radius:50%;animation:ba-spin .8s linear infinite;margin:0 auto 16px}@keyframes ba-spin{to{transform:rotate(360deg)}}
+</style>
+<div class="container-fluid ba-import-wrap py-3">
+ <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"><div><h2 class="mb-1">Importação de infrequência</h2><p class="text-muted mb-0">Envie os arquivos e acompanhe o processamento em tempo real.</p></div><a class="btn btn-outline-secondary" href="{% url 'busca_ativa:painel' %}">Voltar à Busca Ativa</a></div>
+ <div class="alert alert-info"><strong>Importação segura em etapas.</strong> O sistema valida o arquivo, cruza as matrículas em consultas agrupadas e grava os dados em lotes menores. Isso reduz o risco de timeout e mantém os registros anteriores.</div>
+ <div class="row g-3">
+  <div class="col-lg-6"><section class="ba-import-card"><div class="d-flex align-items-center gap-3 mb-3"><div class="ba-import-icon">📊</div><div><h5 class="mb-0">① Base geral — Excel</h5><small class="text-muted">Arquivo .xlsx ou .xlsm · até 15 MB</small></div></div><p class="text-muted">Atualiza os percentuais gerais e por bimestre, faltas, carga horária e informação PAED. Use a planilha oficial completa.</p><form class="ba-upload-form" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="tipo" value="geral"><div class="ba-upload-zone"><input class="form-control" type="file" name="arquivo" accept=".xlsx,.xlsm" required><div class="ba-file-name">Selecione a planilha da base geral.</div></div><button class="btn btn-primary w-100 mt-3" type="submit">Enviar e processar base geral</button></form></section></div>
+  <div class="col-lg-6"><section class="ba-import-card"><div class="d-flex align-items-center gap-3 mb-3"><div class="ba-import-icon">📄</div><div><h5 class="mb-0">② Relatório complementar — 25%+</h5><small class="text-muted">Arquivo .csv · até 15 MB</small></div></div><p class="text-muted">Marca os estudantes presentes no relatório complementar e registra o percentual dessa fonte separadamente.</p><form class="ba-upload-form" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="tipo" value="25mais"><div class="ba-upload-zone"><input class="form-control" type="file" name="arquivo" accept=".csv" required><div class="ba-file-name">Selecione o arquivo CSV complementar.</div></div><button class="btn btn-danger w-100 mt-3" type="submit">Enviar e processar relatório 25%+</button></form></section></div>
+ </div>
+ <div class="alert alert-secondary mt-3 mb-0"><strong>Importante:</strong> os arquivos devem conter as colunas oficiais esperadas. A importação não altera os lançamentos diários de frequência. Os bancos locais SQLite não devem ser enviados por esta tela; use a opção específica de restauração de backup quando desejar importar um backup do módulo.</div>
+</div>
+<div class="ba-overlay" id="uploadOverlay" aria-live="polite"><div class="ba-overlay-box"><div class="ba-spinner"></div><h5>Enviando arquivo...</h5><p class="text-muted mb-0">Aguarde enquanto o arquivo é transferido e validado. Não feche esta página.</p></div></div>
+<script>
+(function(){
+ const overlay=document.getElementById('uploadOverlay');
+ document.querySelectorAll('.ba-upload-form').forEach(form=>{
+  const input=form.querySelector('input[type=file]'); const label=form.querySelector('.ba-file-name');
+  input.addEventListener('change',()=>{label.textContent=input.files.length?input.files[0].name:'Nenhum arquivo selecionado.';});
+  form.addEventListener('submit',e=>{if(!input.files.length){e.preventDefault();return;} overlay.classList.add('show');form.querySelector('button[type=submit]').disabled=true;});
+ });
+})();
+</script>
+{% endblock %}

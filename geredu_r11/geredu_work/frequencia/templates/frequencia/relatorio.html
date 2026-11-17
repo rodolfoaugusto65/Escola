@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% block content %}
+<h4>Relatório de Frequência</h4>
+
+<form method="get">
+    <select name="turma">
+        <option value="">Turma</option>
+        {% for t in turmas %}
+        <option value="{{ t.id }}">{{ t }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="aluno" placeholder="Aluno ou matrícula">
+    <input type="date" name="data_inicio">
+    <input type="date" name="data_fim">
+    <button>Gerar</button>
+</form>
+
+<table class="table">
+    <tr>
+        <th>Aluno</th>
+        <th>Presenças</th>
+        <th>Faltas</th>
+        <th>% Presença</th>
+    </tr>
+    {% for r in resumo %}
+    <tr>
+        <td>{{ r.aluno__nome }}</td>
+        <td>{{ r.presencas }}</td>
+        <td>{{ r.faltas }}</td>
+        <td>{{ r.percentual }}%</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

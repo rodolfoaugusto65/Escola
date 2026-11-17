@@ -1,0 +1,623 @@
+{% extends "core/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+<div class="card modern-card shadow-sm border-0">
+
+<div class="card-body p-4">
+
+<h3 class="fw-bold text-primary d-flex align-items-center gap-2 mb-4">
+<i data-lucide="alert-triangle"></i>
+Nova Ocorrência
+</h3>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="row">
+
+<!-- 🔎 BUSCA PRO -->
+<div class="col-12 mb-4">
+<label class="fw-bold">🔎 Buscar aluno (nome ou matrícula)</label>
+
+<div class="input-group">
+<input type="text" id="buscarAluno" class="form-control form-control-lg"
+placeholder="Digite nome ou matrícula...">
+<button type="button" id="btnBuscar" class="btn btn-primary">
+Buscar
+</button>
+</div>
+</div>
+
+<!-- TURMA -->
+<div class="col-md-6 mb-3">
+<label class="fw-bold">Turma</label>
+{{ form.turma|add_class:"form-select form-select-lg" }}
+</div>
+
+<!-- ALUNO -->
+<div class="col-md-6 mb-3">
+<label class="fw-bold">Aluno</label>
+{{ form.aluno|add_class:"form-select form-select-lg" }}
+</div>
+
+<!-- TIPO -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Tipo</label>
+{{ form.tipo_ocorrencia|add_class:"form-select" }}
+</div>
+
+<!-- STATUS -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Status</label>
+{{ form.status|add_class:"form-select" }}
+</div>
+
+<!-- DATA -->
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Data</label>
+{{ form.data|add_class:"form-control" }}
+</div>
+
+<!-- DESCRIÇÃO -->
+<div class="col-12 mb-3">
+<label class="fw-bold">Descrição</label>
+{{ form.descricao|add_class:"form-control" }}
+</div>
+
+<!-- PROVIDÊNCIAS -->
+<div class="col-12 mb-3">
+<label class="fw-bold">Providências</label>
+{{ form.providencias|add_class:"form-control" }}
+</div>
+
+</div>
+
+<hr>
+
+<h5 class="text-danger fw-bold mb-3">🚨 Controle FICAI</h5>
+
+<div class="row">
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Abrir FICAI?</label><br>
+{{ form.ficai_aberta }}
+</div>
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Número FICAI</label>
+{{ form.ficai_numero|add_class:"form-control" }}
+</div>
+
+<div class="col-md-4 mb-3">
+<label class="fw-bold">Data FICAI</label>
+{{ form.ficai_data|add_class:"form-control" }}
+</div>
+
+</div>
+
+<div class="mt-4 d-flex justify-content-between">
+<a href="{% url 'lista_ocorrencias' %}" class="btn btn-secondary px-4">
+⬅ Voltar
+</a>
+
+<button type="submit" class="btn btn-success btn-modern px-4">
+<i data-lucide="save"></i>
+Salvar ocorrência
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<div id="alertaOcorrencias"></div>
+
+<!-- ================= JS PRO ================= -->
+
+<script>
+
+/* ALERTA AUTOMÁTICO AO CARREGAR A PÁGINA */
+
+const OCORRENCIAS_ALUNO = {
+total: {{ total_ocorrencias|default:0 }},
+tipos: [
+{% for o in ocorrencias_resumo %}
+{
+tipo: "{{ o.tipo_ocorrencia }}",
+total: {{ o.total }}
+},
+{% endfor %}
+]
+};
+
+document.addEventListener("DOMContentLoaded", function(){
+
+if(OCORRENCIAS_ALUNO.total === 0) return;
+
+/* ================= TIPOS ================= */
+
+let tiposHTML = "";
+
+OCORRENCIAS_ALUNO.tipos.forEach(o => {
+
+let icon = "📄";
+let nome = o.tipo;
+
+if(nome === "DISCIPLINAR"){ icon="⚠"; nome="Ocorrência disciplinar";}
+if(nome === "ATRASO"){ icon="⏰"; nome="Atraso";}
+if(nome === "UNIFORME"){ icon="👕"; nome="Problema de uniforme";}
+if(nome === "OUT"){ icon="📋"; nome="Outros";}
+
+tiposHTML += `
+<div style="display:flex;justify-content:space-between;padding:6px 10px">
+<span>${icon} ${nome}</span>
+<b>${o.total}</b>
+</div>
+`;
+
+});
+
+/* ================= STATUS (não temos ainda nesse contexto) ================= */
+
+let statusHTML = `
+<div style="margin:10px 0;font-size:.9rem;color:#64748b">
+ℹ Status detalhado disponível ao selecionar o aluno.
+</div>
+`;
+
+/* ================= ALERTA ================= */
+
+Swal.fire({
+
+icon: "warning",
+title: "Histórico disciplinar",
+
+html: `
+<div style="text-align:left">
+
+<div style="font-weight:600;font-size:1.05rem;margin-bottom:10px;">
+⚠️ Este estudante possui <b>${OCORRENCIAS_ALUNO.total}</b> ocorrência(s)
+</div>
+
+<b>📊 Situação atual</b>
+
+${statusHTML}
+
+<b>📋 Distribuição por tipo</b>
+
+<div style="border:1px solid #e2e8f0;border-radius:8px;margin-top:6px;">
+${tiposHTML}
+</div>
+
+</div>
+`,
+
+showCancelButton:true,
+
+confirmButtonText:"Continuar registro",
+cancelButtonText:"📋 Ver ocorrências",
+
+confirmButtonColor:"#0ea5e9",
+cancelButtonColor:"#64748b"
+
+}).then((result) => {
+
+if(result.dismiss === Swal.DismissReason.cancel){
+
+const alunoSelect = document.getElementById("id_aluno");
+
+if(!alunoSelect || !alunoSelect.value){
+Swal.fire({
+icon:"info",
+title:"Selecione um aluno primeiro"
+});
+return;
+}
+
+const alunoId = alunoSelect.value;
+
+/* abre igual ao botão RELATÓRIO da busca */
+Swal.fire({
+title: "Carregando histórico",
+text: "Preparando dados do aluno...",
+allowOutsideClick: false,
+allowEscapeKey: false,
+didOpen: () => {
+
+Swal.showLoading();
+
+setTimeout(()=>{
+window.open(`/ocorrencias/?aluno=${alunoId}`, "_blank");
+Swal.close();
+},900);
+
+}
+});
+
+}
+
+});
+
+});
+
+</script>
+
+
+<script>
+
+// ENTER = BUSCAR
+document.getElementById("buscarAluno").addEventListener("keypress", e => {
+    if(e.key === "Enter"){
+        e.preventDefault();
+        buscarAluno();
+    }
+});
+
+document.getElementById("btnBuscar").onclick = buscarAluno;
+
+function buscarAluno(){
+
+    const termo = document.getElementById("buscarAluno").value;
+
+    fetch(`/ocorrencias/buscar-aluno/?q=${termo}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if(!data.length){
+                alert("Aluno não encontrado");
+                return;
+            }
+
+            const aluno = data[0];
+
+            // seleciona turma
+            document.getElementById("id_turma").value = aluno.turma_id;
+
+            // carrega alunos da turma
+            fetch(`/ocorrencias/get-alunos/?turma=${aluno.turma_id}`)
+                .then(r => r.json())
+                .then(lista => {
+
+                    const select = document.getElementById("id_aluno");
+                    select.innerHTML = "";
+
+                    lista.forEach(a => {
+                        const opt = document.createElement("option");
+                        opt.value = a.id;
+                        opt.text = `${a.nome} (${a.matricula})`;
+                        select.appendChild(opt);
+                    });
+
+                    // seleciona automaticamente o aluno
+                    select.value = aluno.id;
+                    verificarOcorrencias(aluno.id);
+                });
+
+        });
+}
+
+const alunoSelect = document.getElementById("id_aluno");
+
+if(alunoSelect){
+    alunoSelect.addEventListener("change", function(){
+        verificarOcorrencias(this.value);
+    });
+}
+
+
+// FILTRAR POR TURMA
+document.getElementById("id_turma").addEventListener("change", function(){
+
+    const turmaId = this.value;
+
+    fetch(`/ocorrencias/get-alunos/?turma=${turmaId}`)
+        .then(r => r.json())
+        .then(lista => {
+
+            const select = document.getElementById("id_aluno");
+            select.innerHTML = "";
+
+            lista.forEach(a => {
+                const opt = document.createElement("option");
+                opt.value = a.id;
+                opt.text = `${a.nome} (${a.matricula})`;
+                select.appendChild(opt);
+            });
+        });
+});
+
+// =============================
+// AUTO CARREGAR ALUNO VIA URL
+// =============================
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const params = new URLSearchParams(window.location.search);
+    const matricula = params.get("matricula");
+
+    if(!matricula) return;
+
+    fetch(`/ocorrencias/buscar-aluno/?q=${matricula}`)
+    .then(r => r.json())
+    .then(data => {
+
+        if(!data.length) return;
+
+        const aluno = data[0];
+
+        // seleciona turma
+        document.getElementById("id_turma").value = aluno.turma_id;
+
+        // carrega alunos da turma
+        fetch(`/ocorrencias/get-alunos/?turma=${aluno.turma_id}`)
+        .then(r => r.json())
+        .then(lista => {
+
+            const select = document.getElementById("id_aluno");
+            select.innerHTML = "";
+
+            lista.forEach(a => {
+
+                const opt = document.createElement("option");
+                opt.value = a.id;
+                opt.text = `${a.nome} (${a.matricula})`;
+
+                select.appendChild(opt);
+
+            });
+
+            // seleciona automaticamente o aluno
+            select.value = aluno.id;
+
+        });
+
+    });
+
+});
+
+</script>
+
+<script>
+
+function verificarOcorrencias(alunoId){
+
+fetch(`/ocorrencias/alerta-ocorrencias/?aluno=${alunoId}`)
+.then(r => r.json())
+.then(data => {
+
+if(!data.total) return;
+
+let tiposHTML = "";
+
+/* ================= TIPOS ================= */
+
+data.tipos.forEach(o => {
+
+let icon = "📄";
+let nome = o.tipo_ocorrencia;
+
+if(nome === "DISCIPLINAR"){
+icon = "⚠";
+nome = "Ocorrência disciplinar";
+}
+
+if(nome === "ATRASO"){
+icon = "⏰";
+nome = "Atraso escolar";
+}
+
+if(nome === "UNIFORME"){
+icon = "👕";
+nome = "Problema de uniforme";
+}
+
+if(nome === "OUT"){
+icon = "📋";
+nome = "Outros registros";
+}
+
+tiposHTML += `
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 12px;
+border-bottom:1px solid #f1f5f9;
+">
+
+<div style="display:flex;gap:8px;align-items:center">
+<span style="font-size:18px">${icon}</span>
+<span style="font-weight:500;color:#334155">
+${nome}
+</span>
+</div>
+
+<div style="
+background:#e2e8f0;
+padding:2px 10px;
+border-radius:20px;
+font-size:.85rem;
+font-weight:600;
+">
+${o.total}
+</div>
+
+</div>
+`;
+});
+
+
+/* ================= STATUS ================= */
+
+let abertas = 0;
+let andamento = 0;
+let resolvidas = 0;
+
+if(data.status){
+data.status.forEach(s => {
+
+if(s.status === "ABERTA") abertas = s.total;
+if(s.status === "ANDAMENTO") andamento = s.total;
+if(s.status === "RESOLVIDA") resolvidas = s.total;
+
+});
+}
+
+const statusHTML = `
+<div style="display:flex;gap:10px;margin:15px 0">
+
+<div style="
+flex:1;
+padding:12px;
+border-radius:10px;
+background:#fee2e2;
+color:#991b1b;
+text-align:center;
+font-weight:600;
+">
+🔴 ${abertas}
+<div style="font-size:.75rem">Abertas</div>
+</div>
+
+<div style="
+flex:1;
+padding:12px;
+border-radius:10px;
+background:#fef3c7;
+color:#92400e;
+text-align:center;
+font-weight:600;
+">
+🟡 ${andamento}
+<div style="font-size:.75rem">Em andamento</div>
+</div>
+
+<div style="
+flex:1;
+padding:12px;
+border-radius:10px;
+background:#dcfce7;
+color:#065f46;
+text-align:center;
+font-weight:600;
+">
+🟢 ${resolvidas}
+<div style="font-size:.75rem">Resolvidas</div>
+</div>
+
+</div>
+`;
+
+Swal.fire({
+
+icon: "warning",
+
+title: "Histórico disciplinar",
+
+html: `
+<div style="text-align:left">
+
+<div style="font-size:1.05rem;font-weight:600;margin-bottom:10px;color:#1e293b;">
+Aluno: ${data.nome}
+</div>
+
+<div style="margin-bottom:10px;font-size:.95rem;color:#475569;">
+Total de ocorrências: <b>${data.total}</b>
+</div>
+
+<b>Situação atual</b>
+
+${statusHTML}
+
+<b>Distribuição por tipo</b>
+
+<div style="border:1px solid #e2e8f0;border-radius:8px;margin-top:6px;">
+${tiposHTML}
+</div>
+
+</div>
+`,
+
+confirmButtonText: "Continuar registro",
+confirmButtonColor: "#0ea5e9"
+
+});
+
+});
+}
+
+</script>
+<script>
+
+const formOcorrencia = document.querySelector("form");
+
+formOcorrencia.addEventListener("submit", function(e){
+
+e.preventDefault();
+
+const formData = new FormData(formOcorrencia);
+
+fetch(window.location.href,{
+method:"POST",
+body:formData,
+headers:{
+"X-Requested-With":"XMLHttpRequest"
+}
+})
+.then(res => res.json())
+.then(data => {
+
+if(!data.success){
+Swal.fire({
+icon:"error",
+title:"Erro ao salvar ocorrência"
+});
+return;
+}
+
+/* ================= PERGUNTAR IMPRESSÃO ================= */
+
+Swal.fire({
+title:"Ocorrência registrada",
+text:"Deseja imprimir agora?",
+icon:"success",
+showCancelButton:true,
+confirmButtonText:"Sim, imprimir",
+cancelButtonText:"Não",
+confirmButtonColor:"#0ea5e9"
+})
+.then((result) => {
+
+if(result.isConfirmed){
+
+    window.open(data.url_impressao, "_blank");
+
+}
+
+setTimeout(()=>{
+    window.location.href = data.redirect;
+},400);
+
+});
+
+})
+.catch(err => {
+
+console.error(err);
+
+Swal.fire({
+icon:"error",
+title:"Erro de comunicação com o servidor"
+});
+
+});
+
+});
+
+</script>
+{% endblock %}

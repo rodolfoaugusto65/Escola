@@ -1,0 +1,176 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<div class="container-fluid mt-4 fade-in">
+
+  <!-- BOTÃO VOLTAR -->
+  <div class="mb-3">
+    <button onclick="history.back()"
+            class="btn btn-light btn-modern d-flex align-items-center gap-2 shadow-sm">
+      <i data-lucide="arrow-left"></i>
+      Voltar
+    </button>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="card border-0 shadow-sm modern-card">
+        <div class="card-body p-4">
+
+          <!-- CABEÇALHO PERFIL -->
+          <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 mb-4">
+
+            <!-- Avatar -->
+            <div class="profile-avatar">
+              {{ usuario.first_name|slice:":1" }}{{ usuario.last_name|slice:":1" }}
+            </div>
+
+            <!-- Info Principal -->
+            <div class="flex-grow-1">
+
+              <h4 class="fw-bold mb-1">
+                {{ usuario.get_full_name }}
+              </h4>
+
+              <p class="text-muted mb-2">
+                {{ usuario.get_perfil_display }}
+              </p>
+
+              <div class="d-flex flex-wrap gap-2">
+
+                {% if usuario.is_active %}
+                  <span class="indicator indicator-true">
+                    Conta Ativa
+                  </span>
+                {% else %}
+                  <span class="indicator indicator-false">
+                    Conta Inativa
+                  </span>
+                {% endif %}
+
+                {% if usuario.perfil_gerencial %}
+                  <span class="indicator indicator-true">
+                    Perfil Gerencial
+                  </span>
+                {% else %}
+                  <span class="indicator indicator-false">
+                    Sem Permissão Gerencial
+                  </span>
+                {% endif %}
+
+                {% if usuario.is_superuser %}
+                  <span class="indicator indicator-true">
+                    Superusuário
+                  </span>
+                {% endif %}
+
+              </div>
+
+            </div>
+
+            <!-- AÇÕES -->
+            <div class="d-flex flex-column gap-2">
+
+              <a href="{% url 'editar_dados' %}"
+                 class="btn btn-warning btn-modern d-flex align-items-center gap-2">
+                <i data-lucide="edit-3"></i>
+                Editar Dados
+              </a>
+
+              <a href="{% url 'password_change' %}"
+                 class="btn btn-primary btn-modern d-flex align-items-center gap-2">
+                <i data-lucide="key-round"></i>
+                Alterar Senha
+              </a>
+
+            </div>
+
+          </div>
+
+          <hr>
+
+          <!-- INFORMAÇÕES DETALHADAS -->
+          <div class="row g-4 mt-2">
+
+            <div class="col-md-6">
+              <div class="info-box">
+                <h6 class="text-muted mb-3">Informações Pessoais</h6>
+
+                <p><strong>CPF:</strong><br>{{ usuario.cpf }}</p>
+                <p><strong>Email:</strong><br>{{ usuario.email }}</p>
+                <p><strong>Telefone:</strong><br>{{ usuario.telefone|default:"Não informado" }}</p>
+                <p><strong>Endereço:</strong><br>{{ usuario.endereco|default:"Não informado" }}</p>
+
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="info-box">
+                <h6 class="text-muted mb-3">Informações da Conta</h6>
+
+                <p><strong>Usuário desde:</strong><br>{{ usuario.date_joined|date:"d/m/Y H:i" }}</p>
+                <p><strong>Último login:</strong><br>{{ usuario.last_login|date:"d/m/Y H:i"|default:"Nunca acessou" }}</p>
+
+                <p><strong>Status:</strong><br>
+                  {% if usuario.is_active %}
+                    <span class="indicator indicator-true">Ativo</span>
+                  {% else %}
+                    <span class="indicator indicator-false">Inativo</span>
+                  {% endif %}
+                </p>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    color: #fff;
+    font-size: 32px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 18px;
+    border-radius: 14px;
+    height: 100%;
+}
+
+.btn-modern {
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    lucide.createIcons();
+});
+</script>
+
+{% endblock %}

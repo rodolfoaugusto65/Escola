@@ -1,0 +1,14 @@
+VERSAO: 2026.11.16.25
+TITULO: Fila de conferência individual dos últimos lançamentos e ajuste de tamanho do mascote
+
+TEXTO:
+- Adicionada ao lado da fila de trabalho 25%+ a opção "Conferir últimos lançamentos".
+- A nova fila mostra os estudantes vinculados que constam na importação de infrequência mais recente, independentemente da faixa de percentual.
+- Cada estudante permanece na fila até que uma ação de Busca Ativa seja registrada depois da data/hora daquela importação.
+- Ações canceladas não contam como conferência. Ações anteriores à importação também não retiram o estudante da fila.
+- Após registrar uma ação válida na ficha do estudante, ele deixa de aparecer automaticamente na fila da importação atual.
+- Uma nova importação inicia uma nova conferência, sem apagar ações ou históricos anteriores.
+- Estudantes sem vínculo no cadastro são mantidos visíveis e identificados; é necessário vincular a matrícula para registrar ação pela ficha.
+- O mascote foi ampliado em relação à r24: canvas maior, escala 3D maior e câmera reajustada para continuar mostrando o corpo inteiro.
+- Mantidos o posicionamento inferior direito, arraste, fala e botão de retorno.
+- Nenhuma alteração de modelo ou estrutura do banco de dados.

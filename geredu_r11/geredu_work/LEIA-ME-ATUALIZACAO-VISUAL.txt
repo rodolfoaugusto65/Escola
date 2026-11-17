@@ -1,0 +1,55 @@
+GEREDU — PADRONIZAÇÃO VISUAL GLOBAL
+Data: 10/11/2026
+
+OBJETIVO
+Aplicar a identidade visual do painel Busca Ativa e Infrequência às demais áreas do GerEdu,
+sem alterar regras de negócio, modelos, banco de dados ou históricos.
+
+ÁREAS ABRANGIDAS
+- Cadastros de alunos e turmas;
+- Frequência, consulta individual, lançamentos e relatórios;
+- Busca Ativa, acompanhamentos, providências, compensações, histórico e backup;
+- Avaliações e participação, importação, painel e histórico;
+- Ocorrências e prontuários;
+- Conselho de Classe;
+- Usuários, perfil e administração.
+
+MELHORIAS
+- Tokens visuais compartilhados para cores, bordas, sombras e espaçamentos;
+- Cabeçalho de página com gradiente azul e hierarquia tipográfica consistente;
+- Cartões, formulários, filtros, tabelas, botões, alertas e paginação padronizados;
+- Menu lateral mais compacto, com grupos mais legíveis e estados ativos consistentes;
+- Topbar com busca, indicadores e avatar alinhados ao mesmo padrão;
+- Ajustes de responsividade para telas menores;
+- Aplicação do cabeçalho também após navegação HTMX.
+
+SEGURANÇA E COMPATIBILIDADE
+- Nenhuma migração de banco foi criada;
+- Nenhum modelo ou dado foi removido;
+- As rotinas de upload local/R2 e as importações permanecem no pacote;
+- Não substituir .env, credenciais, media ou banco de produção.
+
+VALIDAÇÃO RECOMENDADA ANTES DO RAILWAY
+1. Ativar o ambiente virtual e executar: python manage.py check
+2. Executar: python manage.py showmigrations
+3. Executar: python manage.py migrate --plan (não deve haver operações inesperadas)
+4. Executar testes: python manage.py test
+5. Abrir uma tela de cada módulo e testar a navegação HTMX;
+6. Testar importação de planilha de avaliação e backup SQLite em cópias;
+7. Verificar desktop e celular;
+8. Confirmar os dias 20/11 e 08/12 excluídos do cálculo letivo;
+9. Fazer backup PostgreSQL e confirmar variáveis do R2 antes do deploy.
+
+PUBLICAÇÃO
+Após validação local, enviar o projeto completo ao GitHub. No Railway, conferir variáveis,
+backup do PostgreSQL e logs das migrações antes de considerar o deploy concluído.
+
+
+ATUALIZAÇÃO 10/11/2026 — IDENTIDADE VISUAL E NAVEGAÇÃO (2026.11.10.4)
+- Restaurado o símbolo capelo em destaque (aprox. 57–62 px), com animação flutuante e brilho ciano.
+- Refeito o menu lateral com fundo em camadas, realces suaves, grupos mais legíveis, estados ativos e transições fluidas.
+- Menu inicia recolhido no desktop quando não há preferência salva; expande ao passar o mouse e pode ser fixado aberto pelo cadeado.
+- Melhorada a navegação móvel: abertura por botão, fechamento ao clicar fora ou pressionar Escape.
+- Refinados estilos transversais de cartões, filtros, formulários, tabelas, cabeçalhos e responsividade sem alterar regras de negócio.
+- Removida a inclusão duplicada do script Lucide no cabeçalho.
+- Registro de versão atualizado para 2026.11.10.4.

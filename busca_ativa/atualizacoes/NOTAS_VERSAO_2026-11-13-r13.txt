@@ -1,0 +1,12 @@
+VERSAO: 2026.11.13.13
+TITULO: Correção e organização das atualizações do GerEdu
+
+TEXTO:
+- Corrigido o erro de template da tela de atualizações: agora ela herda explicitamente core/base.html.
+- Movido o acesso Atualizações do sistema para Administração.
+- Restaurada a publicação por arquivo TXT com confirmação de leitura no sistema.
+- Cada TXT publicado é arquivado como NOTAS_VERSAO_<versao>.txt.
+- Histórico de notas reunido em busca_ativa/atualizacoes/.
+- Disponibilizada listagem e download das notas para usuários gerenciais.
+- Melhorado o comportamento dos nomes longos no menu lateral.
+- Nenhuma migration necessária nesta versão.

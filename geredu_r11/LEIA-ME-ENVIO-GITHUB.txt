@@ -1,0 +1,60 @@
+GEREDU + BUSCA ATIVA — PACOTE PARA GITHUB
+
+Este pacote inclui o codigo-fonte do GerEdu integrado ao aplicativo Django Busca Ativa,
+as migracoes, templates, arquivos estaticos do aplicativo e modelos vazios de planilhas.
+
+NAO INCLUIDO por seguranca:
+- banco SQLite local da Busca Ativa e qualquer outro banco local;
+- planilhas preenchidas com nomes, matriculas, CPFs ou frequencia de estudantes;
+- fotos/documentos em media;
+- arquivos .env, credenciais e segredos.
+
+As planilhas em busca_ativa/planilhas_modelo sao apenas modelos vazios (cabecalhos).
+A base real e os arquivos preenchidos devem ser importados manualmente pela tela de importacao
+da Busca Ativa no ambiente autorizado, depois de validar o backup e as permissoes.
+
+Antes do push, confira: git status
+Depois, faca commit e push somente se nao houver arquivos privados listados.
+
+Deploy Railway: apos o push, confira as variaveis de ambiente e execute as migracoes
+Django no ambiente de producao, conforme o procedimento de atualizacao do projeto.
+
+
+ATUALIZAÇÃO — HISTÓRICO, ARQUIVOS E PERFORMANCE
+
+- Novas migrações: busca_ativa 0005 e 0006; frequencia 0003; acompanhamento_avaliacoes 0002.
+- O Railway executa `python manage.py migrate` antes de iniciar o Gunicorn conforme railway.json.
+- Planilhas de Busca Ativa, Avaliações e backups SQLite são arquivados no storage padrão (Cloudflare R2) e
+  têm tamanho verificado após o upload. Se o armazenamento não confirmar o arquivo, a
+  importação é cancelada e não atualiza os dados.
+- Importações de infrequência geram fotografias históricas por estudante. Estudantes que
+  reaparecem são sinalizados; o histórico anterior não é sobrescrito nem pode ser apagado
+  pela exclusão da importação de origem.
+- O backup SQLite exportado agora inclui importações e fotografias históricas.
+- A tela do diário de frequência usa agregações no banco, paginação e índices adicionais.
+
+Antes de publicar em produção, faça backup do PostgreSQL e valide as variáveis R2:
+AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME e AWS_S3_ENDPOINT_URL.
+
+CHECKLIST DE TESTE APÓS DEPLOY
+1. Acesse Busca Ativa > Importar dados e envie uma planilha válida.
+2. Confirme a importação e abra o histórico gerado; confira o arquivo original no registro.
+3. Envie uma segunda planilha com pelo menos uma matrícula repetida e confira o alerta de recorrência.
+4. Baixe o backup SQLite e reimporte-o em ambiente de homologação; confira que as tabelas imports/history foram restauradas.
+5. Envie 6º, 7º, 8º e 9º anos em Avaliações e Participação; confirme os quatro arquivos originais na nuvem.
+6. Abra Frequência > Ver por aluno e navegue pelas páginas; confirme filtros e totais.
+7. Verifique os logs do Railway e confirme que as migrações foram aplicadas e que o R2 confirmou os tamanhos dos arquivos.
+
+IMPORTANTE: compileall foi executado neste pacote. O ambiente de preparação não possui Django instalado
+nem acesso à internet para instalar as dependências, portanto o `manage.py check`, as migrações reais
+e os testes de integração precisam ser executados no ambiente Python/Django do projeto antes da
+publicação definitiva.
+
+ATUALIZAÇÃO 10/11/2026 — IMPORTAÇÕES E BACKUP
+- A importação do banco SQLite da Busca Ativa agora valida PRAGMA quick_check antes de gravar dados.
+- O arquivo é arquivado usando nome seguro e fluxo de arquivo temporário já validado, sem depender do nome/cursor original do upload.
+- Colunas opcionais de backups antigos são lidas com valores padrão, ampliando a compatibilidade entre versões.
+- Falhas são registradas com traceback nos logs do servidor; a mensagem ao usuário informa o tipo do erro sem revelar detalhes internos.
+- A importação de avaliações verifica arquivos vazios e registra o traceback técnico.
+- A migração busca_ativa.0007 cria o comunicado obrigatório de atualização para aparecer na tela de alertas após o deploy.
+- Faça backup do PostgreSQL e do R2 antes de publicar. Teste primeiro com cópias dos arquivos.

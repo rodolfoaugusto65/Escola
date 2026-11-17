@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% block title %}Conferência dos últimos lançamentos | Busca Ativa{% endblock %}
+{% block content %}
+<style>
+.bal-wrap{max-width:1600px;margin:auto;padding:18px 8px 34px;color:#20334b}
+.bal-hero{background:linear-gradient(115deg,#143451,#23648d);color:#fff;border-radius:19px;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;box-shadow:0 10px 28px #143b5c20}
+.bal-hero h2{font-weight:850;margin:0}.bal-hero p{color:#e0efff;margin:5px 0 0}
+.bal-hero .btn{background:#fff;color:#174d73;border:0;border-radius:10px;font-weight:750}
+.bal-note{margin:14px 0;padding:14px 17px;border-radius:13px;border:1px solid #b9d9ef;background:#eff8ff;color:#245577}
+.bal-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.bal-stat{background:#fff;border:1px solid #e3eaf1;border-radius:14px;padding:15px;box-shadow:0 5px 18px #1b355609}
+.bal-stat small{display:block;color:#71839a;font-weight:700}.bal-stat strong{font-size:27px;color:#1d6596}
+.bal-filter{background:#fff;border:1px solid #e2e9f1;border-radius:14px;padding:15px;margin-bottom:14px}
+.bal-table{background:#fff;border:1px solid #e3eaf1;border-radius:15px;overflow:hidden;box-shadow:0 6px 20px #1b35560a}
+.bal-table table{margin:0}.bal-table thead th{background:#f3f7fb;color:#6e8097;text-transform:uppercase;font-size:10px;letter-spacing:.06em;padding:12px;white-space:nowrap}
+.bal-table tbody td{padding:12px;border-bottom:1px solid #edf1f5;vertical-align:middle}
+.bal-table tbody tr:hover{background:#f7fbff}
+.bal-pill{display:inline-block;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:800;background:#eaf4ff;color:#245e91}
+.bal-action{background:#17618f;color:#fff;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
+.bal-action:hover{background:#10496d;color:#fff}
+@media(max-width:760px){.bal-stats{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.bal-stats{grid-template-columns:1fr}.bal-hero{padding:18px}}
+</style>
+<div class="bal-wrap">
+ <header class="bal-hero">
+  <div><div class="small fw-bold text-uppercase opacity-75 mb-2">GerEdu · Conferência individual</div><h2>Últimos alunos lançados</h2><p>Revise cada estudante da importação mais recente e registre a providência realizada.</p></div>
+  <a class="btn px-3 py-2" href="{% url 'busca_ativa:painel' %}">Voltar à Busca Ativa</a>
+ </header>
+ {% if importacao %}
+ <div class="bal-note"><strong>Regra de conferência:</strong> cada estudante da última importação aparece aqui até que uma ação seja registrada depois desse upload. Ao registrar uma ação, ele sai automaticamente desta fila. Ações canceladas não contam como conferência. Importações futuras iniciam uma nova fila, sem apagar o histórico anterior.</div>
+ <div class="bal-stats">
+  <div class="bal-stat"><small>Pendentes de conferência</small><strong>{{ total }}</strong></div>
+  <div class="bal-stat"><small>Registros na última importação</small><strong>{{ total_importado }}</strong></div>
+  <div class="bal-stat"><small>Arquivo importado</small><div class="fw-bold mt-2">{{ importacao.arquivo|truncatechars:48 }}</div><small>{{ importacao.criado_em|date:"d/m/Y H:i" }}</small></div>
+ </div>
+ <form method="get" class="bal-filter"><div class="row g-2 align-items-end">
+  <div class="col-md-4"><label class="form-label">Estudante ou matrícula</label><input class="form-control" name="q" value="{{ q }}" placeholder="Digite para localizar"></div>
+  <div class="col-md-2"><label class="form-label">Turno</label><select class="form-select" name="turno"><option value="">Todos</option>{% for v,l in turnos %}<option value="{{ v }}" {% if turno == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><label class="form-label">Turma</label><select class="form-select" name="turma"><option value="">Todas</option>{% for t in turmas %}<option value="{{ t.id }}" {% if turma == t.id|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <div class="col-md-1 d-grid"><button class="btn btn-primary">Filtrar</button></div><div class="col-md-2 d-grid"><a class="btn btn-light" href="{% url 'busca_ativa:fila_ultimos_lancamentos' %}">Limpar</a></div>
+ </div></form>
+ <div class="bal-table"><div class="table-responsive"><table class="table table-hover align-middle">
+  <thead><tr><th>Estudante</th><th>Turma / turno</th><th>Infrequência</th><th>Faixa</th><th>Conferência</th><th></th></tr></thead><tbody>
+  {% for h in registros %}
+  <tr>
+   <td><strong>{{ h.aluno.nome|default:"Estudante não vinculado" }}</strong><br><small class="text-muted">Matrícula: {{ h.matricula }}</small></td>
+   <td>{% if h.aluno %}{{ h.aluno.turma|default:"—" }}<br><small>{{ h.aluno.turma.get_turno_display|default:"" }}</small>{% else %}<span class="text-muted">Sem vínculo no cadastro</span>{% endif %}</td>
+   <td><strong>{{ h.percentual_considerado|floatformat:2 }}%</strong></td>
+   <td>{% if h.percentual_considerado >= 25 %}<span class="badge text-bg-danger">25% ou mais</span>{% elif h.percentual_considerado >= 10 %}<span class="badge text-bg-warning">Atenção</span>{% else %}<span class="bal-pill">Abaixo de 10%</span>{% endif %}</td>
+   <td><span class="badge text-bg-primary">Aguardando verificação</span></td>
+   <td>{% if h.aluno_id %}<a class="bal-action" href="{% url 'busca_ativa:ficha' h.aluno_id %}">Verificar estudante</a>{% else %}<span class="text-muted small">Vincular matrícula para registrar ação</span>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="text-center py-4"><strong class="text-success">Conferência concluída!</strong><br><span class="text-muted">Todos os estudantes desta importação já possuem uma ação registrada, ou não há registros para os filtros selecionados.</span></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border-top"><small>{{ total }} pendente(s)</small><div>{% if registros.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ registros.previous_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Anterior</a>{% endif %} {% if registros.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ registros.next_page_number }}&q={{ q|urlencode }}&turno={{ turno|urlencode }}&turma={{ turma|urlencode }}">Próxima</a>{% endif %}</div></div>
+ </div>
+ {% else %}
+ <div class="alert alert-info mt-3">Ainda não existe importação de infrequência. Importe a planilha para iniciar a conferência individual.</div>
+ {% endif %}
+</div>
+{% endblock %}

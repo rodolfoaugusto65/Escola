@@ -1,0 +1,46 @@
+{% extends "core/base.html" %}
+{% block title %}Cadastro de Aluno{% endblock %}
+{% block page_title %}Cadastrar Novo Aluno{% endblock %}
+{% block content %}
+
+<div class="card shadow-sm mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-primary text-white">Cadastro de Aluno</div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row mb-3">
+                <div class="col-md-8">{{ form.nome.label_tag }} {{ form.nome }}</div>
+                <div class="col-md-4">{{ form.matricula.label_tag }} {{ form.matricula }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">{{ form.data_nascimento.label_tag }} {{ form.data_nascimento }}</div>
+                <div class="col-md-6">{{ form.turma.label_tag }} {{ form.turma }}</div>
+            </div>
+
+            <hr>
+            <h6 class="fw-bold text-primary">Responsáveis</h6>
+            <div class="row mb-3">
+                <div class="col-md-6">{{ form.nome_pai.label_tag }} {{ form.nome_pai }}</div>
+                <div class="col-md-6">{{ form.nome_mae.label_tag }} {{ form.nome_mae }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">{{ form.nome_responsavel.label_tag }} {{ form.nome_responsavel }}</div>
+                <div class="col-md-6">{{ form.telefone_responsavel.label_tag }} {{ form.telefone_responsavel }}</div>
+            </div>
+
+            <hr>
+            <h6 class="fw-bold text-primary">Atendimento PAED</h6>
+            <div class="form-check mb-3">
+                {{ form.paed }} {{ form.paed.label_tag }}
+            </div>
+            <div class="mb-3">{{ form.observacao_paed.label_tag }} {{ form.observacao_paed }}</div>
+
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'lista_alunos' %}" class="btn btn-secondary me-2">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

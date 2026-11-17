@@ -1,0 +1,16 @@
+VERSAO: 2026.11.17.27
+TITULO: Correção de publicação do Mapeamento da Aprendizagem e aderência à planilha oficial
+
+TEXTO:
+- Corrigido o registro do aplicativo mapeamento_aprendizagem no settings.py do projeto principal que contém manage.py.
+- Corrigida a inclusão da rota /mapeamento-aprendizagem/ no urls.py efetivamente utilizado pelo Django.
+- O atalho Mapeamento da Aprendizagem agora aparece diretamente na barra lateral para todo usuário autenticado, sem depender da permissão gerencial.
+- A nota desta atualização é publicada no sistema por migração de dados em ComunicadoSistema, usando o mecanismo existente de confirmação individual de leitura.
+- A tela utiliza o vínculo real Aluno.turma e os campos existentes Aluno.aluno_paed e Aluno.transferido.
+- A exportação foi conferida com a planilha original enviada: aba Mapeamento, colunas A:S, cabeçalhos na linha 8 e dados a partir da linha 9.
+- Os campos exportados seguem a ordem exata: Ano, Turma, Turno, Nome completo, PAEDE, Situação, Professor(a) de Língua Portuguesa, Diagnóstico, 1º a 4º Bimestre, Professor(a) de Matemática, Diagnóstico, 1º a 4º Bimestre e Observações.
+- PAEDE utiliza SIM/NÃO em maiúsculas; Situação utiliza Matriculado/Transferido; níveis utilizam Nível 01 a Nível 05.
+- A grafia de ano segue a validação do arquivo, inclusive 8° conforme consta no modelo.
+- A validação de turno preserva Matutino, Vespertino e Integral e acrescenta Noturno para compatibilidade com turmas existentes no GerEdu.
+- As abas Escolas e Painel de Dados, mesclagens, estilos, larguras e demais validações do arquivo-base são preservadas.
+- Nenhum cadastro escolar existente é apagado ou alterado pela exportação.
