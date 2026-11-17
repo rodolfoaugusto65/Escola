@@ -280,10 +280,9 @@
     </div>
 
     <!-- FORMULÁRIO -->
-    <!-- MAPEAMENTO DA APRENDIZAGEM: DADOS ORIGINAIS, SOMENTE LEITURA -->
-<div class="card border-0 shadow-sm mb-4">
+    <div class="card border-0 shadow-sm mb-4">
   <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
-    <div class="fw-bold"><i data-lucide="book-open-check" class="me-1"></i> Mapeamento da Aprendizagem</div>
+    <strong><i data-lucide="book-open-check" class="me-1"></i> Mapeamento da Aprendizagem</strong>
     <span class="badge bg-primary">Ano {{ conselho.ano }}</span>
   </div>
   <div class="card-body">
@@ -291,33 +290,21 @@
       <div class="row g-3">
         <div class="col-lg-6">
           <h6 class="fw-bold text-primary">Língua Portuguesa</h6>
-          <div class="small">Professor(a): {{ aluno.mapeamento_aprendizagem.professor_lp|default:"Não informado" }}</div>
-          <div class="small mb-2">Diagnóstico: <strong>{{ aluno.mapeamento_aprendizagem.diagnostico_lp|default:"Não informado" }}</strong></div>
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge bg-light text-dark border">1º: {{ aluno.mapeamento_aprendizagem.lp_b1|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">2º: {{ aluno.mapeamento_aprendizagem.lp_b2|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">3º: {{ aluno.mapeamento_aprendizagem.lp_b3|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">4º: {{ aluno.mapeamento_aprendizagem.lp_b4|default:"—" }}</span>
-          </div>
+          <div class="small">Professor(a): {{ aluno.mapeamento_aprendizagem.professor_lp|default:"—" }}</div>
+          <div class="small">Diagnóstico: <strong>{{ aluno.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</strong></div>
+          <div class="small mt-1">B1 {{ aluno.mapeamento_aprendizagem.lp_b1|default:"—" }} · B2 {{ aluno.mapeamento_aprendizagem.lp_b2|default:"—" }} · B3 {{ aluno.mapeamento_aprendizagem.lp_b3|default:"—" }} · B4 {{ aluno.mapeamento_aprendizagem.lp_b4|default:"—" }}</div>
         </div>
         <div class="col-lg-6">
           <h6 class="fw-bold text-primary">Matemática</h6>
-          <div class="small">Professor(a): {{ aluno.mapeamento_aprendizagem.professor_mt|default:"Não informado" }}</div>
-          <div class="small mb-2">Diagnóstico: <strong>{{ aluno.mapeamento_aprendizagem.diagnostico_mt|default:"Não informado" }}</strong></div>
-          <div class="d-flex flex-wrap gap-2">
-            <span class="badge bg-light text-dark border">1º: {{ aluno.mapeamento_aprendizagem.mt_b1|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">2º: {{ aluno.mapeamento_aprendizagem.mt_b2|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">3º: {{ aluno.mapeamento_aprendizagem.mt_b3|default:"—" }}</span>
-            <span class="badge bg-light text-dark border">4º: {{ aluno.mapeamento_aprendizagem.mt_b4|default:"—" }}</span>
-          </div>
+          <div class="small">Professor(a): {{ aluno.mapeamento_aprendizagem.professor_mt|default:"—" }}</div>
+          <div class="small">Diagnóstico: <strong>{{ aluno.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</strong></div>
+          <div class="small mt-1">B1 {{ aluno.mapeamento_aprendizagem.mt_b1|default:"—" }} · B2 {{ aluno.mapeamento_aprendizagem.mt_b2|default:"—" }} · B3 {{ aluno.mapeamento_aprendizagem.mt_b3|default:"—" }} · B4 {{ aluno.mapeamento_aprendizagem.mt_b4|default:"—" }}</div>
         </div>
       </div>
-      {% if aluno.mapeamento_aprendizagem.observacoes %}
-        <hr><div class="small"><strong>Observações do mapeamento:</strong> {{ aluno.mapeamento_aprendizagem.observacoes }}</div>
-      {% endif %}
-      <div class="form-text mt-3">Consulta somente leitura. Para alterar os níveis, use o módulo Mapeamento da Aprendizagem.</div>
+      {% if aluno.mapeamento_aprendizagem.observacoes %}<hr><div class="small"><strong>Observações:</strong> {{ aluno.mapeamento_aprendizagem.observacoes }}</div>{% endif %}
+      <small class="text-muted d-block mt-2">Consulta somente leitura. Atualize os níveis no Mapeamento da Aprendizagem.</small>
     {% else %}
-      <div class="text-muted">Não existe mapeamento registrado para este estudante no ano letivo {{ conselho.ano }}.</div>
+      <span class="text-muted">Sem mapeamento registrado para o ano letivo {{ conselho.ano }}.</span>
     {% endif %}
   </div>
 </div>

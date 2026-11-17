@@ -39,7 +39,7 @@ Preenchimento pedagógico inteligente
 <thead class="table-light">
 <tr>
     <th>Aluno</th>
-    <th>Mapeamento da Aprendizagem</th>
+    <th>Mapeamento (níveis)</th>
     <th>Status</th>
     <th>% Freq.</th>
     <th>Ocorr.</th>
@@ -61,7 +61,7 @@ Preenchimento pedagógico inteligente
 
 <tbody>
 
-{% for a in alunos %}
+{% for a in alunos_mapeados %}
 <tr class="
 {% if a.total_ocorrencias > 5 or a.frequencia < 75 or a.media < 5 %}
 table-danger
@@ -85,20 +85,12 @@ border border-3 border-dark
 </a>
 </td>
 
-<!-- MAPEAMENTO DA APRENDIZAGEM (somente leitura) -->
-<td style="min-width:260px">
+<!-- MAPEAMENTO DA APRENDIZAGEM -->
+<td class="small" style="min-width:270px">
 {% if a.mapeamento_aprendizagem %}
-  <div class="small">
-    <div class="fw-semibold text-primary mb-1">Língua Portuguesa</div>
-    <div>Diagnóstico: <strong>{{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</strong></div>
-    <div class="text-muted">B1 {{ a.mapeamento_aprendizagem.lp_b1|default:"—" }} · B2 {{ a.mapeamento_aprendizagem.lp_b2|default:"—" }} · B3 {{ a.mapeamento_aprendizagem.lp_b3|default:"—" }} · B4 {{ a.mapeamento_aprendizagem.lp_b4|default:"—" }}</div>
-    <div class="fw-semibold text-primary mt-2 mb-1">Matemática</div>
-    <div>Diagnóstico: <strong>{{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</strong></div>
-    <div class="text-muted">B1 {{ a.mapeamento_aprendizagem.mt_b1|default:"—" }} · B2 {{ a.mapeamento_aprendizagem.mt_b2|default:"—" }} · B3 {{ a.mapeamento_aprendizagem.mt_b3|default:"—" }} · B4 {{ a.mapeamento_aprendizagem.mt_b4|default:"—" }}</div>
-  </div>
-{% else %}
-  <span class="badge bg-secondary">Sem mapeamento em {{ conselho.ano }}</span>
-{% endif %}
+  <div><strong>LP:</strong> {{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }} · {{ a.mapeamento_aprendizagem.lp_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b4|default:"—" }}</div>
+  <div><strong>MAT:</strong> {{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }} · {{ a.mapeamento_aprendizagem.mt_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b4|default:"—" }}</div>
+{% else %}<span class="badge bg-secondary">Sem mapeamento</span>{% endif %}
 </td>
 
 <!-- STATUS -->

@@ -408,35 +408,25 @@ Direção
 }
 </style>
 
-<div class="card border-0 shadow-sm mt-4">
+<section class="card border-0 shadow-sm mt-4">
   <div class="card-header bg-primary-subtle">
-    <h5 class="mb-0 fw-bold"><i data-lucide="book-open-check" class="me-2"></i>Mapeamento da Aprendizagem — análise do Conselho</h5>
-    <small class="text-muted">Registros do módulo de Mapeamento para o ano letivo {{ conselho.ano }}. Consulta somente leitura.</small>
+    <h5 class="mb-0 fw-bold">Mapeamento da Aprendizagem — análise pedagógica</h5>
+    <small>Dados originais do Mapeamento no ano letivo {{ conselho.ano }} (somente leitura).</small>
   </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle">
-        <thead><tr><th>Estudante</th><th>LP — Diagnóstico</th><th>LP — B1 / B2 / B3 / B4</th><th>Matemática — Diagnóstico</th><th>Matemática — B1 / B2 / B3 / B4</th></tr></thead>
-        <tbody>
-        {% for a in alunos %}
-          <tr>
-            <td>{{ a.aluno.nome }}</td>
-            {% if a.mapeamento_aprendizagem %}
-              <td><strong>{{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</strong></td>
-              <td>{{ a.mapeamento_aprendizagem.lp_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b4|default:"—" }}</td>
-              <td><strong>{{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</strong></td>
-              <td>{{ a.mapeamento_aprendizagem.mt_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b4|default:"—" }}</td>
-            {% else %}
-              <td colspan="4"><span class="badge bg-secondary">Sem mapeamento no ano {{ conselho.ano }}</span></td>
-            {% endif %}
-          </tr>
-        {% empty %}
-          <tr><td colspan="5" class="text-center text-muted">Nenhum estudante neste Conselho.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="card-body table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead><tr><th>Estudante</th><th>LP · Diagnóstico / B1-B4</th><th>Matemática · Diagnóstico / B1-B4</th></tr></thead>
+      <tbody>
+      {% for a in alunos_mapeados %}
+        <tr><td>{{ a.aluno.nome }}</td>
+        {% if a.mapeamento_aprendizagem %}
+          <td><strong>{{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</strong><br><small>{{ a.mapeamento_aprendizagem.lp_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.lp_b4|default:"—" }}</small></td>
+          <td><strong>{{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</strong><br><small>{{ a.mapeamento_aprendizagem.mt_b1|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b2|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b3|default:"—" }} / {{ a.mapeamento_aprendizagem.mt_b4|default:"—" }}</small></td>
+        {% else %}<td colspan="2"><span class="badge bg-secondary">Sem mapeamento no ano</span></td>{% endif %}</tr>
+      {% empty %}<tr><td colspan="3" class="text-muted">Nenhum estudante no conselho.</td></tr>{% endfor %}
+      </tbody>
+    </table>
   </div>
-</div>
+</section>
 
 {% endblock %}

@@ -374,6 +374,57 @@ def relatorio_aluno_completo(request, aluno_id):
     ).first()
 
     # =========================
+    # ALERTAS PEDAGÓGICOS E INFREQUÊNCIA
+    # =========================
+    from busca_ativa.models import SituacaoInfrequencia
+    from mapeamento_aprendizagem.models import RegistroMapeamento
+    from django.db.models import Q
+    from django.utils import timezone
+
+    ano_referencia = getattr(aluno.turma, "ano_letivo", None) or timezone.localdate().year
+    registro_mapeamento = RegistroMapeamento.objects.filter(
+        aluno=aluno, ano_letivo=ano_referencia
+    ).first()
+    if registro_mapeamento is None:
+        registro_mapeamento = RegistroMapeamento.objects.filter(
+            aluno=aluno
+        ).order_by("-ano_letivo", "-atualizado_em").first()
+
+    campos_nivel = (
+        "diagnostico_lp", "lp_b1", "lp_b2", "lp_b3", "lp_b4",
+        "diagnostico_mt", "mt_b1", "mt_b2", "mt_b3", "mt_b4",
+    )
+    possui_nivel_mapeado = bool(
+        registro_mapeamento and any(getattr(registro_mapeamento, campo) for campo in campos_nivel)
+    )
+    registro_infrequencia = SituacaoInfrequencia.objects.filter(
+        aluno=aluno
+    ).order_by("-ano_letivo").first()
+    percentual_infrequencia = (
+        registro_infrequencia.percentual_considerado if registro_infrequencia else 0
+    )
+    alerta_busca_ativa = percentual_infrequencia >= 10
+    # Mantém o campo do cadastro coerente com o alerta oficial importado.
+    if alerta_busca_ativa and not aluno.aluno_busca_ativa:
+        Aluno.objects.filter(pk=aluno.pk, aluno_busca_ativa=False).update(aluno_busca_ativa=True)
+        aluno.aluno_busca_ativa = True
+
+    niveis_mapeamento = {}
+    if registro_mapeamento:
+        niveis_mapeamento = {
+            "lp_diagnostico": registro_mapeamento.diagnostico_lp,
+            "lp_bimestres": [
+                registro_mapeamento.lp_b1, registro_mapeamento.lp_b2,
+                registro_mapeamento.lp_b3, registro_mapeamento.lp_b4,
+            ],
+            "mt_diagnostico": registro_mapeamento.diagnostico_mt,
+            "mt_bimestres": [
+                registro_mapeamento.mt_b1, registro_mapeamento.mt_b2,
+                registro_mapeamento.mt_b3, registro_mapeamento.mt_b4,
+            ],
+        }
+
+    # =========================
     # CONTEXTO
     # =========================
 
@@ -384,6 +435,11 @@ def relatorio_aluno_completo(request, aluno_id):
         "total_ocorrencias": total_ocorrencias,
         "percentual_frequencia": percentual_frequencia,
         "ultimo_dia_presente": ultimo_dia_presente,
+        "registro_mapeamento": registro_mapeamento,
+        "possui_nivel_mapeado": possui_nivel_mapeado,
+        "niveis_mapeamento": niveis_mapeamento,
+        "registro_infrequencia": registro_infrequencia,
+        "alerta_busca_ativa": alerta_busca_ativa,
     }
 
     return render(

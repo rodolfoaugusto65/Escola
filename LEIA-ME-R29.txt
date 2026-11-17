@@ -1,0 +1,23 @@
+GEREDU R29 — SINCRONIZAÇÃO DE ALERTAS DA BUSCA ATIVA E MAPEAMENTO APA
+
+Aplicar o conteúdo do ZIP na raiz do projeto (pasta que contém manage.py),
+substituindo os arquivos existentes.
+
+O que esta atualização faz:
+1. Importações da Busca Ativa passam a marcar aluno_busca_ativa=True quando
+   a situação oficial do ano atinge 10% ou mais de infrequência.
+2. Mantém os alertas de 10%+ visíveis no painel mesmo com ações/prazos ativos.
+3. Corrige a listagem do painel para exibir somente estudantes em faixa de alerta.
+4. Cadastro individual passa a consultar o percentual oficial e os níveis
+   registrados no Mapeamento da Aprendizagem.
+5. Alertas APA são originados no RegistroMapeamento (ano vigente), exibindo
+   diagnóstico e níveis bimestrais de LP e Matemática.
+6. Conselho de Classe consulta o mapeamento do mesmo ano, em modo somente leitura.
+7. Inclui comando para sincronizar cadastros já importados anteriormente.
+
+Após aplicar:
+    python manage.py check
+    python manage.py sincronizar_alertas_cadastro --ano 2026
+
+Não há novas migrations. O comando marca como Busca Ativa apenas alunos com
+situação oficial de infrequência de 10% ou mais; não desmarca marcações manuais.

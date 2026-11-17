@@ -340,6 +340,25 @@ PAED
 
 
 
+<!-- ALERTAS PEDAGÓGICOS -->
+<div class="row g-3 mb-4">
+  {% if alerta_busca_ativa %}
+  <div class="col-md-6"><div class="card modern-card border-start border-4 {% if registro_infrequencia.percentual_considerado >= 25 %}border-danger{% else %}border-warning{% endif %} h-100"><div class="card-body">
+    <div class="d-flex align-items-center justify-content-between gap-2"><div><div class="fw-bold"><i data-lucide="alert-triangle" class="me-1"></i> ALERTA DE BUSCA ATIVA</div><div class="small text-muted">Infrequência oficial · Ano {{ registro_infrequencia.ano_letivo }}</div></div><span class="badge {% if registro_infrequencia.percentual_considerado >= 25 %}bg-danger{% else %}bg-warning text-dark{% endif %} fs-6">{{ registro_infrequencia.percentual_considerado|floatformat:1 }}%</span></div>
+    <div class="small mt-2">Alerta automático, independente da marcação manual “Aluno de Busca Ativa” ou do lançamento de providências.</div>
+  </div></div></div>
+  {% endif %}
+  {% if possui_nivel_mapeado %}
+  <div class="col-md-6"><div class="card modern-card border-start border-4 border-primary h-100"><div class="card-body">
+    <div class="fw-bold mb-2"><i data-lucide="graduation-cap" class="me-1"></i> ALERTA APA · MAPEAMENTO DA APRENDIZAGEM</div>
+    <div class="small text-muted mb-2">Registro do ano letivo {{ registro_mapeamento.ano_letivo }} · {{ registro_mapeamento.turma }}</div>
+    <div class="small mb-2"><strong>Língua Portuguesa:</strong> Diagnóstico {{ registro_mapeamento.diagnostico_lp|default:"—" }} · B1 {{ registro_mapeamento.lp_b1|default:"—" }} · B2 {{ registro_mapeamento.lp_b2|default:"—" }} · B3 {{ registro_mapeamento.lp_b3|default:"—" }} · B4 {{ registro_mapeamento.lp_b4|default:"—" }}</div>
+    <div class="small"><strong>Matemática:</strong> Diagnóstico {{ registro_mapeamento.diagnostico_mt|default:"—" }} · B1 {{ registro_mapeamento.mt_b1|default:"—" }} · B2 {{ registro_mapeamento.mt_b2|default:"—" }} · B3 {{ registro_mapeamento.mt_b3|default:"—" }} · B4 {{ registro_mapeamento.mt_b4|default:"—" }}</div>
+    <div class="small text-muted mt-2">Níveis consultados diretamente do Mapeamento da Aprendizagem.</div>
+  </div></div></div>
+  {% endif %}
+</div>
+
 <!-- IDENTIFICAÇÃO -->
 <div class="card modern-card shadow-sm mb-4">
 
