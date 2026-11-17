@@ -316,6 +316,20 @@ transition:left .3s ease;
     border-left:6px solid #38bdf8;
 }
 </style>
+<style>
+/* r13: sidebar labels remain readable in expanded/collapsed layouts */
+.sidebar .sidebar-scroll a,
+.sidebar .sidebar-group > a { min-width:0; }
+.sidebar .sidebar-group > a span,
+.sidebar .sidebar-scroll > a span {
+  min-width:0; overflow:visible; text-overflow:clip;
+  white-space:normal; line-height:1.25; overflow-wrap:anywhere;
+}
+.sidebar .sidebar-group > a,
+.sidebar .sidebar-scroll > a { align-items:center; }
+.sidebar .sidebar-group > a i,
+.sidebar .sidebar-scroll > a i { flex:0 0 20px; }
+</style>
 </head>
 
 <body>
@@ -372,14 +386,17 @@ transition:left .3s ease;
 <details class="sidebar-group">
  <summary><i data-lucide="chart-no-axes-combined"></i><span>Avaliações</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><i data-lucide="chart-column-increasing"></i><span>Avaliações e participação</span></a>
+ <a href="{% url 'acompanhamento_avaliacoes:relatorios' %}"><i data-lucide="clipboard-list"></i><span>Relatórios e listas de sala</span></a>
+ <a href="{% url 'acompanhamento_avaliacoes:historico' %}"><i data-lucide="history"></i><span>Histórico das aplicações</span></a>
 </details>
 {% endif %}
 
-{% if user.pode_gerenciar_usuarios %}
+{% if user.is_superuser or user.pode_gerenciar_usuarios %}
 <details class="sidebar-group">
  <summary><i data-lucide="settings"></i><span>Administração</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a hx-get="{% url 'lista_usuarios' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_usuarios' %}"><i data-lucide="users-cog"></i><span>Usuários</span></a>
  <a hx-get="{% url 'conselho:lista' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'conselho:lista' %}"><i data-lucide="clipboard-signature"></i><span>Conselho de Classe</span></a>
+ <a href="{% url 'busca_ativa:atualizacao_txt' %}" title="Atualizações do sistema"><i data-lucide="file-text"></i><span>Atualizações do sistema</span></a>
 </details>
 {% endif %}
 </div>
@@ -1823,38 +1840,616 @@ document.body.addEventListener("htmx:afterSwap", iniciarGraficos);
 </script>
 
 
-{% if user.is_authenticated and comunicado_pendente %}
-<div class="modal fade show" id="comunicadoObrigatorio" tabindex="-1" style="display:block;background:rgba(15,23,42,.72);z-index:5000" aria-modal="true" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
- <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg rounded-4"><div class="modal-header text-white" style="background:linear-gradient(120deg,#312e81,#6d28d9)"><h5 class="modal-title">{{ comunicado_pendente.titulo }}</h5><span class="badge bg-light text-dark">Atualização {{ comunicado_pendente.versao }}</span></div><div class="modal-body"><p class="text-muted">Leia todo o comunicado para continuar utilizando o GerEdu.</p><div id="textoComunicado" class="border rounded-3 p-3" style="white-space:pre-wrap;max-height:48vh;overflow-y:auto;line-height:1.7">{{ comunicado_pendente.texto }}</div><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="confirmouLeitura" disabled><label class="form-check-label" for="confirmouLeitura">Li todo o comunicado e estou ciente das atualizações.</label></div></div><div class="modal-footer"><form method="post" action="{% url 'busca_ativa:confirmar_comunicado' comunicado_pendente.id %}">{% csrf_token %}<input type="hidden" name="confirmacao" value="lido"><input type="hidden" name="next" value="{{ request.path }}"><button id="btnComunicadoLido" class="btn btn-primary" disabled>Confirmar leitura e continuar</button></form></div></div></div>
-</div>
-<script>(function(){const box=document.getElementById('textoComunicado'),check=document.getElementById('confirmouLeitura'),btn=document.getElementById('btnComunicadoLido');function bottom(){if(box.scrollTop+box.clientHeight>=box.scrollHeight-8){check.disabled=false;}}box.addEventListener('scroll',bottom);bottom();check.addEventListener('change',()=>btn.disabled=!check.checked);})();</script>
-{% endif %}
-{% if user.is_authenticated and mostrar_assistente_natalino %}
+{% if user.is_authenticated %}
 <style>
-#assistenteNatalino{z-index:3000;width:min(355px,calc(100vw - 28px));border:1px solid #dce9df;background:linear-gradient(145deg,#fff 0%,#f4fff7 100%);box-shadow:0 18px 55px #123b2d30!important;animation:duendeEntrada .75s cubic-bezier(.2,.9,.2,1) both;overflow:hidden}
-#assistenteNatalino:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 95% 8%,#dcfce7 0 4px,transparent 5px),radial-gradient(circle at 8% 80%,#fee2e2 0 4px,transparent 5px);pointer-events:none}
-#assistenteNatalino .duende-avatar{font-size:52px;display:grid;place-items:center;width:68px;height:68px;border-radius:22px;background:linear-gradient(145deg,#dcfce7,#fff1f2);animation:duendePula 2.8s ease-in-out infinite;transform-origin:bottom center}
-#assistenteNatalino .duende-sino{display:inline-block;animation:sino 1.8s ease-in-out infinite}
-#assistenteNatalino .duende-numero{font-size:48px;line-height:1;font-weight:900;letter-spacing:-2px;color:#b91c1c;text-shadow:0 3px 0 #fee2e2;animation:numeroBrilha 2.5s ease-in-out infinite}
-#assistenteNatalino .duende-faixa{height:7px;border-radius:20px;background:linear-gradient(90deg,#166534,#22c55e,#dc2626);margin:12px 0}
-#assistenteNatalino .duende-floco{position:absolute;top:-15px;color:#93c5fd;animation:neve 5s linear infinite;pointer-events:none}
-#assistenteNatalino .duende-floco.f2{left:75%;animation-delay:2s;font-size:12px}
-@keyframes duendeEntrada{from{opacity:0;transform:translate(25px,35px) scale(.92)}to{opacity:1;transform:translate(0) scale(1)}}
-@keyframes duendePula{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
-@keyframes sino{0%,85%,100%{transform:rotate(0)}88%{transform:rotate(18deg)}92%{transform:rotate(-18deg)}96%{transform:rotate(10deg)}}
-@keyframes numeroBrilha{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes neve{to{transform:translateY(190px) rotate(220deg);opacity:0}}
-@media(prefers-reduced-motion:reduce){#assistenteNatalino,#assistenteNatalino *{animation:none!important}}
+#gereduUpdateOverlay{position:fixed;inset:0;z-index:10050;background:rgba(8,20,35,.76);display:none;align-items:center;justify-content:center;padding:16px}
+#gereduUpdateOverlay .gu-card{width:min(680px,96vw);max-height:88vh;background:#fff;border-radius:20px;box-shadow:0 25px 80px #0007;overflow:hidden;display:flex;flex-direction:column}
+#gereduUpdateOverlay .gu-head{background:linear-gradient(120deg,#102d50,#176b9b);color:white;padding:18px 22px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+#gereduUpdateOverlay .gu-body{padding:20px 22px;overflow:auto;white-space:pre-wrap;line-height:1.65;color:#243449}
+#gereduUpdateOverlay .gu-foot{padding:15px 22px;border-top:1px solid #e5edf3;display:flex;justify-content:flex-end;align-items:center;gap:12px}
+#gereduUpdateOverlay button{border:0;border-radius:10px;padding:10px 16px;font-weight:700}
+#gereduUpdateOverlay .gu-confirm{background:#1768a0;color:white}
+#gereduUpdateOverlay .gu-confirm:disabled{opacity:.45;cursor:not-allowed}
 </style>
-<div id="assistenteNatalino" class="position-fixed bottom-0 end-0 m-3 p-3 rounded-4">
- <span class="duende-floco" style="left:24%">❄</span><span class="duende-floco f2">✦</span>
- <div class="d-flex gap-3 align-items-center position-relative"><div class="duende-avatar" aria-hidden="true">🧝</div><div class="flex-grow-1"><div class="fw-bold text-success">Duende do GerEdu <span class="duende-sino">🔔</span></div><div class="small text-secondary">Missão: chegar às férias com alegria!</div></div><span aria-hidden="true">🎄</span></div>
- <div class="duende-faixa"></div>
- <div class="text-center position-relative"><div class="duende-numero">{{ dias_letivos_restantes|default:'—' }}</div><div class="small fw-bold text-success mt-1">DIAS ÚTEIS RESTANTES</div><div class="small text-muted">{% if data_fim_letivo %}Até {{ data_fim_letivo|date:'d/m/Y' }}{% else %}Calendário escolar a configurar{% endif %}</div></div>
- <p class="small text-center mt-3 mb-3">Ho, ho, ho! ✨ Cada dia conta. Continue fazendo a diferença na nossa escola!</p>
- <form method="post" action="{% url 'busca_ativa:dispensar_natalino' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-success btn-sm w-100 rounded-pill fw-semibold">Entendi, até amanhã! 🎁</button></form>
+<div id="gereduUpdateOverlay" role="dialog" aria-modal="true" aria-labelledby="guTitle">
+ <div class="gu-card">
+  <div class="gu-head"><div><strong id="guTitle">Atualização do GerEdu</strong><div id="guVersion" style="font-size:12px;opacity:.85"></div></div><span>🔔</span></div>
+  <div class="gu-body" id="guText"></div>
+  <div class="gu-foot"><label style="margin-right:auto;font-size:13px"><input type="checkbox" id="guRead" disabled> Li e estou ciente desta atualização.</label><button class="gu-confirm" id="guConfirm" disabled>Confirmar leitura</button></div>
+ </div>
 </div>
+<script>
+(function(){
+ const overlay=document.getElementById('gereduUpdateOverlay');
+ if(!overlay || window.gereduUpdateWatcherStarted) return;
+ window.gereduUpdateWatcherStarted=true;
+ const title=document.getElementById('guTitle'),version=document.getElementById('guVersion'),
+       text=document.getElementById('guText'),read=document.getElementById('guRead'),
+       confirm=document.getElementById('guConfirm');
+ let activeId=null,locked=false;
+ function cookie(name){const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+ function show(data){
+   if(activeId===data.id) return;
+   activeId=data.id; locked=true;
+   title.textContent=data.titulo||'Atualização do GerEdu';
+   version.textContent='Versão '+(data.versao||'')+(data.total>1?' · '+data.total+' atualizações pendentes':'');
+   text.textContent=data.texto||'';
+   read.checked=false;read.disabled=true;confirm.disabled=true;
+   overlay.style.display='flex';document.body.style.overflow='hidden';
+   text.scrollTop=0;
+   text.onscroll=()=>{if(text.scrollTop+text.clientHeight>=text.scrollHeight-8)read.disabled=false;};
+   if(text.scrollHeight<=text.clientHeight+8)read.disabled=false;
+ }
+ function hide(){overlay.style.display='none';document.body.style.overflow='';activeId=null;locked=false;}
+ read.addEventListener('change',()=>confirm.disabled=!read.checked);
+ confirm.addEventListener('click',async()=>{
+   if(!activeId||!read.checked) return;
+   confirm.disabled=true;confirm.textContent='Registrando...';
+   try{
+    const body=new URLSearchParams({comunicado_id:String(activeId)});
+    const response=await fetch("{% url 'busca_ativa:comunicado_pendente_api' %}",{
+      method:'POST',credentials:'same-origin',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','X-CSRFToken':cookie('csrftoken'),'X-Requested-With':'XMLHttpRequest'},
+      body:body.toString()
+    });
+    if(!response.ok) throw new Error('Falha ao confirmar');
+    const data=await response.json();hide();
+    if(data.pending) show(data);
+   }catch(e){confirm.disabled=false;confirm.textContent='Tentar novamente';}
+   finally{confirm.textContent='Confirmar leitura';}
+ });
+ async function poll(){
+  if(locked) return;
+  try{const response=await fetch("{% url 'busca_ativa:comunicado_pendente_api' %}",{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});
+   if(response.ok){const data=await response.json();if(data.pending)show(data);}
+  }catch(e){}
+ }
+ poll();setInterval(poll,10000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+})();
+</script>
 {% endif %}
+{% if user.is_authenticated %}
+<style>
+#gereduDuende{position:fixed;right:24px;bottom:18px;z-index:4200;font-family:inherit;touch-action:none;user-select:none}
+#gereduDuende .gd-launcher{width:184px;height:260px;padding:0;border:0;background:transparent;cursor:grab;position:relative;filter:drop-shadow(0 9px 12px #102b4730);transform-origin:50% 85%}
+#gereduDuende .gd-launcher:active{cursor:grabbing}
+
+#gereduDuende .gd-dancer-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 7px #142b3b35);transform:translateZ(12px)}
+#gereduDuende .gd-3d-fallback{position:absolute;inset:12px 4px 4px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,#e7f8e8,#b9d9b8);color:#28553a;font-weight:800;font-size:12px;text-align:center}
+#gereduDuende .gd-launcher{overflow:visible}
+#gereduDuende .gd-launcher:hover .gd-dancer-img{filter:drop-shadow(0 13px 12px #142b3b55)}
+#gereduDuende .gd-dialog-body .gd-routine{font-size:11px;color:#52687a;margin-top:6px}
+#gereduDuende .gd-portal{pointer-events:none}
+
+#gereduDuende .gd-launcher:hover{filter:drop-shadow(0 12px 16px #102b4750)}
+#gereduDuende .gd-launcher{animation:none;transform-style:preserve-3d;transition:transform .18s cubic-bezier(.2,.7,.2,1),filter .2s}
+#gereduDuende .gd-dancer-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 7px #142b3b35);transform:translateZ(12px)}
+#gereduDuende .gd-launcher:hover .gd-dancer-img{filter:drop-shadow(0 13px 12px #142b3b55) saturate(1.08)}
+#gereduDuende .gd-launcher.gd-clicked{animation:gdClickBounce .55s ease}
+@keyframes gdClickBounce{0%,100%{transform:scale(1)}35%{transform:scale(1.12) rotate(-5deg)}70%{transform:scale(.97) rotate(4deg)}}
+#gereduDuende .gd-portal{width:184px;height:260px;border-radius:48% 52% 46% 54%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(ellipse at center,rgba(255,255,255,.06) 0 28%,rgba(255,214,102,.35) 42%,rgba(67,190,137,.8) 56%,rgba(125,222,175,.3) 68%,transparent 76%);filter:drop-shadow(0 0 16px #ffd76a)}
+#gereduDuende .gd-portal:before{border-color:#ffe6a1 #70d6a0 #ffe6a1 #70d6a0}
+#gereduDuende .gd-portal:after{border-color:#fff3bf transparent #8be1b4 #8be1b4}
+#gereduDuende.gd-vanishing .gd-portal,#gereduDuende.gd-returning .gd-portal{animation-duration:1.05s}
+#gereduDuende .gd-portal{box-shadow:0 0 22px #ffda72,inset 0 0 18px #b5f4c7}
+#gereduDuende .gd-coins{position:absolute;inset:-8px;z-index:3;pointer-events:none}
+#gereduDuende .gd-coin{position:absolute;width:13px;height:13px;border-radius:50%;transform-style:preserve-3d;background:radial-gradient(circle at 35% 30%,#fff5b7 0 12%,#ffd45c 25%,#c78312 78%);border:1px solid #9c650e;box-shadow:0 0 7px #ffcf4a;opacity:0}
+#gereduDuende .gd-coin:nth-child(1){--coin-x:-24px;left:2%;top:20%}.gd-coin:nth-child(2){--coin-x:24px;right:0;top:28%}.gd-coin:nth-child(3){--coin-x:-28px;left:8%;top:55%}.gd-coin:nth-child(4){--coin-x:28px;right:4%;top:62%}.gd-coin:nth-child(5){left:25%;top:4%}.gd-coin:nth-child(6){right:24%;top:5%}.gd-coin:nth-child(7){left:28%;bottom:2%}.gd-coin:nth-child(8){right:28%;bottom:1%}
+#gereduDuende.gd-vanishing .gd-coin{animation:gdCoinBurst .95s cubic-bezier(.16,.75,.25,1) forwards}
+#gereduDuende.gd-vanishing .gd-coin:nth-child(2n){animation-delay:.08s}
+#gereduDuende.gd-vanishing .gd-coin:nth-child(3n){animation-delay:.16s}
+#gereduDuende.gd-returning .gd-coin{animation:gdCoinGather .95s ease-in forwards}
+#gereduDuende.gd-returning .gd-coin:nth-child(2n){animation-delay:.08s}
+#gereduDuende.gd-returning .gd-coin:nth-child(3n){animation-delay:.16s}
+
+#gereduDuende .gd-preferences{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 11px;background:#f4f8f4;border:1px solid #dceade;border-radius:11px;font-size:12px}
+#gereduDuende .gd-preferences select{max-width:150px;border:1px solid #cbd9ce;border-radius:8px;padding:6px;background:white;color:#244437}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal{display:none}
+#gereduDuende .gd-summon{display:none;position:absolute;right:0;bottom:0;width:48px;height:48px;border:2px solid #f4d47a;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff4c2,#d79a25 60%,#81500c);color:#fff;font-size:22px;box-shadow:0 5px 20px #98630c66;cursor:pointer}
+#gereduDuende.gd-away .gd-summon{display:block}
+
+#gereduDuende .gd-character{width:100%;height:100%;overflow:visible;position:relative;z-index:2}
+#gereduDuende .gd-head{transform-origin:80px 76px;animation:gdLook 4s ease-in-out infinite}
+#gereduDuende .gd-arm-left{transform-origin:54px 111px;animation:gdWave 3.6s ease-in-out infinite}
+#gereduDuende .gd-arm-right{transform-origin:106px 111px;animation:gdGesture 4.2s ease-in-out infinite}
+#gereduDuende .gd-body{transform-origin:80px 115px;animation:gdBreathe 3s ease-in-out infinite}
+#gereduDuende .gd-shadow{animation:gdShadow 3s ease-in-out infinite}
+#gereduDuende .gd-dialog{position:absolute;right:8px;bottom:268px;width:min(390px,calc(100vw - 28px));background:#fff;border:1px solid #dbe5ef;border-radius:18px;box-shadow:0 18px 55px #0f274733;overflow:hidden;display:none;z-index:4}
+#gereduDuende.gd-open .gd-dialog{display:block;animation:gdDialogIn .24s ease-out}
+#gereduDuende .gd-dialog-head{padding:13px 16px;background:linear-gradient(120deg,#244c3e,#367c61);color:#fff;display:flex;align-items:center;justify-content:space-between}
+#gereduDuende .gd-dialog-body{padding:15px;color:#25364a;font-size:14px;line-height:1.5}
+#gereduDuende .gd-actions{display:grid;gap:8px;margin-top:12px}
+#gereduDuende .gd-actions a{display:flex;align-items:center;gap:9px;text-decoration:none;color:#24523e;background:#f2f8f3;border:1px solid #dceade;border-radius:10px;padding:9px 11px;font-weight:650}
+#gereduDuende .gd-actions a:hover{background:#e5f2e8}
+#gereduDuende .gd-close,#gereduDuende .gd-speech-close{border:0;background:#ffffff25;color:#fff;border-radius:8px;width:30px;height:30px;font-size:20px;line-height:1;cursor:pointer}
+#gereduDuende .gd-speech{position:absolute;right:104px;bottom:98px;display:flex;align-items:flex-start;gap:8px;max-width:min(310px,calc(100vw - 150px));background:#fff;color:#244437;border:1px solid #dce7df;border-radius:14px;padding:10px 11px;box-shadow:0 7px 22px #102b4722;font-size:12px;font-weight:650;line-height:1.4;white-space:normal;z-index:5}
+#gereduDuende .gd-speech:after{content:"";position:absolute;right:-6px;bottom:13px;width:10px;height:10px;background:#fff;border-right:1px solid #dce7df;border-bottom:1px solid #dce7df;transform:rotate(-45deg)}
+#gereduDuende .gd-speech-close{background:#edf3ee;color:#587065;flex:0 0 22px;width:22px;height:22px;font-size:16px}
+#gereduDuende .gd-portal{position:absolute;left:50%;top:54%;width:122px;height:122px;transform:translate(-50%,-50%) scale(.05);border-radius:50%;opacity:0;pointer-events:none;z-index:1;background:radial-gradient(circle,rgba(255,255,255,.05) 0 30%,rgba(80,209,170,.25) 43%,rgba(83,172,139,.8) 54%,rgba(181,221,164,.25) 65%,transparent 73%);filter:drop-shadow(0 0 14px #75d9a2)}
+#gereduDuende .gd-portal:before,#gereduDuende .gd-portal:after{content:"";position:absolute;inset:7px;border:3px solid #b7f4d0;border-left-color:#62b78b;border-bottom-color:transparent;border-radius:50%;box-shadow:0 0 14px #71d6a0,inset 0 0 12px #71d6a0}
+#gereduDuende .gd-portal:after{inset:18px;border-width:2px;border-color:#e0ffe9 transparent #80cba0 #80cba0;animation:gdPortalSpin 1s linear infinite}
+#gereduDuende.gd-vanishing .gd-launcher{animation:gdVanish 1s ease-in forwards}
+#gereduDuende.gd-vanishing .gd-portal{animation:gdPortalOpen 1s ease-out forwards}
+#gereduDuende.gd-hidden .gd-launcher{opacity:0;visibility:hidden}
+#gereduDuende.gd-returning .gd-launcher{visibility:visible;animation:gdAppear 1s cubic-bezier(.16,.8,.2,1) both}
+#gereduDuende.gd-returning .gd-portal{animation:gdPortalClose 1s ease-in forwards}
+#gereduDuende .gd-launcher.gd-flee-left{transform:translateX(-38px) rotate(-4deg)}
+#gereduDuende .gd-launcher.gd-flee-right{transform:translateX(38px) rotate(4deg)}
+@keyframes gdDance{0%,100%{transform:translateY(0) rotate(0) scale(1)}12%{transform:translateY(-5px) rotate(-5deg) scale(1.02)}25%{transform:translateY(0) rotate(5deg) scale(1)}38%{transform:translateY(-8px) rotate(-4deg) scale(1.03)}52%{transform:translateY(0) rotate(4deg) scale(1)}68%{transform:translateY(-4px) rotate(-3deg)}82%{transform:translateY(0) rotate(3deg)}}
+@keyframes gdCoinBurst{0%{opacity:0;transform:translate(0,0) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translate(var(--coin-x,18px),-36px) scale(1.2) rotate(220deg)}}
+@keyframes gdCoinGather{0%{opacity:0;transform:translate(0,0) scale(.2)}100%{opacity:1;transform:translate(0,0) scale(1)}}
+@keyframes gdLook{0%,100%{transform:rotate(0)}30%{transform:rotate(3deg)}65%{transform:rotate(-3deg)}}
+@keyframes gdWave{0%,62%,100%{transform:rotate(0)}70%{transform:rotate(-28deg)}78%{transform:rotate(14deg)}86%{transform:rotate(-18deg)}}
+@keyframes gdGesture{0%,100%{transform:rotate(0)}45%{transform:rotate(10deg)}60%{transform:rotate(-7deg)}}
+@keyframes gdBreathe{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-2px) scaleY(1.025)}}
+@keyframes gdShadow{0%,100%{transform:scaleX(1);opacity:.23}50%{transform:scaleX(.82);opacity:.13}}
+@keyframes gdDialogIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes gdPortalSpin{to{transform:rotate(360deg)}}
+@keyframes gdPortalOpen{0%{opacity:0;transform:translate(-50%,-50%) scale(.05) rotate(0)}55%{opacity:1;transform:translate(-50%,-50%) scale(1.12) rotate(200deg)}100%{opacity:.95;transform:translate(-50%,-50%) scale(1) rotate(360deg)}}
+@keyframes gdPortalClose{0%{opacity:.95;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-50%) scale(.05) rotate(360deg)}}
+@keyframes gdVanish{0%{opacity:1;transform:scale(1) translateY(0) rotate(0)}45%{opacity:1;transform:scale(.8) translateY(-8px) rotate(-10deg)}100%{opacity:0;transform:scale(.02) translateY(8px) rotate(180deg)}}
+@keyframes gdAppear{0%{opacity:0;transform:scale(.02) translateY(8px) rotate(-180deg)}65%{opacity:1;transform:scale(1.12) translateY(-5px) rotate(8deg)}100%{opacity:1;transform:scale(1) translateY(0) rotate(0)}}
+@media(max-width:600px){#gereduDuende{right:8px;bottom:8px}#gereduDuende .gd-launcher{width:88px;height:126px}#gereduDuende .gd-dialog{bottom:132px;right:-2px}#gereduDuende .gd-speech{right:78px;bottom:76px}}
+@media(prefers-reduced-motion:reduce){#gereduDuende *{animation:none!important;transition:none!important}}
+
+
+#gereduDuende{width:124px;height:174px;right:18px;bottom:14px;overflow:visible}
+#gereduDuende .gd-launcher{width:120px;height:168px;overflow:visible;display:block;isolation:isolate}
+#gereduDuende #gd3dCanvas{width:100%!important;height:100%!important;display:block;overflow:visible}
+#gereduDuende .gd-portal{width:120px;height:168px}
+#gereduDuende .gd-coins{inset:-12px}
+#gereduDuende .gd-dialog{right:0;bottom:176px;width:min(370px,calc(100vw - 30px))}
+#gereduDuende .gd-speech{width:270px;max-width:min(270px,calc(100vw - 28px));min-width:220px;right:92px;bottom:72px;font-size:12px;line-height:1.4}
+#gereduDuende .gd-summon{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;font-size:17px;line-height:1;border-width:1px}
+#gereduDuende.gd-away{width:32px;height:32px;right:6px;bottom:6px;left:auto;top:auto}
+#gereduDuende.gd-away .gd-summon{display:flex;position:relative;inset:auto;width:30px;height:30px}
+#gereduDuende.gd-away .gd-summon:after{inset:-4px;border-width:1px}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal,#gereduDuende.gd-away .gd-coins{display:none}
+#gereduDuende.gd-vanishing .gd-launcher{animation:gdMagicVanish .95s cubic-bezier(.2,.7,.1,1) forwards}
+#gereduDuende.gd-returning .gd-launcher{animation:gdMagicAppear .95s cubic-bezier(.2,.8,.2,1) both}
+@media(max-width:600px){#gereduDuende{width:100px;height:142px;right:5px;bottom:6px}#gereduDuende .gd-launcher{width:96px;height:136px}#gereduDuende .gd-dialog{bottom:145px}#gereduDuende .gd-speech{right:72px;bottom:62px;width:230px;min-width:210px}#gereduDuende .gd-portal{width:96px;height:136px}}
+
+#gereduDuende{width:92px!important;height:128px!important;right:10px!important;bottom:10px!important;left:auto!important;top:auto!important;overflow:visible!important}
+#gereduDuende .gd-launcher{width:88px!important;height:124px!important;max-width:88px!important;max-height:124px!important;overflow:visible!important}
+#gereduDuende #gd3dCanvas{width:88px!important;height:124px!important;max-width:88px!important;max-height:124px!important}
+#gereduDuende .gd-portal{width:88px!important;height:124px!important}
+#gereduDuende .gd-coins{inset:-5px!important}
+#gereduDuende .gd-dialog{bottom:132px!important;right:0!important;width:min(340px,calc(100vw - 24px))!important}
+#gereduDuende .gd-speech{width:250px!important;min-width:210px!important;max-width:calc(100vw - 28px)!important;right:76px!important;bottom:52px!important;font-size:12px!important;line-height:1.38!important}
+#gereduDuende.gd-away{position:fixed!important;width:24px!important;height:24px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;z-index:99999!important}
+#gereduDuende.gd-away .gd-summon{display:flex!important;position:fixed!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;font-size:13px!important;padding:0!important;border-width:1px!important;z-index:100000!important}
+#gereduDuende.gd-away .gd-summon:after{inset:-3px!important;border-width:1px!important}
+#gereduDuende.gd-away .gd-launcher,#gereduDuende.gd-away .gd-speech,#gereduDuende.gd-away .gd-portal,#gereduDuende.gd-away .gd-coins{display:none!important}
+@media(max-width:600px){#gereduDuende{width:72px!important;height:100px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:68px!important;height:96px!important}#gereduDuende .gd-portal{width:68px!important;height:96px!important}#gereduDuende .gd-dialog{bottom:104px!important}#gereduDuende .gd-speech{right:58px!important;bottom:40px!important;width:220px!important;min-width:190px!important}}
+
+#gereduDuende{position:fixed!important;width:68px!important;height:96px!important;right:10px!important;bottom:10px!important;left:auto!important;top:auto!important;overflow:visible!important;contain:none!important;clip-path:none!important}
+#gereduDuende .gd-launcher{width:64px!important;height:92px!important;max-width:64px!important;max-height:92px!important;overflow:visible!important;clip-path:none!important}
+#gereduDuende #gd3dCanvas{width:64px!important;height:92px!important;max-width:64px!important;max-height:92px!important;overflow:visible!important}
+#gereduDuende .gd-portal{width:64px!important;height:92px!important}
+#gereduDuende .gd-dialog{bottom:104px!important}
+#gereduDuende .gd-speech{right:58px!important;bottom:38px!important;width:230px!important;min-width:190px!important}
+#gereduDuende.gd-away{position:fixed!important;width:22px!important;height:22px!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;z-index:2147483000!important}
+#gereduDuende.gd-away .gd-summon{position:fixed!important;right:0!important;bottom:0!important;left:auto!important;top:auto!important;width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;font-size:12px!important}
+@media(max-width:600px){#gereduDuende{width:58px!important;height:82px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:54px!important;height:78px!important}#gereduDuende .gd-portal{width:54px!important;height:78px!important}#gereduDuende .gd-dialog{bottom:88px!important}#gereduDuende .gd-speech{right:48px!important;bottom:30px!important;width:210px!important;min-width:180px!important}}
+
+#gereduDuende{width:104px!important;height:146px!important;right:10px!important;bottom:10px!important;overflow:visible!important;contain:none!important;clip-path:none!important}
+#gereduDuende .gd-launcher{width:98px!important;height:138px!important;max-width:98px!important;max-height:138px!important;overflow:visible!important;clip-path:none!important}
+#gereduDuende #gd3dCanvas{width:98px!important;height:138px!important;max-width:98px!important;max-height:138px!important;overflow:visible!important}
+#gereduDuende .gd-portal{width:98px!important;height:138px!important}
+#gereduDuende .gd-dialog{bottom:150px!important}
+#gereduDuende .gd-speech{right:88px!important;bottom:48px!important;width:245px!important;min-width:200px!important}
+@media(max-width:600px){#gereduDuende{width:82px!important;height:116px!important;right:6px!important;bottom:6px!important}#gereduDuende .gd-launcher,#gereduDuende #gd3dCanvas{width:76px!important;height:108px!important;max-width:76px!important;max-height:108px!important}#gereduDuende .gd-portal{width:76px!important;height:108px!important}#gereduDuende .gd-dialog{bottom:120px!important}#gereduDuende .gd-speech{right:68px!important;bottom:38px!important;width:220px!important;min-width:180px!important}}
+</style>
+<div id="gereduDuende">
+ <div class="gd-dialog" id="gdDialog" role="dialog" aria-label="Ajuda do Duende GerEdu" aria-hidden="true">
+  <div class="gd-dialog-head"><div><strong>Duende do GerEdu</strong><div style="font-size:11px;opacity:.88">Seu ajudante na escola</div></div><button type="button" class="gd-close" id="gdClose" aria-label="Fechar diálogo">×</button></div>
+  <div class="gd-dialog-body">
+   <div id="gdHelpText">Olá, {{ user.first_name|default:user.username|escape }}! Que bom ter você por aqui. Sou o duende do GerEdu e posso ajudar a encontrar as ferramentas do sistema.</div>
+   <div style="margin-top:12px;padding:12px;border-radius:12px;background:#f0f7f1;border:1px solid #d8e9dc">
+    <div style="font-size:11px;font-weight:800;color:#367c61;text-transform:uppercase;letter-spacing:.06em">Calendário letivo</div>
+    {% if data_fim_letivo %}
+      <div style="font-size:25px;font-weight:900;color:#244c3e;line-height:1.2" id="gdCalendarDays">{{ dias_letivos_restantes|default:"—" }} dias letivos</div>
+      <div style="font-size:12px;color:#52687a">Até {{ data_fim_letivo|date:"d/m/Y" }}</div>
+      <div style="font-size:12px;color:#52687a;margin-top:3px" id="gdCalendarNaturalDays" data-end="{{ data_fim_letivo|date:'Y-m-d' }}">Calculando dias corridos até o encerramento...</div>
+    {% else %}
+      <div style="font-size:13px;color:#52687a">Cadastre ou ative o calendário escolar para acompanhar o encerramento do ano letivo.</div>
+    {% endif %}
+   </div>
+   <div class="gd-routine" id="gdRoutineStatus">Rotina do duende: preparando o dia...</div>
+   {% if comunicado_pendente %}
+   <div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff5e6;border:1px solid #f3d39b;color:#875314;font-size:12px">🔔 Há uma atualização do GerEdu aguardando sua confirmação de leitura.</div>
+   {% endif %}
+   <div class="gd-actions" style="grid-template-columns:1fr 1fr">
+    <button type="button" class="gd-hide-now" id="gdHideNow">✨ Fazer o duende desaparecer</button>
+    <button type="button" class="gd-dance-now" id="gdDanceNow">💃 Dançar comigo</button>
+   </div>
+   <div class="gd-preferences">
+    <label for="gdHideAfter"><strong>Tempo para desaparecer</strong></label>
+    <select id="gdHideAfter" aria-label="Tempo para o duende desaparecer">
+     <option value="0">Sempre visível</option>
+     <option value="300">5 minutos</option>
+     <option value="900">15 minutos</option>
+     <option value="1800">30 minutos</option>
+     <option value="3600">1 hora</option>
+     <option value="7200">2 horas</option>
+    </select>
+   </div>
+   <div class="gd-actions">
+    <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><span>📊</span> Avaliações e participação</a>
+    <a href="{% url 'busca_ativa:painel' %}"><span>🎒</span> Busca Ativa e acompanhamentos</a>
+    {% if user.is_superuser or user.pode_gerenciar_usuarios %}<a href="{% url 'busca_ativa:atualizacao_txt' %}"><span>🛠️</span> Administração e atualizações</a>{% endif %}
+   </div>
+  </div>
+ </div>
+ <div class="gd-speech" id="gdSpeech">
+  <span>Olá, {{ user.first_name|default:user.username|escape }}! Seja bem-vindo(a) ao GerEdu! {% if data_fim_letivo %}Faltam <strong>{{ dias_letivos_restantes|default:"—" }} dias letivos</strong> para encerrarmos o ano, até {{ data_fim_letivo|date:"d/m/Y" }}.{% else %}Vamos começar? Estou aqui para ajudar!{% endif %} Precisa de uma mãozinha?</span>
+  <button type="button" class="gd-speech-close" id="gdSpeechClose" aria-label="Fechar balão de boas-vindas">×</button>
+ </div>
+ <div class="gd-portal" id="gdPortal" aria-hidden="true"></div>
+ <div class="gd-coins" aria-hidden="true">{% for coin in "12345678" %}<i class="gd-coin"></i>{% endfor %}</div>
+ <button type="button" class="gd-summon" id="gdSummon" aria-label="Trazer o duende de volta">☘</button>
+ <button type="button" class="gd-launcher" id="gdLauncher" aria-label="Abrir ajuda do Duende GerEdu" aria-expanded="false" aria-controls="gdDialog">
+  <canvas id="gd3dCanvas" class="gd-character gd-dancer-img" aria-label="Mascote 3D interativo do GerEdu"></canvas><span id="gd3dFallback" class="gd-3d-fallback" hidden>Duende do GerEdu</span>
+ </button>
+</div>
+<script>
+(function(){
+ const root=document.getElementById('gereduDuende');
+ if(!root || root.dataset.initialized==='1') return;
+ root.dataset.initialized='1';
+ const launcher=document.getElementById('gdLauncher');
+ const dialog=document.getElementById('gdDialog');
+ const close=document.getElementById('gdClose');
+ const speech=document.getElementById('gdSpeech');
+ const speechClose=document.getElementById('gdSpeechClose');
+ const portal=document.getElementById('gdPortal');
+ const hideSelect=document.getElementById('gdHideAfter');
+ const summon=document.getElementById('gdSummon');
+ const hideNow=document.getElementById('gdHideNow');
+ const danceNow=document.getElementById('gdDanceNow');
+ let drag=null,dragged=false,portalBusy=false,animationTimer=null,lastDodge=0,hideTimer=null;
+ function setOpen(open){
+  root.classList.toggle('gd-open',open);
+  launcher.setAttribute('aria-expanded',String(open));
+  dialog.setAttribute('aria-hidden',String(!open));
+  if(open && speech) speech.style.display='none';
+ }
+ launcher.addEventListener('click',()=>{
+  if(!dragged){
+   launcher.classList.remove('gd-clicked');void launcher.offsetWidth;launcher.classList.add('gd-clicked');
+   setOpen(!root.classList.contains('gd-open'));
+  }
+  dragged=false;
+ });
+ launcher.addEventListener('pointermove',e=>{
+  if(drag||e.pointerType==='touch'||root.classList.contains('gd-vanishing')||root.classList.contains('gd-hidden'))return;
+  const r=launcher.getBoundingClientRect();
+  const nx=(e.clientX-r.left)/r.width-.5, ny=(e.clientY-r.top)/r.height-.5;
+  const rx=Math.max(-11,Math.min(11,-ny*20)), ry=Math.max(-13,Math.min(13,nx*24));
+  launcher.style.transform=`perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+ });
+ launcher.addEventListener('pointerleave',()=>{if(!drag)launcher.style.transform='';});
+ close.addEventListener('click',()=>setOpen(false));
+ speechClose.addEventListener('click',e=>{e.stopPropagation();speech.style.display='none';});
+ speech.addEventListener('click',()=>{speech.style.display='none';});
+ document.addEventListener('click',e=>{if(root.classList.contains('gd-open')&&!dialog.contains(e.target)&&!launcher.contains(e.target))setOpen(false);});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')setOpen(false);});
+ function setAway(seconds){
+  if(hideTimer)clearTimeout(hideTimer);
+  try{localStorage.setItem('gereduDuendeHideAfter',String(seconds));}catch(_){}
+  root.classList.remove('gd-away');
+  if(seconds>0)hideTimer=setTimeout(()=>magicalHide(),seconds*1000);
+ }
+ let savedDuration='0';try{savedDuration=localStorage.getItem('gereduDuendeHideAfter')||'0';}catch(_){}
+ if(hideSelect){hideSelect.value=savedDuration;setAway(parseInt(savedDuration,10)||0);hideSelect.addEventListener('change',()=>setAway(parseInt(hideSelect.value,10)||0));}
+ function magicalHide(){
+  if(animationTimer)clearTimeout(animationTimer);
+  portalBusy=false;
+  portalBusy=true;setOpen(false);
+  root.classList.remove('gd-returning','gd-hidden');root.classList.add('gd-vanishing');
+  setTimeout(()=>{
+   root.classList.remove('gd-vanishing');root.classList.add('gd-hidden','gd-away');
+   root.style.left='auto';root.style.top='auto';root.style.right='0px';root.style.bottom='0px';
+   portalBusy=false;
+  },1150);
+ }
+ function magicalReturn(openDialog=false){
+  root.classList.remove('gd-away','gd-hidden','gd-vanishing');
+  root.style.left='auto';root.style.top='auto';root.style.right='10px';root.style.bottom='10px';
+  root.classList.add('gd-returning');
+  setAway(parseInt(hideSelect?.value||'0',10)||0);
+  setTimeout(()=>root.classList.remove('gd-returning'),1250);
+  if(openDialog)setOpen(true);
+ }
+ if(hideNow)hideNow.addEventListener('click',magicalHide);
+ if(summon)summon.addEventListener('click',()=>magicalReturn(true));
+ if(danceNow)danceNow.addEventListener('click',()=>{launcher.dispatchEvent(new Event('dblclick'));setOpen(false);});
+ const naturalDays=document.getElementById('gdCalendarNaturalDays');
+ if(naturalDays&&naturalDays.dataset.end){
+  const parts=naturalDays.dataset.end.split('-').map(Number),endDate=new Date(parts[0],parts[1]-1,parts[2]);
+  const now=new Date();now.setHours(0,0,0,0);
+  const diff=Math.max(0,Math.ceil((endDate-now)/86400000));
+  naturalDays.textContent=diff+' dias corridos até o encerramento do calendário letivo.';
+  const welcome=speech?.querySelector('span');
+  if(welcome && !welcome.dataset.calendarAdded){
+   welcome.dataset.calendarAdded='1';
+   welcome.insertAdjacentHTML('beforeend',' <span class="gd-welcome-count">São '+diff+' dias corridos pela frente. Vamos aproveitar bem o período letivo!</span>');
+  }
+ }
+ function portalCycle(){
+  if(portalBusy||drag||root.classList.contains('gd-open')||root.classList.contains('gd-away')){animationTimer=setTimeout(portalCycle,4000);return;}
+  portalBusy=true;
+  root.classList.remove('gd-hidden','gd-returning','gd-vanishing');
+  void launcher.offsetWidth;
+  root.classList.add('gd-vanishing');
+  animationTimer=setTimeout(()=>{
+   root.classList.remove('gd-vanishing');
+   root.classList.add('gd-hidden');
+   animationTimer=setTimeout(()=>{
+    root.classList.remove('gd-hidden');
+    void launcher.offsetWidth;
+    root.classList.add('gd-returning');
+    animationTimer=setTimeout(()=>{
+     root.classList.remove('gd-returning');
+     portalBusy=false;
+     animationTimer=setTimeout(portalCycle,15000);
+    },1050);
+   },850);
+  },1050);
+ }
+ animationTimer=setTimeout(portalCycle,7000);
+ launcher.addEventListener('pointerdown',e=>{
+  if(e.button!==0&&e.pointerType!=='touch')return;
+  const r=root.getBoundingClientRect();
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};
+  launcher.style.transform='';
+  dragged=false;
+  try{launcher.setPointerCapture(e.pointerId);}catch(_){}
+ });
+ launcher.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(Math.abs(dx)+Math.abs(dy)>7)dragged=true;
+  if(!dragged)return;
+  const left=Math.max(0,Math.min(innerWidth-root.offsetWidth,drag.left+dx));
+  const top=Math.max(0,Math.min(innerHeight-root.offsetHeight,drag.top+dy));
+  root.style.left=left+'px';root.style.top=top+'px';root.style.right='auto';root.style.bottom='auto';
+ });
+ function finishDrag(e){
+  if(!drag||e.pointerId!==drag.id)return;
+  if(dragged){try{localStorage.setItem('gereduDuendePos',JSON.stringify({left:parseFloat(root.style.left),top:parseFloat(root.style.top)}));}catch(_){}}
+  drag=null;
+ }
+ launcher.addEventListener('pointerup',finishDrag);
+ launcher.addEventListener('pointercancel',finishDrag);
+ // Sempre inicia no canto inferior direito; evita restaurar coordenadas antigas que cortavam o personagem.
+ root.style.left='auto';root.style.top='auto';root.style.right='10px';root.style.bottom='10px';
+ try{localStorage.removeItem('gereduDuendePos');}catch(_){}
+ root.addEventListener('pointermove',e=>{
+  if(e.pointerType==='touch'||drag||root.classList.contains('gd-open')||portalBusy)return;
+  const r=launcher.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  if(Math.hypot(e.clientX-cx,e.clientY-cy)<78&&Date.now()-lastDodge>1800){
+   lastDodge=Date.now();launcher.classList.remove('gd-flee-left','gd-flee-right');
+   launcher.classList.add(e.clientX<cx?'gd-flee-right':'gd-flee-left');
+   setTimeout(()=>launcher.classList.remove('gd-flee-left','gd-flee-right'),550);
+  }
+ });
+})();
+</script>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+(async function(){
+ const canvas=document.getElementById('gd3dCanvas');
+ const launcher=document.getElementById('gdLauncher');
+ const root=document.getElementById('gereduDuende');
+ const fallback=document.getElementById('gd3dFallback');
+ const routineLabel=document.getElementById('gdRoutineStatus');
+ if(!canvas||!launcher||!root||canvas.dataset.ready==='1')return;
+ canvas.dataset.ready='1';
+ try{
+  const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
+  renderer.setSize(launcher.clientWidth,launcher.clientHeight,false);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.12;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(36,launcher.clientWidth/launcher.clientHeight,.1,30);
+  camera.position.set(0,1.48,5.5);
+  camera.lookAt(0,1.48,0);
+  scene.add(new THREE.HemisphereLight(0xfff3dc,0x52634b,2.0));
+  const key=new THREE.DirectionalLight(0xffedce,3.0);key.position.set(-3,5,5);scene.add(key);
+  const fill=new THREE.DirectionalLight(0x9fd9ff,1.15);fill.position.set(3,2,2);scene.add(fill);
+  const rim=new THREE.PointLight(0xffd16a,1.0,9);rim.position.set(0,3,-2);scene.add(rim);
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(1.0,40),new THREE.MeshBasicMaterial({color:0x203c2b,transparent:true,opacity:.13}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=.01;floor.scale.set(.68,.22,1);scene.add(floor);
+  const model=new THREE.Group();
+  const mat=(color,roughness=.68,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+  const skin=mat(0xf0c99b),skinLight=mat(0xffdfb8),green=mat(0x3e8a62),greenDark=mat(0x245b45),leaf=mat(0x80bd75),gold=mat(0xe5b95b,.42,.22),boot=mat(0x654b3d),white=mat(0xfff8e9),iris=mat(0x4b7d68),black=mat(0x27333a),blush=mat(0xe99483);
+  const sphere=(name,r,pos,material,scale=[1,1,1])=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,24,18),material);m.name=name;m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;model.add(m);return m;};
+  const capsule=(name,r,len,pos,material)=>{const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,5,12),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  const cone=(name,r,h,pos,material,segments=28)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,segments),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  const cyl=(name,rt,rb,h,pos,material)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,28),material);m.name=name;m.position.set(...pos);m.castShadow=true;model.add(m);return m;};
+  // Silhueta pequena e arredondada: guardião da floresta com gorro de folha.
+  sphere('body',.43,[0,1.12,0],green,[.82,1.08,.64]);
+  sphere('belly',.29,[0,1.10,.285],mat(0xd9e9c9),[.9,1.03,.28]);
+  // Cabeça e rosto expressivo.
+  const head=sphere('head_skin',.48,[0,1.91,0],skin,[1.02,.94,.83]);
+  sphere('left_ear',.17,[-.46,1.92,0],skin,[.48,.8,.42]);
+  sphere('right_ear',.17,[.46,1.92,0],skin,[.48,.8,.42]);
+  sphere('left_eye_white',.105,[-.18,1.98,.385],white,[.88,1.1,.55]);
+  sphere('right_eye_white',.105,[.18,1.98,.385],white,[.88,1.1,.55]);
+  sphere('left_iris',.052,[-.17,1.97,.443],iris,[.9,1.0,.5]);
+  sphere('right_iris',.052,[.19,1.97,.443],iris,[.9,1.0,.5]);
+  sphere('left_pupil',.025,[-.16,1.97,.464],black,[.9,1.0,.5]);
+  sphere('right_pupil',.025,[.20,1.97,.464],black,[.9,1.0,.5]);
+  sphere('left_glint',.012,[-.175,1.995,.477],white);
+  sphere('right_glint',.012,[.185,1.995,.477],white);
+  sphere('nose',.065,[0,1.86,.435],skinLight,[1,.7,.75]);
+  sphere('cheek_l',.07,[-.29,1.82,.34],blush,[1,.55,.3]);
+  sphere('cheek_r',.07,[.29,1.82,.34],blush,[1,.55,.3]);
+  // Chapéu de aventureiro com copa macia e folha dourada.
+  cyl('hat_brim',.52,.49,.10,[0,2.34,0],greenDark);
+  cone('hat',.40,.58,[0,2.65,0],green);
+  sphere('hat_tip',.07,[0,2.96,0],gold,[.9,1.2,.9]);
+  const leafMesh=new THREE.Mesh(new THREE.SphereGeometry(.15,16,12),leaf);leafMesh.name='hat_leaf';leafMesh.position.set(.25,2.72,.05);leafMesh.scale.set(1.5,.45,.35);leafMesh.rotation.z=-.4;model.add(leafMesh);
+  // Cachecol e pequena fivela.
+  const scarf=capsule('scarf',.10,.42,[0,1.48,.22],gold);scarf.rotation.z=Math.PI/2;
+  sphere('scarf_knot',.12,[.24,1.49,.23],gold,[.9,1.2,.8]);
+  // Braços articulados.
+  capsule('left_arm',.105,.42,[-.39,1.34,0],green).rotation.z=-.35;
+  capsule('right_arm',.105,.42,[.39,1.34,0],green).rotation.z=.35;
+  sphere('left_hand',.12,[-.47,1.08,.02],skin);
+  sphere('right_hand',.12,[.47,1.08,.02],skin);
+  // Pernas curtas e botas arredondadas.
+  capsule('left_leg',.12,.28,[-.18,.62,0],greenDark);
+  capsule('right_leg',.12,.28,[.18,.62,0],greenDark);
+  sphere('left_boot',.16,[-.20,.31,.10],boot,[1.15,.72,1.4]);
+  sphere('right_boot',.16,[.20,.31,.10],boot,[1.15,.72,1.4]);
+  // Agrupa a cabeça e os traços faciais para que o olhar acompanhe a rotação.
+  const headGroup=new THREE.Group();headGroup.name='head';headGroup.position.set(0,1.91,0);
+  model.updateMatrixWorld(true);
+  ['head_skin','left_ear','right_ear','left_eye_white','right_eye_white','left_iris','right_iris','left_pupil','right_pupil','left_glint','right_glint','nose','cheek_l','cheek_r'].forEach(n=>{
+    const part=model.getObjectByName(n);if(part)headGroup.attach(part);
+  });
+  model.add(headGroup);
+  // Pequena mochila/folha nas costas.
+  sphere('backpack',.24,[0,1.18,-.34],gold,[.8,1,.5]);
+  model.scale.setScalar(.64);
+  model.position.set(0,-.08,0);
+  scene.add(model);
+  const get=n=>model.getObjectByName(n);
+  const pivot=(name,point)=>{
+    const obj=get(name);if(!obj)return null;
+    const p=new THREE.Group();p.position.set(...point);model.add(p);p.attach(obj);return p;
+  };
+  const headPivot=pivot('head',[0,1.95,0]);
+  const hatPivot=pivot('hat',[0,2.36,0]);
+  const leftArm=pivot('left_arm',[-.30,1.45,0]);
+  const rightArm=pivot('right_arm',[.30,1.45,0]);
+  const leftLeg=pivot('left_leg',[-.18,.42,0]);
+  const rightLeg=pivot('right_leg',[.18,.42,0]);
+  const leftBoot=pivot('left_boot',[-.19,.25,0]);
+  const rightBoot=pivot('right_boot',[.19,.25,0]);
+  const eyeParts=['left_iris','right_iris','left_pupil','right_pupil'].map(n=>get(n)).filter(Boolean);
+  const eyeBase=eyeParts.map(o=>({o,x:o.position.x,y:o.position.y}));
+  const modelRoot=new THREE.Group();modelRoot.add(model);scene.add(modelRoot);
+  let mouseX=0,mouseY=0,targetX=0,targetY=0,lastActivity=Date.now(),lastWander=0,wanderUntil=0,wanderTarget=0,lastScreenWander=0;
+  let mode='idle',modeSince=Date.now(),dragging=false,lookAtMouse=false,night=false;
+  const clock=new THREE.Clock();
+  const dayMode=()=>{
+    const h=new Date().getHours();
+    if(h>=5&&h<12)return 'morning';
+    if(h>=12&&h<18)return 'afternoon';
+    return 'night';
+  };
+  function setRoutine(){
+    const d=dayMode();
+    night=d==='night';
+    scene.background=null;
+    key.color.set(night?0x9ab8ff:d==='morning'?0xffd49a:0xfff0d4);
+    key.intensity=night?1.45:d==='morning'?2.6:2.25;
+    fill.color.set(night?0x668bd8:0xa5dcff);
+    fill.intensity=night?1.35:1.0;
+    rim.color.set(night?0x8eabff:0xffd16a);
+    if(routineLabel)routineLabel.textContent=d==='morning'?'Rotina da manhã · acordado e animado':d==='afternoon'?'Rotina da tarde · brincalhão e atento':'Rotina da noite · movimentos tranquilos e descanso';
+  }
+  setRoutine();
+  function wake(){
+    lastActivity=Date.now();lookAtMouse=true;
+    if(mode==='sleep'||mode==='rest'){mode='wake';modeSince=Date.now();}
+    if(mode==='wander'){mode='dance';modeSince=Date.now();}
+  }
+  window.addEventListener('pointermove',e=>{
+    const r=launcher.getBoundingClientRect();
+    if(e.clientX>=r.left-80&&e.clientX<=r.right+80&&e.clientY>=r.top-80&&e.clientY<=r.bottom+80){
+      targetX=((e.clientX-r.left)/Math.max(1,r.width)-.5)*1.4;
+      targetY=((e.clientY-r.top)/Math.max(1,r.height)-.5)*-.9;
+      wake();
+    }
+  },{passive:true});
+  launcher.addEventListener('pointerdown',()=>{wake();mode='dance';modeSince=Date.now();root.style.transition='left .2s ease, top .2s ease';});
+  launcher.addEventListener('dblclick',()=>{mode='dance';modeSince=Date.now();});
+  window.addEventListener('pointerdown',e=>{
+    if(!root.contains(e.target)){lastActivity=Date.now();}
+  },{passive:true});
+  const resize=()=>{
+    const w=Math.max(1,launcher.clientWidth),h=Math.max(1,launcher.clientHeight);
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  };
+  new ResizeObserver(resize).observe(launcher);
+  const smooth=(a,b,t)=>a+(b-a)*Math.min(1,t);
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime,now=Date.now();
+    const idle=(now-lastActivity)/1000;
+    if(now-modeSince>60000&&dayMode()!== (window._gdDay||'')){window._gdDay=dayMode();setRoutine();}
+    if(idle>22&&mode!=='wander'&&mode!=='sleep'&&mode!=='rest'){
+      mode='wander';modeSince=now;wanderUntil=now+18000;wanderTarget=(Math.random()-.5)*.75;
+      // Mantém o mascote ancorado no canto inferior direito; o passeio é animado no próprio palco 3D.
+      root.style.transition='none';root.style.left='auto';root.style.top='auto';
+      root.style.right='10px';root.style.bottom='10px';
+      lastScreenWander=now;
+    }
+    if(mode==='wander'&&now-lastScreenWander>4200){
+      wanderTarget=(Math.random()-.5)*.9;
+      lastScreenWander=now;
+    }
+    if(mode==='wander'&&now>wanderUntil){mode=night?'sleep':'rest';modeSince=now;}
+    if(mode==='wake'&&now-modeSince>2200){mode='dance';modeSince=now;}
+    if(mode==='rest'&&idle<5){mode='wake';modeSince=now;}
+    if(mode==='sleep'&&idle<5){mode='wake';modeSince=now;}
+    const dance=mode==='dance'||mode==='wake';
+    const walking=mode==='wander';
+    const resting=mode==='rest'||mode==='sleep';
+    const amp=dance?1:walking?.62:resting?.12:.25;
+    const speed=night?.7:1.0;
+    const wave=Math.sin(t*5.5*speed),bounce=Math.abs(Math.sin(t*3.3*speed));
+    modelRoot.position.x=smooth(modelRoot.position.x,walking?wanderTarget:0,dt*(walking?.7:1.8));
+    modelRoot.position.y=smooth(modelRoot.position.y,resting?-.22:0,dt*1.8)+ (walking?Math.abs(wave)*.055:dance?bounce*.10:Math.sin(t*1.2)*.018);
+    modelRoot.rotation.y=smooth(modelRoot.rotation.y,targetX*.24+(walking?Math.sin(t*1.1)*.22:0),dt*3);
+    if(hatPivot)hatPivot.rotation.z=Math.sin(t*2.4)*(dance?.08:walking?.045:.018);
+    if(headPivot){
+      headPivot.rotation.y=smooth(headPivot.rotation.y,targetX*.32+Math.sin(t*1.1)*.035,dt*4);
+      headPivot.rotation.x=smooth(headPivot.rotation.x,targetY*.18+(resting?.13:Math.sin(t*2)*.018),dt*4);
+      headPivot.rotation.z=Math.sin(t*1.8)*.035+(walking?Math.sin(t*5)*.04:0);
+    }
+    if(leftArm){leftArm.rotation.z=dance?Math.sin(t*5)*1.05:walking?Math.sin(t*7)*.62:resting?.28:Math.sin(t*1.7)*.16;leftArm.rotation.x=dance?Math.sin(t*3.7)*.24:0;}
+    if(rightArm){rightArm.rotation.z=dance?-Math.sin(t*5+.8)*1.05:walking?-Math.sin(t*7)*.62:resting?-.28:-Math.sin(t*1.7)*.16;rightArm.rotation.x=dance?Math.cos(t*3.7)*.24:0;}
+    if(leftLeg)leftLeg.rotation.x=walking?Math.sin(t*7)*.62:dance?Math.sin(t*5)*.25:0;
+    if(rightLeg)rightLeg.rotation.x=walking?-Math.sin(t*7)*.62:dance?-Math.sin(t*5)*.25:0;
+    if(leftBoot)leftBoot.rotation.x=walking?Math.sin(t*7)*.35:0;
+    if(rightBoot)rightBoot.rotation.x=walking?-Math.sin(t*7)*.35:0;
+    const eyeX=targetX*.045,eyeY=targetY*.035;
+    for(const p of eyeBase){p.o.position.x=p.x+eyeX;p.o.position.y=p.y+eyeY;}
+    if(resting){modelRoot.rotation.z=smooth(modelRoot.rotation.z,mode==='sleep'?-1.18:-.88,dt*.8);}
+    else{modelRoot.rotation.z=smooth(modelRoot.rotation.z,0,dt*2.2);}
+    if(mode==='sleep'&&headPivot)headPivot.rotation.z=Math.sin(t*.5)*.025;
+    if(routineLabel){
+      const period=dayMode();
+      const phase=mode==='wander'?'passeando pela tela':mode==='sleep'?'dormindo':mode==='rest'?'descansando':mode==='wake'?'acordando':mode==='dance'?'dançando':'observando o movimento';
+      const timeLabel=period==='morning'?'Manhã':period==='afternoon'?'Tarde':'Noite';
+      routineLabel.textContent=timeLabel+' · '+phase;
+    }
+    renderer.render(scene,camera);
+  }
+  animate();
+  root.dataset.model3d='ready';
+ }catch(err){
+  console.error('Duende 3D não carregou:',err);
+  if(fallback){fallback.hidden=false;fallback.textContent='Duende indisponível · verifique a conexão 3D';}
+  if(routineLabel)routineLabel.textContent='Não foi possível carregar o modelo 3D.';
+ }
+})();
+</script>
+{% endif %}
+
 
 <script>
 /* Mantém a estrutura original dos cabeçalhos. A identidade visual global é aplicada

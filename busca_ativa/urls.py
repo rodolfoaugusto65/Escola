@@ -4,7 +4,12 @@ from . import views
 app_name = "busca_ativa"
 
 urlpatterns = [
+    path("dashboard/", views.dashboard_busca_ativa, name="dashboard"),
     path("", views.painel, name="painel"),
+    path("relatorio-25-mais/", views.relatorio_25mais, name="relatorio_25mais"),
+    path("lancamentos-atuais/", views.lancamentos_atuais, name="lancamentos_atuais"),
+    path("fila-ultimos-lancamentos/", views.fila_ultimos_lancamentos, name="fila_ultimos_lancamentos"),
+    path("alertas-operacionais/", views.painel_alertas, name="alertas_operacionais"),
     path("aluno/<int:aluno_id>/", views.ficha_aluno, name="ficha"),
     path("aluno/<int:aluno_id>/acao/", views.registrar_acao, name="acao"),
     path("aluno/<int:aluno_id>/acao/<int:acao_id>/status/", views.atualizar_status_acao, name="status_acao"),
@@ -21,6 +26,9 @@ urlpatterns = [
     path("consultas/", views.estatisticas_consultas, name="estatisticas_consultas"),
     path("calendario-letivo/", views.calendario_letivo, name="calendario_letivo"),
     path("consulta/<str:token>/", views.consulta_publica, name="consulta_publica"),
+    path("comunicado/pendente-api/", views.comunicado_pendente_api, name="comunicado_pendente_api"),
     path("comunicado/<int:comunicado_id>/lido/", views.confirmar_comunicado, name="confirmar_comunicado"),
+    path("atualizacao-txt/", views.importar_comunicado_txt, name="atualizacao_txt"),
+    path("atualizacao-txt/nota/<str:nome>/", views.baixar_nota_versao, name="baixar_nota_versao"),
     path("assistente-natalino/dispensar/", views.dispensar_assistente_natalino, name="dispensar_natalino"),
 ]
