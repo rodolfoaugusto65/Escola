@@ -1,0 +1,26 @@
+GEREDU R30 — RECUPERAÇÃO DAS ROTAS DA BUSCA ATIVA
+
+Causa encontrada:
+O commit R29 substituiu partes do arquivo busca_ativa/views.py e removeu sete
+views que ainda eram referenciadas por busca_ativa/urls.py. O hotfix anterior
+restaurou somente dashboard_busca_ativa, deixando as demais ausentes.
+
+Este patch restaura as sete funções originais da versão R28:
+- relatorio_25mais
+- lancamentos_atuais
+- fila_ultimos_lancamentos
+- painel_alertas
+- comunicado_pendente_api
+- importar_comunicado_txt
+- baixar_nota_versao
+
+Mantém as alterações R29 no painel, importação e sincronização de alertas,
+além da compatibilidade dashboard_busca_ativa.
+
+Aplicação:
+1. Extraia na raiz do projeto (pasta que contém manage.py), substituindo
+   busca_ativa/views.py.
+2. Execute: python manage.py check
+3. Se passar, execute os testes e só então publique.
+
+Não requer migrations e não altera dados do banco.

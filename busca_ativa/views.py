@@ -28,6 +28,12 @@ from alunos.models import Aluno
 from frequencia.models import FrequenciaAluno
 from core.file_storage import salvar_arquivo_geredu
 from core.working_days import eh_dia_letivo, feriados_fixos_geredu
+import uuid
+from pathlib import Path
+from django.conf import settings
+from django.db.models import F
+from django.views.decorators.http import require_POST
+from django.utils.dateparse import parse_date
 logger = logging.getLogger(__name__)
 
 from .models import (
@@ -1183,5 +1189,292 @@ def acompanhamentos(request):
 
 # Compatibilidade com versões do urls.py que registram dashboard_busca_ativa.
 # A implementação oficial do painel permanece em painel().
+def dashboard_busca_ativa(request):
+    return painel(request)
+
+
+# Views de rotas preservadas da versão R28, restauradas para compatibilidade.
+
+def relatorio_25mais(request):
+    """Fila de trabalho prioritária baseada no relatório 25%+ mais recente."""
+    hoje = timezone.localdate()
+    qs = SituacaoInfrequencia.objects.filter(
+        ano_letivo=hoje.year, consta_relatorio_25=True
+    ).select_related("aluno", "aluno__turma", "importacao")
+    q = request.GET.get("q", "").strip()
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    if q:
+        qs = qs.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q))
+    if turno:
+        qs = qs.filter(aluno__turma__turno=turno)
+    if turma:
+        qs = qs.filter(aluno__turma_id=turma)
+    # Só sai da fila quando existe ação aberta com prazo ainda vigente.
+    # Ação vencida ou sem prazo não resolve a pendência: o estudante continua visível.
+    acao_no_prazo = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__gte=hoje
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    acao_vencida = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__lt=hoje
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    acao_sem_prazo = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__isnull=True
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    ultima_importacao = HistoricoSituacaoInfrequencia.objects.filter(
+        aluno_id=OuterRef("aluno_id"), ano_letivo=hoje.year
+    ).order_by("-importado_em")
+    ultima_conclusao = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), status="Concluída"
+    ).order_by("-atualizado_em")
+    qs = qs.annotate(
+        tem_acao_no_prazo=Exists(acao_no_prazo),
+        tem_acao_vencida=Exists(acao_vencida),
+        tem_acao_sem_prazo=Exists(acao_sem_prazo),
+        ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
+        concluida_em=Subquery(ultima_conclusao.values("atualizado_em")[:1]),
+    ).annotate(
+        concluido_apos_integracao=Q(concluida_em__isnull=False) &
+        Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
+    )
+    qs = qs.filter(tem_acao_no_prazo=False).exclude(concluido_apos_integracao=True)
+    qs = qs.order_by("-percentual_relatorio_25", "-percentual_geral_final", "aluno__nome")
+    from turmas.models import Turma
+    total = qs.count()
+    pagina = Paginator(qs, 50).get_page(request.GET.get("page"))
+    return render(request, "busca_ativa/relatorio_25mais.html", {
+        "situacoes": pagina, "q": q, "turno": turno, "turma": turma,
+        "turmas": Turma.objects.all().order_by("nome"),
+        "turnos": Turma.TURNOS, "total": total, "ano_letivo": hoje.year,
+    })
+
+def lancamentos_atuais(request):
+    """Mostra a fotografia integral da importação mais recente, sem apagar snapshots anteriores."""
+    importacao = ImportacaoInfrequencia.objects.order_by("-criado_em").first()
+    historico = HistoricoSituacaoInfrequencia.objects.filter(
+        importacao=importacao
+    ).select_related("aluno", "aluno__turma") if importacao else HistoricoSituacaoInfrequencia.objects.none()
+    q = request.GET.get("q", "").strip()
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    faixa = request.GET.get("faixa", "")
+    if q:
+        historico = historico.filter(Q(aluno__nome__icontains=q) | Q(matricula__icontains=q))
+    if turno:
+        historico = historico.filter(aluno__turma__turno=turno)
+    if turma:
+        historico = historico.filter(aluno__turma_id=turma)
+    if faixa in {"25mais", "10a249", "abaixo10"}:
+        if faixa == "25mais":
+            historico = historico.filter(percentual_considerado__gte=25)
+        elif faixa == "10a249":
+            historico = historico.filter(percentual_considerado__gte=10, percentual_considerado__lt=25)
+        else:
+            historico = historico.filter(percentual_considerado__lt=10)
+    from turmas.models import Turma
+    pagina = Paginator(historico.order_by("-percentual_considerado", "aluno__nome"), 50).get_page(request.GET.get("page"))
+    return render(request, "busca_ativa/lancamentos_atuais.html", {
+        "importacao": importacao, "registros": pagina, "total": historico.count(),
+        "q": q, "turno": turno, "turma": turma, "faixa": faixa,
+        "turmas": Turma.objects.all().order_by("nome"), "turnos": Turma.TURNOS,
+    })
+
+def fila_ultimos_lancamentos(request):
+    """Fila de conferência individual dos estudantes da importação mais recente."""
+    from turmas.models import Turma
+    importacao = ImportacaoInfrequencia.objects.order_by("-criado_em").first()
+    registros = HistoricoSituacaoInfrequencia.objects.none()
+    if importacao:
+        acao_depois_da_importacao = AcaoBuscaAtiva.objects.filter(
+            aluno_id=OuterRef("aluno_id"),
+            criado_em__gte=importacao.criado_em,
+        ).exclude(status="Cancelada")
+        registros = HistoricoSituacaoInfrequencia.objects.filter(
+            importacao=importacao
+        ).select_related("aluno", "aluno__turma").annotate(
+            possui_acao_registrada=Exists(acao_depois_da_importacao)
+        ).filter(possui_acao_registrada=False)
+    q = request.GET.get("q", "").strip()
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    if q:
+        registros = registros.filter(
+            Q(aluno__nome__icontains=q) | Q(matricula__icontains=q)
+        )
+    if turno:
+        registros = registros.filter(aluno__turma__turno=turno)
+    if turma:
+        registros = registros.filter(aluno__turma_id=turma)
+    total = registros.count()
+    pagina = Paginator(registros.order_by("-percentual_considerado", "aluno__nome"), 50).get_page(
+        request.GET.get("page")
+    )
+    total_importado = HistoricoSituacaoInfrequencia.objects.filter(importacao=importacao).count() if importacao else 0
+    return render(request, "busca_ativa/fila_ultimos_lancamentos.html", {
+        "importacao": importacao, "registros": pagina, "total": total,
+        "total_importado": total_importado, "q": q, "turno": turno, "turma": turma,
+        "turmas": Turma.objects.all().order_by("nome"), "turnos": Turma.TURNOS,
+    })
+
+def painel_alertas(request):
+    """Central de alertas com prazos, prioridade e filtros operacionais."""
+    from datetime import timedelta
+    from turmas.models import Turma
+    hoje = timezone.localdate()
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    q = request.GET.get("q", "").strip()
+    acoes = AcaoBuscaAtiva.objects.select_related("aluno", "aluno__turma", "responsavel").exclude(status__in=["Concluída", "Cancelada"])
+    if turno: acoes = acoes.filter(aluno__turma__turno=turno)
+    if turma: acoes = acoes.filter(aluno__turma_id=turma)
+    if q: acoes = acoes.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q))
+    vencidas = acoes.filter(prazo__lt=hoje).order_by("prazo", "aluno__nome")
+    proximas = acoes.filter(prazo__gte=hoje, prazo__lte=hoje + timedelta(days=7)).order_by("prazo", "aluno__nome")
+    sem_prazo = acoes.filter(prazo__isnull=True).order_by("-data", "aluno__nome")
+    prioridade = SituacaoInfrequencia.objects.filter(ano_letivo=hoje.year, consta_relatorio_25=True).select_related("aluno", "aluno__turma")
+    acao_aberta = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), prazo__gte=hoje).exclude(status__in=["Concluída", "Cancelada"])
+    ultima_integracao = HistoricoSituacaoInfrequencia.objects.filter(aluno_id=OuterRef("aluno_id"), ano_letivo=hoje.year).order_by("-importado_em")
+    ultima_conclusao = AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), status="Concluída").order_by("-atualizado_em")
+    prioridade = prioridade.annotate(
+        tem_acao_aberta=Exists(acao_aberta),
+        ultima_integracao=Subquery(ultima_integracao.values("importado_em")[:1]),
+        concluida_em=Subquery(ultima_conclusao.values("atualizado_em")[:1]),
+    ).annotate(
+        concluido_apos_integracao=Q(concluida_em__isnull=False) & Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
+    ).filter(tem_acao_aberta=False).exclude(concluido_apos_integracao=True).order_by("-percentual_relatorio_25", "aluno__nome")
+    if turno: prioridade = prioridade.filter(aluno__turma__turno=turno)
+    if turma: prioridade = prioridade.filter(aluno__turma_id=turma)
+    if q: prioridade = prioridade.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q))
+    return render(request, "busca_ativa/alertas_operacionais.html", {
+        "vencidas": vencidas[:200], "proximas": proximas[:200], "sem_prazo": sem_prazo[:200],
+        "prioridade": prioridade[:200], "total_vencidas": vencidas.count(),
+        "total_proximas": proximas.count(), "total_sem_prazo": sem_prazo.count(),
+        "total_prioridade": prioridade.count(), "q": q, "turno": turno, "turma": turma,
+        "turnos": Turma.TURNOS, "turmas": Turma.objects.all().order_by("nome"),
+    })
+
+def comunicado_pendente_api(request):
+    """API consultada globalmente para exibir atualizações sem trocar de página."""
+    from django.views.decorators.http import require_http_methods
+    if request.method == "POST":
+        comunicado_id = request.POST.get("comunicado_id")
+        if comunicado_id:
+            comunicado = get_object_or_404(ComunicadoSistema, pk=comunicado_id, ativo=True)
+            LeituraComunicado.objects.get_or_create(comunicado=comunicado, usuario=request.user)
+    comunicado = (
+        ComunicadoSistema.objects.filter(ativo=True)
+        .exclude(leituras__usuario=request.user)
+        .order_by("criado_em", "pk")
+        .first()
+    )
+    total = (
+        ComunicadoSistema.objects.filter(ativo=True)
+        .exclude(leituras__usuario=request.user)
+        .count()
+    )
+    if not comunicado:
+        return JsonResponse({"pending": False, "total": 0})
+    return JsonResponse({
+        "pending": True,
+        "id": comunicado.pk,
+        "versao": comunicado.versao,
+        "titulo": comunicado.titulo,
+        "texto": comunicado.texto,
+        "total": total,
+    })
+
+def importar_comunicado_txt(request):
+    """Publica a atualização do sistema a partir de um arquivo TXT versionado."""
+    if not gerencial(request.user):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    if request.method == 'POST':
+        arquivo = request.FILES.get('arquivo_txt')
+        if not arquivo:
+            messages.error(request, 'Selecione o arquivo TXT da atualização.')
+            return redirect('busca_ativa:atualizacao_txt')
+        if not arquivo.name.lower().endswith('.txt') or arquivo.size > 512 * 1024:
+            messages.error(request, 'Envie somente arquivo .txt de até 512 KB.')
+            return redirect('busca_ativa:atualizacao_txt')
+        try:
+            conteudo = arquivo.read().decode('utf-8-sig')
+            campos = {}
+            corpo = []
+            lendo_texto = False
+            for linha in conteudo.splitlines():
+                if not lendo_texto and ':' in linha:
+                    chave, valor = linha.split(':', 1)
+                    chave = chave.strip().upper()
+                    if chave in {'VERSAO', 'TITULO'}:
+                        campos[chave] = valor.strip()
+                        continue
+                    if chave == 'TEXTO':
+                        if valor.strip(): corpo.append(valor.strip())
+                        lendo_texto = True
+                        continue
+                if lendo_texto:
+                    corpo.append(linha)
+            versao, titulo, texto = campos.get('VERSAO', ''), campos.get('TITULO', ''), '\n'.join(corpo).strip()
+            if not versao or not titulo or not texto:
+                raise ValueError('O TXT precisa conter VERSAO:, TITULO: e TEXTO:, seguido da descrição da atualização.')
+            # Uma versão nova gera um comunicado novo. Se a mesma versão for
+            # republicada com conteúdo diferente, as confirmações anteriores
+            # deixam de valer e todos os usuários precisam ler novamente.
+            comunicado = ComunicadoSistema.objects.filter(versao=versao).first()
+            criado = comunicado is None
+            if comunicado is None:
+                comunicado = ComunicadoSistema.objects.create(
+                    versao=versao, titulo=titulo[:180], texto=texto, ativo=True
+                )
+            else:
+                mudou_conteudo = (
+                    comunicado.titulo != titulo[:180]
+                    or comunicado.texto != texto
+                    or not comunicado.ativo
+                )
+                if mudou_conteudo:
+                    LeituraComunicado.objects.filter(comunicado=comunicado).delete()
+                    comunicado.titulo = titulo[:180]
+                    comunicado.texto = texto
+                    comunicado.ativo = True
+                    comunicado.save(update_fields=["titulo", "texto", "ativo"])
+            # Arquiva o TXT original em uma pasta única de notas de versão.
+            pasta_notas = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+            pasta_notas.mkdir(parents=True, exist_ok=True)
+            nome_arquivo = get_valid_filename(f'NOTAS_VERSAO_{versao}.txt')
+            (pasta_notas / nome_arquivo).write_text(conteudo, encoding='utf-8')
+            messages.success(request, f'Atualização {comunicado.versao} publicada e arquivada. O aviso será exibido aos usuários até confirmarem a leitura.')
+            return redirect('busca_ativa:atualizacao_txt')
+        except UnicodeDecodeError:
+            messages.error(request, 'Não foi possível ler o TXT. Salve o arquivo em UTF-8 e tente novamente.')
+        except Exception as exc:
+            messages.error(request, str(exc))
+    historico = ComunicadoSistema.objects.order_by('-criado_em')[:20]
+    pasta_notas = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+    pasta_notas.mkdir(parents=True, exist_ok=True)
+    arquivos_notas = sorted(pasta_notas.glob('NOTAS_VERSAO_*.txt'), key=lambda p: p.stat().st_mtime, reverse=True)
+    notas_versao = [{'name': p.name, 'size': p.stat().st_size} for p in arquivos_notas]
+    return render(request, 'busca_ativa/atualizacao_txt.html', {
+        'historico': historico,
+        'notas_versao': notas_versao,
+    })
+
+def baixar_nota_versao(request, nome):
+    """Disponibiliza somente arquivos NOTAS_VERSAO_*.txt da pasta oficial."""
+    if not gerencial(request.user):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    nome_seguro = get_valid_filename(nome)
+    if nome_seguro != nome or not nome.startswith('NOTAS_VERSAO_') or not nome.endswith('.txt'):
+        raise Http404
+    pasta = Path(settings.BASE_DIR) / 'busca_ativa' / 'atualizacoes'
+    arquivo = (pasta / nome).resolve()
+    if arquivo.parent != pasta.resolve() or not arquivo.is_file():
+        raise Http404
+    resposta = HttpResponse(arquivo.read_bytes(), content_type='text/plain; charset=utf-8')
+    resposta['Content-Disposition'] = f'attachment; filename="{nome}"'
+    return resposta
+
+
 def dashboard_busca_ativa(request):
     return painel(request)
