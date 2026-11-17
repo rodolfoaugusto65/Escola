@@ -42,3 +42,29 @@ class RegistroMapeamento(models.Model):
 
     def __str__(self):
         return f"{self.aluno.nome} · {self.ano_letivo}"
+
+
+class ResultadoDiagnostico(models.Model):
+    """Classificação de diagnóstico importada da planilha oficial de LP/MT."""
+    DISCIPLINAS = [("LP", "Língua Portuguesa"), ("MT", "Matemática")]
+    aluno = models.ForeignKey("alunos.Aluno", on_delete=models.CASCADE, related_name="resultados_diagnostico")
+    turma = models.ForeignKey("turmas.Turma", null=True, blank=True, on_delete=models.SET_NULL, related_name="resultados_diagnostico")
+    ano_letivo = models.PositiveSmallIntegerField(db_index=True)
+    disciplina = models.CharField(max_length=2, choices=DISCIPLINAS, db_index=True)
+    etapa = models.CharField(max_length=20, blank=True)
+    grupo = models.CharField(max_length=20)
+    codigo_aluno = models.CharField(max_length=40, blank=True)
+    codigo_institucional = models.CharField(max_length=40, blank=True, db_index=True)
+    escola = models.CharField(max_length=180, blank=True)
+    modalidade = models.CharField(max_length=80, blank=True)
+    arquivo_origem = models.CharField(max_length=255, blank=True)
+    importado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["disciplina", "aluno__nome"]
+        constraints = [models.UniqueConstraint(fields=["aluno", "ano_letivo", "disciplina"], name="uniq_resultado_diag_aluno_ano_disc")]
+        verbose_name = "Resultado de diagnóstico"
+        verbose_name_plural = "Resultados de diagnóstico"
+
+    def __str__(self):
+        return f"{self.aluno.nome} · {self.disciplina} · {self.grupo} · {self.ano_letivo}"

@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Importar diagnóstico | GerEdu{% endblock %}
+{% block content %}
+<style>
+.diag-wrap{max-width:1050px;margin:auto;padding:20px 8px 40px;color:#20334b}.diag-hero{padding:24px;border-radius:18px;background:linear-gradient(115deg,#102b45,#1e5d86);color:white;box-shadow:0 12px 30px #173b5c20}.diag-card{background:#fff;border:1px solid #e2eaf2;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 6px 20px #173b5c08}.diag-control{width:100%;border:1px solid #d9e3ee;border-radius:10px;padding:10px;background:#fff}.diag-btn{border:0;border-radius:10px;padding:11px 16px;background:#17689a;color:#fff;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:8px}.diag-muted{color:#70839a;font-size:13px}.diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:650px){.diag-grid{grid-template-columns:1fr}}
+</style>
+<div class="diag-wrap">
+ <header class="diag-hero"><div class="small fw-bold opacity-75">GEREDU · MAPEAMENTO DA APRENDIZAGEM</div><h2 class="fw-bold mt-2 mb-1">Importar fichas de avaliação diagnóstica</h2><p class="mb-0">Envie uma ou mais planilhas oficiais em Excel para registrar os grupos de Língua Portuguesa e Matemática no acompanhamento dos estudantes.</p></header>
+ <section class="diag-card">
+  <h5 class="fw-bold mb-2">Selecionar arquivo</h5>
+  <p class="diag-muted">Formato aceito: .xlsx. O sistema lê as abas da planilha, considera somente a EE RODOLFO AUGUSTO TRECHAUD CURVO e identifica a disciplina pelo campo CD_DISCIPLINA. O vínculo com o cadastro é feito por CD_ALUNO_INSTITUCIONAL = matrícula do GerEdu.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+   <div class="diag-grid mb-3"><div><label class="form-label fw-bold">Ano letivo</label><input class="diag-control" type="number" name="ano_letivo" value="{{ request.GET.ano|default:2026 }}" min="2000" max="2100" required></div><div><label class="form-label fw-bold">Planilhas Excel (.xlsx) — você pode selecionar LP e MT juntas</label><input class="diag-control" type="file" name="arquivos" accept=".xlsx" multiple required></div></div>
+   <div class="d-flex flex-wrap gap-2"><button class="diag-btn" type="submit"><i data-lucide="upload-cloud" style="width:17px"></i> Importar resultados</button><a class="btn btn-outline-secondary" href="{% url 'mapeamento_aprendizagem:painel' %}">Voltar ao mapeamento</a></div>
+  </form>
+ </section>
+ <section class="diag-card"><h5 class="fw-bold">Como a importação funciona</h5><ul class="mb-0"><li>Reconhece os campos de escola, disciplina, etapa, matrícula institucional, nome e grupo.</li><li>Registra Grupo 1, Grupo 2, Grupo 3 ou Grupo 4 sem converter para níveis pedagógicos diferentes.</li><li>Se o mesmo estudante/ano/disciplina for importado novamente, o resultado é atualizado, sem duplicar o registro.</li><li>Estudantes cuja matrícula não for localizada são contabilizados e não são associados a outra pessoa por aproximação de nome.</li></ul></section>
+</div>
+{% endblock %}

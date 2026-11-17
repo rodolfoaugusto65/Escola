@@ -1,0 +1,13 @@
+VERSAO: 2026.11.17-R31
+TITULO: Dashboard inicial e importação de avaliações diagnósticas
+
+TEXTO:
+- A tela de boas-vindas foi ampliada com indicadores de estudantes cadastrados, turmas, PAEDE, Busca Ativa, ocorrências abertas, mapeamentos e resultados diagnósticos.
+- Foram incluídos atalhos para as principais áreas do GerEdu.
+- O Mapeamento da Aprendizagem ganhou uma tela de importação de fichas de avaliação diagnóstica em Excel (.xlsx).
+- É possível enviar os arquivos de Língua Portuguesa e Matemática juntos.
+- A importação identifica a disciplina pelo campo CD_DISCIPLINA, filtra a EE RODOLFO AUGUSTO TRECHAUD CURVO e relaciona CD_ALUNO_INSTITUCIONAL à matrícula do GerEdu.
+- Os resultados Grupo 1, Grupo 2, Grupo 3 e Grupo 4 são preservados como aparecem na planilha, sem conversão automática para Nível 01 a Nível 05.
+- A reimportação do mesmo estudante, ano letivo e disciplina atualiza o resultado existente, evitando duplicidades.
+- Estudantes sem correspondência exata de matrícula são contabilizados e não são vinculados por aproximação de nome.
+- A nota de versão é publicada automaticamente como comunicado durante a aplicação da migração 0003 do Mapeamento da Aprendizagem.

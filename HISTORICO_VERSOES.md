@@ -143,3 +143,9 @@
 - Nota TXT: `NOTAS_VERSAO_2026-11-16-r25.txt`.
 - Migration `0022_comunicado_fila_ultimos_lancamentos_r25.py` publica a nota no sistema.
 >>>>>>> origin/main
+
+## 2026.11.17-R31 — Dashboard inicial e importação de avaliações diagnósticas
+- Tela inicial com indicadores gerais e atalhos de navegação.
+- Importação de planilhas diagnósticas LP/MT em lote, com filtro da unidade e correspondência pela matrícula institucional.
+- Persistência dos grupos originais e atualização sem duplicidade por estudante/ano/disciplina.
+- Comunicado de versão publicado por migração de banco.

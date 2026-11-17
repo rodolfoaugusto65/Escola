@@ -5,6 +5,10 @@ from django.http import JsonResponse
 from django.db.models import Q
 from alunos.models import Aluno
 from django.db.models import Count
+from django.utils import timezone
+from turmas.models import Turma
+from ocorrencias.models import Ocorrencia
+from mapeamento_aprendizagem.models import RegistroMapeamento, ResultadoDiagnostico
 
 
 
@@ -15,7 +19,14 @@ def home_view(request):
     contexto = {
         'nome_completo': usuario.get_full_name(),
         'perfil': usuario.get_perfil_display() if hasattr(usuario, 'get_perfil_display') else '',
-        'cpf': usuario.cpf,
+        'cpf': getattr(usuario, 'cpf', ''),
+        'total_alunos': Aluno.objects.count(),
+        'total_turmas': Turma.objects.count(),
+        'total_paed': Aluno.objects.filter(aluno_paed=True).count(),
+        'total_busca_ativa': Aluno.objects.filter(aluno_busca_ativa=True).count(),
+        'ocorrencias_abertas': Ocorrencia.objects.filter(status='ABERTA').count(),
+        'mapeamentos_ano': RegistroMapeamento.objects.filter(ano_letivo=timezone.localdate().year).count(),
+        'diagnosticos_ano': ResultadoDiagnostico.objects.filter(ano_letivo=timezone.localdate().year).count(),
     }
 
     template, contexto = render_smart(request, "core/home.html", contexto)

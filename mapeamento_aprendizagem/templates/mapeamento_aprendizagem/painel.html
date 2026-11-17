@@ -14,13 +14,13 @@
 .ma-btn{border:0;border-radius:10px;padding:10px 15px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .ma-primary{background:#17689a;color:#fff}.ma-primary:hover{background:#10547e;color:#fff}
 .ma-export{background:#167a59;color:#fff}.ma-export:hover{background:#106548;color:#fff}
-.ma-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.ma-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
 .ma-stat{padding:14px 16px;border:1px solid #e3ebf2;border-radius:13px;background:#f9fbfd}.ma-stat small{display:block;color:#71839a;font-weight:700}.ma-stat strong{font-size:24px;font-weight:850}
 .ma-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .ma-student{border:1px solid #e1e9f1;border-radius:15px;background:#fff;margin-top:13px;overflow:hidden}
 .ma-student-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;background:#f5f8fb;border-bottom:1px solid #e5ebf1}
 .ma-student-name{font-size:15px;font-weight:850}.ma-muted{font-size:12px;color:#73849a}
-.ma-fields{padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ma-fields{padding:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .ma-mini{border:1px solid #e6edf3;border-radius:12px;padding:12px;min-width:0}
 .ma-mini h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:850;margin:0 0 10px;color:#47627c}
 .ma-mini.lp{border-top:3px solid #2979ad}.ma-mini.mt{border-top:3px solid #23866a}.ma-mini.general{border-top:3px solid #9aaabd}
@@ -36,7 +36,7 @@
 <div class="ma-wrap">
  <header class="ma-hero">
   <div><div class="ma-chip mb-2"><i data-lucide="book-open-check" style="width:15px"></i> GEREDU · ACOMPANHAMENTO PEDAGÓGICO</div><h1>Mapeamento da Aprendizagem</h1><p>Preencha os campos pedagógicos por estudante e exporte a aba Mapeamento da planilha oficial.</p></div>
-  {% if turma %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}&turma={{ turma.id }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar esta turma</a>{% else %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar ano</a>{% endif %}
+  <div class="d-flex gap-2 flex-wrap"><a class="ma-btn ma-primary" href="{% url 'mapeamento_aprendizagem:importar_diagnostico' %}"><i data-lucide="upload-cloud" style="width:17px"></i> Importar diagnóstico</a>{% if turma %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}&turma={{ turma.id }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar esta turma</a>{% else %}<a class="ma-btn ma-export" href="{% url 'mapeamento_aprendizagem:exportar' %}?ano={{ ano }}"><i data-lucide="file-spreadsheet" style="width:17px"></i> Exportar ano</a>{% endif %}</div>
  </header>
  <section class="ma-panel">
   <form method="get" class="ma-filters">
@@ -50,6 +50,7 @@
    <div class="ma-stat"><small>Turma selecionada</small><strong>{{ turma.ano_escolar }} {{ turma.nome }}</strong><div class="ma-muted">{{ turma.etapa }} · {{ turma.get_turno_display }}</div></div>
    <div class="ma-stat"><small>Estudantes cadastrados</small><strong>{{ total_alunos }}</strong><div class="ma-muted">Vínculo direto com a turma no GerEdu</div></div>
    <div class="ma-stat"><small>Mapeamentos salvos</small><strong>{{ total_preenchidos }}</strong><div class="ma-muted">Registros do ano e turma selecionados</div></div>
+   <div class="ma-stat"><small>Resultados diagnósticos</small><strong>{{ total_diagnosticos }}</strong><div class="ma-muted">LP: {{ diagnosticos_lp }} · Matemática: {{ diagnosticos_mt }}</div></div>
   </div>
   {% endif %}
  </section>
@@ -60,7 +61,7 @@
   {% for aluno in alunos %}
   {% with registro=registros|get_item:aluno.id %}
   <article class="ma-student">
-   <div class="ma-student-head"><div class="d-flex align-items-center gap-3"><input type="checkbox" name="selecionados" value="{{ aluno.id }}" class="ma-select" {% if registro %}checked{% endif %}><div><div class="ma-student-name">{{ aluno.nome }}</div><div class="ma-muted">Matrícula {{ aluno.matricula }} · {{ turma.ano_escolar }} {{ turma.nome }} · {{ turma.get_turno_display }}</div></div></div>{% if registro %}<span class="badge text-bg-success">Mapeamento salvo</span>{% else %}<span class="badge text-bg-secondary">Novo</span>{% endif %}</div>
+   <div class="ma-student-head"><div class="d-flex align-items-center gap-3"><input type="checkbox" name="selecionados" value="{{ aluno.id }}" class="ma-select" {% if registro %}checked{% endif %}><div><div class="ma-student-name">{{ aluno.nome }}</div><div class="ma-muted">Matrícula {{ aluno.matricula }} · {{ turma.ano_escolar }} {{ turma.nome }} · {{ turma.get_turno_display }}</div></div></div><div class="d-flex flex-wrap gap-1 align-items-center">{% with diaglp=diagnosticos_lp_por_aluno|get_item:aluno.id diagmt=diagnosticos_mt_por_aluno|get_item:aluno.id %}{% if diaglp %}<span class="badge text-bg-primary">LP · {{ diaglp }}</span>{% endif %}{% if diagmt %}<span class="badge text-bg-success">MT · {{ diagmt }}</span>{% endif %}{% endwith %}{% if registro %}<span class="badge text-bg-success">Mapeamento salvo</span>{% else %}<span class="badge text-bg-secondary">Novo</span>{% endif %}</div></div>
    <div class="ma-fields">
     <section class="ma-mini general"><h3>Estudantes · identificação</h3><div class="ma-grid2">
      <div class="ma-field"><label class="ma-label">PAEDE</label><select class="ma-control" name="paede_{{ aluno.id }}"><option value="NÃO" {% if registro.paede == "NÃO" or not registro and not aluno.aluno_paed %}selected{% endif %}>NÃO</option><option value="SIM" {% if registro.paede == "SIM" or not registro and aluno.aluno_paed %}selected{% endif %}>SIM</option></select></div>

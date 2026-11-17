@@ -1,151 +1,29 @@
 {% extends base_template %}
-
-{% block title %}Início{% endblock %}
-{% block page_header %}
-    <i data-lucide="layout-dashboard"></i>
-    <h5>Painel</h5>
-{% endblock %}
-
+{% block title %}Início | GerEdu{% endblock %}
+{% block page_header %}<i data-lucide="layout-dashboard"></i><h5>Painel inicial</h5>{% endblock %}
 {% block content %}
-<div class="container-fluid fade-in">
-
-    <!-- BOAS VINDAS -->
-    <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h4 class="fw-bold mb-1">
-                    👋 Bem-vindo, {{ user.first_name }}!
-                </h4>
-                <p class="text-muted mb-0">
-                    Perfil: <strong>{{ user.get_perfil_display }}</strong>
-                </p>
-            </div>
-
-            <div class="text-end">
-                <span class="badge bg-primary-subtle text-primary px-3 py-2">
-                    CPF: {{ user.cpf }}
-                </span>
-            </div>
-        </div>
-    </div>
-
-    <!-- CARDS DE STATUS -->
-    <div class="row g-4 mb-4">
-
-        <div class="col-md-4">
-            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box bg-success-soft">
-                        <i data-lucide="shield-check"></i>
-                    </div>
-                    <div>
-                        <small class="text-muted">Usuário Ativo</small>
-                        <h5 class="mb-0 fw-bold">
-                            {% if user.is_active %}
-                                <span class="indicator indicator-true">ATIVO</span>
-                            {% else %}
-                                <span class="indicator indicator-false">INATIVO</span>
-                            {% endif %}
-                        </h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box bg-info-soft">
-                        <i data-lucide="settings"></i>
-                    </div>
-                    <div>
-                        <small class="text-muted">Perfil Gerencial</small>
-                        <h5 class="mb-0 fw-bold">
-                            {% if user.perfil_gerencial %}
-                                <span class="indicator indicator-true">SIM</span>
-                            {% else %}
-                                <span class="indicator indicator-false">NÃO</span>
-                            {% endif %}
-                        </h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card status-card border-0 shadow-sm p-4 rounded-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="icon-box bg-warning-soft">
-                        <i data-lucide="user-cog"></i>
-                    </div>
-                    <div>
-                        <small class="text-muted">Permissão de Gestão</small>
-                        <h5 class="mb-0 fw-bold">
-                            {% if user.pode_gerenciar_usuarios %}
-                                <span class="indicator indicator-true">LIBERADO</span>
-                            {% else %}
-                                <span class="indicator indicator-false">RESTRITO</span>
-                            {% endif %}
-                        </h5>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- INFORMAÇÕES DETALHADAS -->
-    <div class="card shadow-sm border-0 p-4 rounded-4">
-        <h5 class="fw-bold mb-3">📌 Informações da Conta</h5>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <strong>Email:</strong><br>
-                <span class="text-muted">{{ user.email }}</span>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <strong>Telefone:</strong><br>
-                <span class="text-muted">
-                    {{ user.telefone|default:"Não informado" }}
-                </span>
-            </div>
-
-            <div class="col-12">
-                <strong>Endereço:</strong><br>
-                <span class="text-muted">
-                    {{ user.endereco|default:"Não informado" }}
-                </span>
-            </div>
-        </div>
-    </div>
-<div class="card p-4 shadow-sm border-0 modern-card mt-4">
-    <h6 class="fw-semibold mb-3 text-muted">
-        <i data-lucide="settings"></i>
-        Ações da Conta
-    </h6>
-
-    <div class="d-flex gap-3 flex-wrap">
-
-        <a href="{% url 'perfil' %}"
-           class="btn btn-primary d-flex align-items-center gap-2 shadow-sm btn-modern"
-           data-bs-toggle="tooltip"
-           data-bs-placement="top"
-           title="Visualizar e editar seus dados pessoais (não gerenciais)">
-            <i data-lucide="user"></i>
-            Meu Perfil
-        </a>
-
-        <a href="{% url 'password_change' %}"
-           class="btn btn-warning d-flex align-items-center gap-2 shadow-sm btn-modern"
-           data-bs-toggle="tooltip"
-           data-bs-placement="top"
-           title="Alterar sua senha de acesso ao sistema">
-            <i data-lucide="key-round"></i>
-            Alterar Senha
-        </a>
-
-    </div>
-</div>
+<style>
+.home-wrap{max-width:1600px;margin:auto;padding:10px 4px 35px;color:#20334b}.home-hero{position:relative;overflow:hidden;border-radius:22px;padding:28px 30px;background:linear-gradient(115deg,#102b45,#1e5d86 68%,#2c78a8);color:white;box-shadow:0 14px 35px #173b5c20}.home-hero:after{content:"";position:absolute;width:260px;height:260px;border:1px solid #ffffff24;border-radius:50%;right:-60px;top:-130px;box-shadow:0 0 0 28px #ffffff0a,0 0 0 58px #ffffff08}.home-hero h2{font-weight:850;font-size:clamp(23px,3vw,31px);margin:0 0 7px}.home-hero p{color:#dfedfa;margin:0;max-width:720px}.home-chip{display:inline-flex;padding:6px 10px;border-radius:30px;background:#ffffff1c;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}.home-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:17px}.home-stat{background:#fff;border:1px solid #e2eaf2;border-radius:16px;padding:17px;box-shadow:0 5px 18px #173b5c08}.home-stat .top{display:flex;justify-content:space-between;align-items:center;color:#71839a;font-size:12px;font-weight:750}.home-stat .value{font-size:29px;font-weight:900;line-height:1.2;margin-top:9px;color:#20334b}.home-stat .sub{font-size:11px;color:#8392a4;margin-top:4px}.home-icon{width:36px;height:36px;border-radius:11px;background:#edf4fa;display:grid;place-items:center;color:#17689a}.home-section{background:#fff;border:1px solid #e2eaf2;border-radius:16px;padding:19px;margin-top:16px;box-shadow:0 5px 18px #173b5c08}.home-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.home-link{display:flex;align-items:center;gap:11px;text-decoration:none;color:#29445e;padding:13px;border:1px solid #e6edf3;border-radius:12px;transition:.18s}.home-link:hover{background:#f6f9fc;border-color:#cbdbe9;transform:translateY(-1px);color:#17689a}.home-link strong{display:block;font-size:13px}.home-link small{display:block;color:#8190a2;font-size:11px;margin-top:2px}.home-link i{width:19px;color:#17689a;flex-shrink:0}@media(max-width:1000px){.home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-links{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.home-grid,.home-links{grid-template-columns:1fr}.home-hero{padding:22px}}
+</style>
+<div class="home-wrap">
+ <section class="home-hero"><div class="home-chip">GEREDU · GESTÃO ESCOLAR</div><h2>Olá, {{ user.first_name|default:user.username }}! 👋</h2><p>Bem-vindo ao seu espaço de gestão. Acompanhe os principais indicadores da unidade e acesse rapidamente as rotinas do sistema.</p><div class="mt-3 d-flex flex-wrap gap-2"><span class="badge rounded-pill text-bg-light">{{ user.get_perfil_display|default:"Usuário" }}</span><span class="badge rounded-pill" style="background:#ffffff22;color:white">{% if user.is_active %}Conta ativa{% else %}Conta inativa{% endif %}</span></div></section>
+ <section class="home-grid">
+  <article class="home-stat"><div class="top"><span>Estudantes cadastrados</span><span class="home-icon"><i data-lucide="users"></i></span></div><div class="value">{{ total_alunos }}</div><div class="sub">Base de alunos do GerEdu</div></article>
+  <article class="home-stat"><div class="top"><span>Turmas</span><span class="home-icon"><i data-lucide="school"></i></span></div><div class="value">{{ total_turmas }}</div><div class="sub">Turmas cadastradas</div></article>
+  <article class="home-stat"><div class="top"><span>PAEDE</span><span class="home-icon"><i data-lucide="heart-handshake"></i></span></div><div class="value">{{ total_paed }}</div><div class="sub">Estudantes sinalizados</div></article>
+  <article class="home-stat"><div class="top"><span>Busca Ativa</span><span class="home-icon"><i data-lucide="user-search"></i></span></div><div class="value">{{ total_busca_ativa }}</div><div class="sub">Estudantes em acompanhamento</div></article>
+  <article class="home-stat"><div class="top"><span>Ocorrências abertas</span><span class="home-icon"><i data-lucide="clipboard-list"></i></span></div><div class="value">{{ ocorrencias_abertas }}</div><div class="sub">Aguardando encaminhamento</div></article>
+  <article class="home-stat"><div class="top"><span>Mapeamentos</span><span class="home-icon"><i data-lucide="book-open-check"></i></span></div><div class="value">{{ mapeamentos_ano }}</div><div class="sub">Registros no ano corrente</div></article>
+  <article class="home-stat"><div class="top"><span>Diagnósticos</span><span class="home-icon"><i data-lucide="chart-no-axes-column"></i></span></div><div class="value">{{ diagnosticos_ano }}</div><div class="sub">Resultados importados no ano</div></article>
+  <article class="home-stat"><div class="top"><span>Seu acesso</span><span class="home-icon"><i data-lucide="shield-check"></i></span></div><div class="value" style="font-size:20px">{% if user.is_active %}ATIVO{% else %}INATIVO{% endif %}</div><div class="sub">Perfil: {{ user.get_perfil_display|default:"Não definido" }}</div></article>
+ </section>
+ <section class="home-section"><h5 class="fw-bold mb-3">Acesso rápido</h5><div class="home-links">
+  <a class="home-link" href="{% url 'lista_alunos' %}"><i data-lucide="users"></i><span><strong>Estudantes</strong><small>Consultar e gerenciar cadastros</small></span></a>
+  <a class="home-link" href="{% url 'busca_ativa:painel' %}"><i data-lucide="user-search"></i><span><strong>Busca Ativa</strong><small>Acompanhamento e providências</small></span></a>
+  <a class="home-link" href="{% url 'mapeamento_aprendizagem:painel' %}"><i data-lucide="book-open-check"></i><span><strong>Mapeamento da Aprendizagem</strong><small>Níveis e resultados diagnósticos</small></span></a>
+  <a class="home-link" href="{% url 'lista_frequencia' %}"><i data-lucide="calendar-check"></i><span><strong>Frequência</strong><small>Chamada e acompanhamento</small></span></a>
+  <a class="home-link" href="{% url 'lista_ocorrencias' %}"><i data-lucide="clipboard-list"></i><span><strong>Ocorrências</strong><small>Registros e encaminhamentos</small></span></a>
+  <a class="home-link" href="{% url 'perfil' %}"><i data-lucide="user-round-cog"></i><span><strong>Meu perfil</strong><small>Dados e segurança da conta</small></span></a>
+ </div></section>
 </div>
 {% endblock %}

@@ -13,7 +13,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from alunos.models import Aluno
 from turmas.models import Turma
-from .models import RegistroMapeamento
+from .models import RegistroMapeamento, ResultadoDiagnostico
 
 
 NIVEIS = ["", "Nível 01", "Nível 02", "Nível 03", "Nível 04", "Nível 05"]
@@ -102,6 +102,11 @@ def painel(request):
         messages.success(request, f"Mapeamento salvo para {salvos} estudante(s).")
         return redirect(f"{request.path}?ano={ano}&turma={turma.pk}")
 
+    resultados_diag = ResultadoDiagnostico.objects.filter(ano_letivo=ano)
+    if turma:
+        resultados_diag = resultados_diag.filter(aluno__turma=turma)
+    diagnosticos_lp_por_aluno = {r.aluno_id: r.grupo for r in resultados_diag.filter(disciplina="LP")}
+    diagnosticos_mt_por_aluno = {r.aluno_id: r.grupo for r in resultados_diag.filter(disciplina="MT")}
     return render(request, "mapeamento_aprendizagem/painel.html", {
         "anos": anos, "ano": ano, "turmas": turmas, "turma": turma,
         "alunos": alunos, "registros": registros, "q": busca,
@@ -110,7 +115,110 @@ def painel(request):
         "mt_campos": [("diagnostico_mt", "Diagnóstico"), ("mt_b1", "1º Bimestre"), ("mt_b2", "2º Bimestre"), ("mt_b3", "3º Bimestre"), ("mt_b4", "4º Bimestre")],
         "total_alunos": alunos.count() if turma else 0,
         "total_preenchidos": len(registros),
+        "total_diagnosticos": resultados_diag.count(),
+        "diagnosticos_lp": resultados_diag.filter(disciplina="LP").count(),
+        "diagnosticos_mt": resultados_diag.filter(disciplina="MT").count(),
+        "diagnosticos_lp_por_aluno": diagnosticos_lp_por_aluno,
+        "diagnosticos_mt_por_aluno": diagnosticos_mt_por_aluno,
     })
+
+
+
+def _codigo_limpo(valor):
+    if valor is None:
+        return ""
+    texto = str(valor).strip()
+    if texto.endswith(".0"):
+        texto = texto[:-2]
+    return "".join(ch for ch in texto if ch.isdigit())
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def importar_diagnostico(request):
+    """Importa as classificações Grupo 1–4 das planilhas oficiais LP/MT."""
+    if request.method == "GET":
+        recentes = ResultadoDiagnostico.objects.values("ano_letivo", "disciplina", "arquivo_origem", "importado_em").distinct().order_by("-importado_em")[:12]
+        return render(request, "mapeamento_aprendizagem/importar_diagnostico.html", {"recentes": recentes})
+
+    arquivos = request.FILES.getlist("arquivos") or ([request.FILES.get("arquivo")] if request.FILES.get("arquivo") else [])
+    try:
+        ano = int(request.POST.get("ano_letivo") or timezone.localdate().year)
+    except (TypeError, ValueError):
+        messages.error(request, "Informe um ano letivo válido.")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+    if not arquivos or any(not arq.name.lower().endswith(".xlsx") for arq in arquivos):
+        messages.error(request, "Selecione uma ou mais planilhas Excel no formato .xlsx.")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+
+    mapa_alunos = {_codigo_limpo(m.matricula): m for m in Aluno.objects.select_related("turma") if _codigo_limpo(m.matricula)}
+    criados = atualizados = nao_encontrados = ignorados = 0
+    escola_alvo = "EE RODOLFO AUGUSTO TRECHAUD CURVO"
+
+    try:
+        with transaction.atomic():
+            for arquivo in arquivos:
+                try:
+                    wb = load_workbook(arquivo, read_only=True, data_only=True)
+                except Exception as exc:
+                    raise ValueError(f"Não foi possível abrir {arquivo.name}: {exc}") from exc
+                arquivo_nome = Path(arquivo.name).name[:255]
+                try:
+                    for ws in wb.worksheets:
+                        linhas = ws.iter_rows(values_only=True)
+                        cabecalho = next(linhas, None)
+                        if not cabecalho:
+                            continue
+                        indices = {str(v or "").strip().upper(): i for i, v in enumerate(cabecalho)}
+                        obrigatorios = ["NM_ESCOLA", "CD_DISCIPLINA", "CD_ETAPA", "CD_ALUNO_INSTITUCIONAL", "NM_ALUNO", "GRUPO"]
+                        if any(c not in indices for c in obrigatorios):
+                            continue
+                        for row in linhas:
+                            if not row or len(row) <= max(indices.values()):
+                                ignorados += 1
+                                continue
+                            valor = lambda campo: row[indices[campo]]
+                            nome_escola = str(valor("NM_ESCOLA") or "").strip().upper()
+                            if nome_escola != escola_alvo:
+                                continue
+                            disciplina = str(valor("CD_DISCIPLINA") or "").strip().upper()
+                            if disciplina not in {"LP", "MT"}:
+                                ignorados += 1
+                                continue
+                            grupo = str(valor("GRUPO") or "").strip()
+                            if grupo not in {"Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"}:
+                                ignorados += 1
+                                continue
+                            codigo = _codigo_limpo(valor("CD_ALUNO_INSTITUCIONAL"))
+                            aluno = mapa_alunos.get(codigo)
+                            if not aluno:
+                                nao_encontrados += 1
+                                continue
+                            defaults = {
+                                "turma": aluno.turma,
+                                "etapa": str(valor("CD_ETAPA") or "").strip(),
+                                "grupo": grupo,
+                                "codigo_aluno": _codigo_limpo(valor("CD_ALUNO")),
+                                "codigo_institucional": codigo,
+                                "escola": str(valor("NM_ESCOLA") or "")[:180],
+                                "modalidade": str(valor("MODALIDADE") or "")[:80],
+                                "arquivo_origem": arquivo_nome,
+                            }
+                            _, criado = ResultadoDiagnostico.objects.update_or_create(
+                                aluno=aluno, ano_letivo=ano, disciplina=disciplina, defaults=defaults
+                            )
+                            if criado:
+                                criados += 1
+                            else:
+                                atualizados += 1
+                finally:
+                    wb.close()
+    except Exception as exc:
+        messages.error(request, f"A importação foi cancelada para evitar gravação parcial: {exc}")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+
+    messages.success(request, f"Importação concluída ({len(arquivos)} arquivo(s)): {criados} novos, {atualizados} atualizados, {nao_encontrados} sem correspondência de matrícula e {ignorados} ignorados. A correspondência usa CD_ALUNO_INSTITUCIONAL com a matrícula do GerEdu.")
+    return redirect("mapeamento_aprendizagem:painel")
 
 
 @login_required

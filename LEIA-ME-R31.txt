@@ -1,0 +1,32 @@
+GEREDU — ATUALIZAÇÃO R31
+
+CONTEÚDO
+1. Tela inicial com indicadores e atalhos rápidos.
+2. Importação de uma ou mais planilhas .xlsx de avaliação diagnóstica no Mapeamento da Aprendizagem.
+3. Resultados Grupo 1 a Grupo 4 armazenados separadamente dos campos Nível 01 a Nível 05.
+4. Exibição dos grupos LP/MT nos cartões dos estudantes e totais no painel.
+5. Publicação automática da nota de versão como comunicado do sistema pela migração 0003.
+
+INSTALAÇÃO
+1. Faça backup do banco antes de atualizar.
+2. Extraia o ZIP na raiz do projeto, na pasta que contém manage.py, preservando os caminhos.
+3. Execute:
+   python manage.py check
+   python manage.py migrate
+4. Se estiver tudo certo, envie as alterações ao GitHub e aguarde o deploy do Railway.
+
+IMPORTAÇÃO DAS FICHAS
+- Acesse Mapeamento da Aprendizagem > Importar diagnóstico.
+- Informe o ano letivo.
+- Selecione os arquivos LP e MT juntos (ou um por vez).
+- O sistema filtra NM_ESCOLA = EE RODOLFO AUGUSTO TRECHAUD CURVO.
+- O vínculo usa CD_ALUNO_INSTITUCIONAL comparado à matrícula do aluno no GerEdu.
+- Não há associação por nome aproximado. Matrículas não encontradas são contabilizadas.
+- Reimportar o mesmo aluno/ano/disciplina atualiza o registro existente.
+
+OBSERVAÇÕES IMPORTANTES
+- Os arquivos recebidos possuem as colunas DRE, MUNICIPIO, COD. INEP, COD. LOTACAO, NM_ESCOLA, MODALIDADE, CD_DISCIPLINA, CD_ETAPA, CD_ALUNO, CD_ALUNO_INSTITUCIONAL, NM_ALUNO e Grupo.
+- As planilhas contêm registros de outras unidades em algumas abas; o filtro da escola evita importação indevida.
+- A classificação Grupo 1–4 é preservada literalmente. Não foi presumida equivalência com Nível 01–05.
+- A nota é criada no banco durante `migrate`. O arquivo TXT também fica arquivado em busca_ativa/atualizacoes/.
+- A validação Python compileall foi executada. `manage.py check` não pôde ser executado neste ambiente porque Django não está instalado; execute o comando no ambiente virtual do projeto antes do deploy.
