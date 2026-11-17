@@ -1,0 +1,36 @@
+[1mdiff --git a/geredu_work/Escola/core/templates/core/base.html b/geredu_work/Escola/core/templates/core/base.html[m
+[1mindex e17dcda..15ddbf8 100644[m
+[1m--- a/geredu_work/Escola/core/templates/core/base.html[m
+[1m+++ b/geredu_work/Escola/core/templates/core/base.html[m
+[36m@@ -352,6 +352,7 @@[m [mhx-push-url="true">[m
+ </a>[m
+ [m
+ <a href="{% url 'consulta_frequencia_codigo' %}" target="_blank"><i data-lucide="search-check"></i><span>Consulta do estudante</span></a>[m
+[32m+[m[32m<a href="{% url 'mapeamento_aprendizagem:painel' %}"><i data-lucide="book-open-check"></i><span>Mapeamento da aprendizagem</span></a>[m
+ {% if user.is_authenticated and user.is_superuser or user.pode_gerenciar_usuarios %}[m
+ <a href="{% url 'acompanhamento_avaliacoes:painel' %}"><i data-lucide="chart-no-axes-combined"></i><span>Avaliações e Participação</span></a>[m
+ {% endif %}[m
+[1mdiff --git a/geredu_work/Escola/escola/settings.py b/geredu_work/Escola/escola/settings.py[m
+[1mindex 366660e..e02930b 100644[m
+[1m--- a/geredu_work/Escola/escola/settings.py[m
+[1m+++ b/geredu_work/Escola/escola/settings.py[m
+[36m@@ -64,6 +64,7 @@[m [mINSTALLED_APPS = [[m
+     "conselho",[m
+     "busca_ativa",[m
+     "acompanhamento_avaliacoes",[m
+[32m+[m[32m    "mapeamento_aprendizagem",[m
+ ][m
+ [m
+ [m
+[1mdiff --git a/geredu_work/Escola/urls.py b/geredu_work/Escola/urls.py[m
+[1mindex 6c86613..7777465 100644[m
+[1m--- a/geredu_work/Escola/urls.py[m
+[1m+++ b/geredu_work/Escola/urls.py[m
+[36m@@ -26,6 +26,7 @@[m [murlpatterns = [[m
+     path("conselho/", include("conselho.urls")),[m
+     path("busca-ativa/", include("busca_ativa.urls")),[m
+     path("avaliacoes/", include("acompanhamento_avaliacoes.urls")),[m
+[32m+[m[32m    path("mapeamento-aprendizagem/", include("mapeamento_aprendizagem.urls")),[m
+     path("consulta-frequencia/", busca_ativa_views.consulta_por_codigo, name="consulta_frequencia_codigo"),[m
+     path("consulta-frequencia/<str:token>/", busca_ativa_views.consulta_publica, name="consulta_frequencia_publica"),[m
+     path("transferencias/", include("transferencias.urls")),[m
