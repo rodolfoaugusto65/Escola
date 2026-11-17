@@ -28,6 +28,8 @@ from alunos.models import Aluno
 from frequencia.models import FrequenciaAluno
 from core.file_storage import salvar_arquivo_geredu
 from core.working_days import eh_dia_letivo, feriados_fixos_geredu
+
+# Compatibilidade com as rotas atuais (mantém os endpoints adicionados após a R28).
 import uuid
 from pathlib import Path
 from django.conf import settings
@@ -60,25 +62,6 @@ def _percent(value):
     return n.quantize(Decimal("0.01"))
 
 
-
-
-
-def _marcar_alunos_com_alerta_infrequencia(aluno_ids, ano_letivo):
-    """Marca no cadastro os alunos com alerta oficial (10% ou mais).
-    Não desmarca registros manuais; apenas garante a sinalização automática.
-    """
-    from django.db.models import Q
-    ids = SituacaoInfrequencia.objects.filter(
-        aluno_id__in=aluno_ids,
-        ano_letivo=ano_letivo,
-    ).filter(
-        Q(percentual_geral_final__gte=10)
-        | Q(percentual_geral__gte=10)
-        | Q(percentual_relatorio_25__gte=10)
-    ).values_list("aluno_id", flat=True)
-    Aluno.objects.filter(id__in=ids, aluno_busca_ativa=False).update(
-        aluno_busca_ativa=True
-    )
 
 
 def _sqlite_value(row, key, default=None):
@@ -122,11 +105,7 @@ def painel(request):
     ativos = AcaoBuscaAtiva.objects.filter(prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"])
     base = situacoes.annotate(tem_prazo_ativo=Exists(
         AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"])
-    )).filter(
-        Q(percentual_geral_final__gte=10)
-        | Q(percentual_geral__gte=10)
-        | Q(percentual_relatorio_25__gte=10)
-    )
+    ))
     # Alertas permanecem visíveis mesmo quando já existem ações/prazos ativos.
     pendentes = base
     q = request.GET.get("q", "").strip()
@@ -141,20 +120,15 @@ def painel(request):
     base = base.order_by("-percentual_geral_final", "aluno__nome")
     total_estudantes = base.count()
     pagina_situacoes = Paginator(base, 50).get_page(request.GET.get("page"))
-    from mapeamento_aprendizagem.models import RegistroMapeamento
-    campos_nivel = (
-        Q(diagnostico_lp__gt="") | Q(lp_b1__gt="") | Q(lp_b2__gt="")
-        | Q(lp_b3__gt="") | Q(lp_b4__gt="")
-        | Q(diagnostico_mt__gt="") | Q(mt_b1__gt="") | Q(mt_b2__gt="")
-        | Q(mt_b3__gt="") | Q(mt_b4__gt="")
-    )
-    alertas_apa = (
-        RegistroMapeamento.objects.filter(ano_letivo=today.year)
-        .filter(campos_nivel)
-        .select_related("aluno", "turma")
-        .order_by("aluno__nome")
-    )
+    from conselho.models import ConselhoAluno
+    from django.db.models import OuterRef, Subquery, F
 
+    ultimo_registro_conselho = ConselhoAluno.objects.filter(
+        aluno_id=OuterRef("aluno_id")
+    ).order_by("-conselho__ano", "-conselho__bimestre", "-atualizado_em").values("id")[:1]
+    alertas_apa = (ConselhoAluno.objects.annotate(ultimo_id=Subquery(ultimo_registro_conselho))
+        .filter(id=F("ultimo_id"), apa="sim")
+        .select_related("aluno", "conselho", "conselho__turma").order_by("aluno__nome"))
 
     context = {
         "alertas_apa": alertas_apa,
@@ -510,7 +484,6 @@ def importar_backup_local(request):
             if situacoes_atualizar:
                 campos_atualizacao = ["codigo_fonte", "codigo_ged", "importacao", "percentual_geral", "percentual_geral_final", "percentual_1_bim", "percentual_2_bim", "percentual_3_bim", "percentual_4_bim", "percentual_relatorio_25", "consta_relatorio_25", "faltas_geral", "faltas_final", "carga_horaria", "paed_na_fonte", "atualizado_em"]
                 SituacaoInfrequencia.objects.bulk_update(situacoes_atualizar, campos_atualizacao, batch_size=500)
-            _marcar_alunos_com_alerta_infrequencia(alunos_ids_lote, ano_backup)
             if snapshots_backup:
                 HistoricoSituacaoInfrequencia.objects.bulk_create(snapshots_backup, batch_size=250)
             registro_backup.estudantes_repetidos = sum(1 for h in snapshots_backup if h.apareceu_novamente)
@@ -903,7 +876,6 @@ def processar_importacao(request, job_id):
                               "percentual_2_bim", "percentual_3_bim", "percentual_4_bim", "faltas_geral",
                               "faltas_final", "carga_horaria", "paed_na_fonte", "atualizado_em"]
                     SituacaoInfrequencia.objects.bulk_update(atualizar, campos, batch_size=200)
-                _marcar_alunos_com_alerta_infrequencia(list(alunos_lote.keys()), job.ano_letivo)
                 job.vinculados += len(registros)
                 job.importacao.estudantes_repetidos = (job.importacao.estudantes_repetidos or 0) + repetidos_lote
                 job.importacao.save(update_fields=["estudantes_repetidos"])
@@ -1187,14 +1159,7 @@ def acompanhamentos(request):
     })
 
 
-# Compatibilidade com versões do urls.py que registram dashboard_busca_ativa.
-# A implementação oficial do painel permanece em painel().
-def dashboard_busca_ativa(request):
-    return painel(request)
-
-
-# Views de rotas preservadas da versão R28, restauradas para compatibilidade.
-
+# Endpoints auxiliares preservados para compatibilidade com busca_ativa/urls.py
 def relatorio_25mais(request):
     """Fila de trabalho prioritária baseada no relatório 25%+ mais recente."""
     hoje = timezone.localdate()
@@ -1475,6 +1440,5 @@ def baixar_nota_versao(request, nome):
     resposta['Content-Disposition'] = f'attachment; filename="{nome}"'
     return resposta
 
-
-def dashboard_busca_ativa(request):
-    return painel(request)
+# Alias de compatibilidade para a rota dashboard/ já publicada.
+dashboard_busca_ativa = painel

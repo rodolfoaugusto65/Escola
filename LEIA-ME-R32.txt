@@ -1,0 +1,17 @@
+GEREDU R32 — RESTAURAÇÃO DA BUSCA ATIVA AO PADRÃO R28
+
+Objetivo: restaurar a tela e as regras de trabalho da Busca Ativa conforme a R28, mantendo compatibilidade com as rotas atuais.
+
+Arquivos: busca_ativa/views.py e busca_ativa/templates/busca_ativa/painel.html.
+
+A restauração recupera a lógica e a apresentação da R28. Foram mantidos os endpoints auxiliares necessários às URLs atuais (dashboard, relatórios de 25%+, lançamentos, alertas e comunicados), para evitar erros de rota.
+
+Não altera models, migrations, banco de dados, registros, ações, prazos ou históricos. Não substitua a pasta inteira do projeto.
+
+Instalação: extraia o conteúdo na raiz do projeto Django (pasta que contém manage.py), permitindo substituir apenas os dois arquivos indicados.
+
+Validação:
+  python manage.py check
+  python manage.py test busca_ativa
+
+Depois de validar, faça commit apenas dos arquivos deste patch.
