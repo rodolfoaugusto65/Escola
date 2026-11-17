@@ -39,6 +39,7 @@ Preenchimento pedagógico inteligente
 <thead class="table-light">
 <tr>
     <th>Aluno</th>
+    <th>Mapeamento da Aprendizagem</th>
     <th>Status</th>
     <th>% Freq.</th>
     <th>Ocorr.</th>
@@ -47,6 +48,7 @@ Preenchimento pedagógico inteligente
     <th>Disciplina</th>
     <th>Aprendizagem</th>
     <th>APA</th>
+    <th>Nível APA</th>
     <th>Família</th>
     <th>Reclass.</th>
     <th>Busca Ativa</th>
@@ -81,6 +83,22 @@ border border-3 border-dark
 
     {{ a.aluno }}
 </a>
+</td>
+
+<!-- MAPEAMENTO DA APRENDIZAGEM (somente leitura) -->
+<td style="min-width:260px">
+{% if a.mapeamento_aprendizagem %}
+  <div class="small">
+    <div class="fw-semibold text-primary mb-1">Língua Portuguesa</div>
+    <div>Diagnóstico: <strong>{{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</strong></div>
+    <div class="text-muted">B1 {{ a.mapeamento_aprendizagem.lp_b1|default:"—" }} · B2 {{ a.mapeamento_aprendizagem.lp_b2|default:"—" }} · B3 {{ a.mapeamento_aprendizagem.lp_b3|default:"—" }} · B4 {{ a.mapeamento_aprendizagem.lp_b4|default:"—" }}</div>
+    <div class="fw-semibold text-primary mt-2 mb-1">Matemática</div>
+    <div>Diagnóstico: <strong>{{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</strong></div>
+    <div class="text-muted">B1 {{ a.mapeamento_aprendizagem.mt_b1|default:"—" }} · B2 {{ a.mapeamento_aprendizagem.mt_b2|default:"—" }} · B3 {{ a.mapeamento_aprendizagem.mt_b3|default:"—" }} · B4 {{ a.mapeamento_aprendizagem.mt_b4|default:"—" }}</div>
+  </div>
+{% else %}
+  <span class="badge bg-secondary">Sem mapeamento em {{ conselho.ano }}</span>
+{% endif %}
 </td>
 
 <!-- STATUS -->
@@ -173,6 +191,15 @@ border border-3 border-dark
     <option value="nao" {% if a.apa == 'nao' %}selected{% endif %}>
         Não
     </option>
+</select>
+</td>
+
+<!-- NÍVEL APA -->
+<td>
+<select name="aluno_{{ a.id }}_nivel_apa" class="form-select form-select-sm">
+    <option value="">—</option>
+    <option value="01" {% if a.nivel_apa == '01' %}selected{% endif %}>Nível 01</option>
+    <option value="02" {% if a.nivel_apa == '02' %}selected{% endif %}>Nível 02</option>
 </select>
 </td>
 

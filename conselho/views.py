@@ -187,13 +187,31 @@ def criar_conselho(request):
     })
 
 
+
+
+def anexar_mapeamentos_aprendizagem(conselho, alunos):
+    """Anexa, para consulta no Conselho, o mapeamento já salvo para o mesmo ano."""
+    from mapeamento_aprendizagem.models import RegistroMapeamento
+
+    alunos_lista = list(alunos)
+    ids = [item.aluno_id for item in alunos_lista]
+    registros = RegistroMapeamento.objects.filter(
+        ano_letivo=conselho.ano, aluno_id__in=ids
+    ).select_related("turma")
+    por_aluno = {registro.aluno_id: registro for registro in registros}
+    for item in alunos_lista:
+        item.mapeamento_aprendizagem = por_aluno.get(item.aluno_id)
+    return alunos_lista
+
+
 # 🧠 PREENCHIMENTO DO CONSELHO
 def preencher_conselho(request, pk):
     conselho = get_object_or_404(ConselhoClasse, pk=pk)
 
-    alunos = conselho.alunos.select_related(
-        "aluno"
-    ).order_by("aluno__nome")
+    alunos = anexar_mapeamentos_aprendizagem(
+        conselho,
+        conselho.alunos.select_related("aluno").order_by("aluno__nome")
+    )
 
     if request.method == "POST":
         for a in alunos:
@@ -215,6 +233,9 @@ def preencher_conselho(request, pk):
             a.apa = request.POST.get(
                 f"{prefix}_apa"
             )
+            a.nivel_apa = request.POST.get(
+                f"{prefix}_nivel_apa", ""
+            ) if a.apa == "sim" else ""
 
             a.chamar_familia = request.POST.get(
                 f"{prefix}_familia"
@@ -256,7 +277,7 @@ def preencher_conselho(request, pk):
 
             a.save()
 
-            total = alunos.count()
+            total = len(alunos)
             concluidos = sum(
                 1
                 for a in alunos
@@ -301,15 +322,12 @@ def detalhe_conselho(request, pk):
         pk=pk
     )
 
-    alunos = conselho.alunos.select_related(
-        "aluno"
-    ).order_by(
-        "aluno__nome"
+    alunos = anexar_mapeamentos_aprendizagem(
+        conselho,
+        conselho.alunos.select_related("aluno").order_by("aluno__nome")
     )
 
-    criticos = alunos.filter(
-        classificacao="critico"
-    ).count()
+    criticos = sum(1 for item in alunos if item.classificacao == "critico")
 
     return render(
         request,
@@ -576,77 +594,76 @@ def relatorio_pedagogico(request, pk):
         pk=pk
     )
 
-    alunos = conselho.alunos.select_related(
-        "aluno"
-    )
+    alunos_qs = conselho.alunos.select_related("aluno").order_by("aluno__nome")
+    alunos = anexar_mapeamentos_aprendizagem(conselho, alunos_qs)
 
     context = {
         "conselho": conselho,
 
-        "reclassificacao": alunos.filter(
+        "reclassificacao": alunos_qs.filter(
             reclassificacao="sim"
         ),
 
-        "familia": alunos.filter(
+        "familia": alunos_qs.filter(
             chamar_familia="sim"
         ),
 
-        "apa": alunos.filter(
+        "apa": alunos_qs.filter(
             apa="sim"
         ),
 
-        "indisciplina": alunos.filter(
+        "indisciplina": alunos_qs.filter(
             disciplina="ind"
         ),
 
-        "baixa_aprendizagem": alunos.filter(
+        "baixa_aprendizagem": alunos_qs.filter(
             aprendizagem="nao"
         ),
 
-        "faltosos": alunos.filter(
+        "faltosos": alunos_qs.filter(
             faltas="faltoso"
         ),
 
-        "criticos": alunos.filter(
+        "criticos": alunos_qs.filter(
             classificacao="critico"
         ),
 
-        "busca_ativa": alunos.filter(
+        "busca_ativa": alunos_qs.filter(
             busca_ativa="sim"
         ),
 
-        "afastados": alunos.filter(
+        "afastados": alunos_qs.filter(
             afastamento="sim"
         ),
 
-        "plano_pendente": alunos.filter(
+        "plano_pendente": alunos_qs.filter(
             plano_recomposicao="nao_feito"
         ),
 
         # INDICADORES
-        "total_alunos": alunos.count(),
+        "total_alunos": alunos_qs.count(),
 
-        "total_criticos": alunos.filter(
+        "total_criticos": alunos_qs.filter(
             classificacao="critico"
         ).count(),
 
-        "total_faltosos": alunos.filter(
+        "total_faltosos": alunos_qs.filter(
             faltas="faltoso"
         ).count(),
 
-        "total_apa": alunos.filter(
+        "total_apa": alunos_qs.filter(
             apa="sim"
         ).count(),
 
-        "total_busca_ativa": alunos.filter(
+        "total_busca_ativa": alunos_qs.filter(
             busca_ativa="sim"
         ).count(),
 
-        "total_afastados": alunos.filter(
+        "total_afastados": alunos_qs.filter(
             afastamento="sim"
         ).count(),
 
-        "total_plano": alunos.filter(
+        "total_plano": alunos_qs.filter(
             plano_recomposicao="nao_feito"
         ).count(),
 
@@ -859,6 +876,7 @@ def preencher_aluno(request, pk):
     )
 
     atual = alunos[indice]
+    anexar_mapeamentos_aprendizagem(conselho, [atual])
 
     # IDADE
     idade = None
@@ -931,6 +949,9 @@ def preencher_aluno(request, pk):
         atual.apa = request.POST.get(
             f"{prefix}_apa"
         )
+        atual.nivel_apa = request.POST.get(
+            f"{prefix}_nivel_apa", ""
+        ) if atual.apa == "sim" else ""
 
         atual.chamar_familia = request.POST.get(
             f"{prefix}_familia"

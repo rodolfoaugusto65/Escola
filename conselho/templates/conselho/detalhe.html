@@ -134,6 +134,7 @@
     <th>Freq.</th>
     <th>Ocorr.</th>
     <th>Informes</th>
+    <th>Mapeamento</th>
     <th>Status</th>
     <th></th>
 </tr>
@@ -222,6 +223,16 @@
 
     </td>
 
+    <td class="small">
+      {% if a.mapeamento_aprendizagem %}
+        <div><strong>LP:</strong> {{ a.mapeamento_aprendizagem.diagnostico_lp|default:"—" }}</div>
+        <div><strong>Matemática:</strong> {{ a.mapeamento_aprendizagem.diagnostico_mt|default:"—" }}</div>
+        <span class="badge bg-success-subtle text-success">Mapeado</span>
+      {% else %}
+        <span class="badge bg-secondary">Sem mapeamento</span>
+      {% endif %}
+    </td>
+
     <td>
 
         {% if a.classificacao == "critico" %}
@@ -264,7 +275,7 @@
 {% empty %}
 
 <tr>
-    <td colspan="7" class="text-center text-muted py-4">
+    <td colspan="8" class="text-center text-muted py-4">
         Nenhum aluno encontrado.
     </td>
 </tr>
