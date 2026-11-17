@@ -1179,3 +1179,9 @@ def acompanhamentos(request):
         "tipos": AcaoBuscaAtiva.TIPOS, "status_choices": AcaoBuscaAtiva.STATUS,
         "turnos": [(v, l) for v, l in __import__("turmas.models", fromlist=["Turma"]).Turma.TURNOS],
     })
+
+
+# Compatibilidade com versões do urls.py que registram dashboard_busca_ativa.
+# A implementação oficial do painel permanece em painel().
+def dashboard_busca_ativa(request):
+    return painel(request)

@@ -1,13 +1,18 @@
-CORREÇÃO DO ERRO DJANGO admin.E040 — GEREDU
+HOTFIX URGENTE — GEREDU R29
 
-1. Extraia este ZIP na pasta raiz do projeto Django (a mesma pasta que contém manage.py).
-2. Confirme que o arquivo alunos/admin.py foi substituído.
-3. Ative seu ambiente virtual.
-4. Execute:
-   python manage.py check
+Corrige o crash:
+AttributeError: module 'busca_ativa.views' has no attribute 'dashboard_busca_ativa'
 
-A alteração adiciona search_fields=('nome', 'matricula') ao AlunoAdmin.
-Isso atende ao autocomplete_fields=('aluno', ...) usado pelo módulo
-mapeamento_aprendizagem.
+Extraia na raiz do projeto Django (pasta que contém manage.py), substituindo:
+busca_ativa/views.py
 
-Não há alteração de models, migrations, banco de dados, .env, mídia ou uploads.
+A correção cria uma view de compatibilidade dashboard_busca_ativa(request)
+que encaminha para painel(request). Não altera models, migrations ou banco.
+
+Depois execute:
+python manage.py check
+
+Se passar, commit e push:
+git add busca_ativa/views.py
+git commit -m "Hotfix R29 restaura endpoint dashboard da Busca Ativa"
+git push origin main
