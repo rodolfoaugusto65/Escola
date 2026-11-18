@@ -1,0 +1,16 @@
+GEREDU — NOTA DE CORREÇÃO R33.1
+Data: 18/11/2026
+
+Correção:
+- Restaurada a definição do modelo PerfilAcesso em usuarios/models.py, conforme a migração 0003_perfis_acesso_e_promocao_gerencial.py já existente.
+- Implementado o método Usuario.pode_gerenciar_area(), utilizado pelas áreas Frequência, Ocorrências, Busca Ativa e Avaliações.
+- Ajustada a propriedade pode_gerenciar_usuarios para respeitar superusuários e a matriz de permissões.
+- Alinhado o tamanho máximo do campo Usuario.perfil (30) com a migração 0003.
+
+Importante:
+- Esta correção não cria uma nova migração: a migração 0003 já define PerfilAcesso e a alteração do campo perfil.
+- Faça backup do banco antes de aplicar.
+- Execute primeiro: python manage.py check
+- Depois: python manage.py showmigrations usuarios
+- Se a migração 0003 ainda estiver pendente, execute: python manage.py migrate usuarios
+- Se já estiver aplicada, não reaplique nem apague o banco.

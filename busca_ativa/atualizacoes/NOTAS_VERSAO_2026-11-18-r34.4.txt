@@ -1,0 +1,12 @@
+GEREDU R34.4 — CORREÇÃO DO MAPEAMENTO E FOCO DO MENU
+Data: 18/11/2026
+
+Correções:
+- Corrigida a declaração do helper _nivel_diagnostico, que havia sido gravada como texto literal com sequências \\n e ficado comentada.
+- A tela do Mapeamento agora usa o diagnóstico importado para preencher o campo Diagnóstico quando ainda não existe valor manual salvo.
+- Valores manuais já salvos têm prioridade sobre o resultado importado.
+- O badge do estudante passa a exibir o nível convertido (ex.: MT · Nível 03), mantendo Grupo original na tela de resultado da importação.
+- A navegação lateral seleciona apenas a rota mais específica, abre o grupo correspondente e centraliza a opção ativa no painel de rolagem.
+- O foco é recalculado após navegação HTMX e voltar/avançar do navegador.
+
+Não foram alterados models, migrations ou dados existentes.

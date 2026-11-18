@@ -17,6 +17,16 @@ from .models import RegistroMapeamento, ResultadoDiagnostico
 
 
 NIVEIS = ["", "Nível 01", "Nível 02", "Nível 03", "Nível 04", "Nível 05"]
+
+# Equivalência adotada exclusivamente para o diagnóstico inicial importado.
+GRUPO_PARA_NIVEL_DIAGNOSTICO = {
+    f"Grupo {i}": f"Nível {i:02d}" for i in range(1, 5)
+}
+
+
+def _nivel_diagnostico(grupo):
+    """Converte somente o resultado do diagnóstico inicial; não afeta bimestres."""
+    return GRUPO_PARA_NIVEL_DIAGNOSTICO.get(str(grupo or "").strip(), "")
 CAMPOS_TEXTO = ["professor_lp", "professor_mt", "observacoes"]
 CAMPOS_NIVEL = [
     "diagnostico_lp", "lp_b1", "lp_b2", "lp_b3", "lp_b4",
@@ -105,8 +115,8 @@ def painel(request):
     resultados_diag = ResultadoDiagnostico.objects.filter(ano_letivo=ano)
     if turma:
         resultados_diag = resultados_diag.filter(aluno__turma=turma)
-    diagnosticos_lp_por_aluno = {r.aluno_id: r.grupo for r in resultados_diag.filter(disciplina="LP")}
-    diagnosticos_mt_por_aluno = {r.aluno_id: r.grupo for r in resultados_diag.filter(disciplina="MT")}
+    diagnosticos_lp_por_aluno = {r.aluno_id: _nivel_diagnostico(r.grupo) for r in resultados_diag.filter(disciplina="LP")}
+    diagnosticos_mt_por_aluno = {r.aluno_id: _nivel_diagnostico(r.grupo) for r in resultados_diag.filter(disciplina="MT")}
     return render(request, "mapeamento_aprendizagem/painel.html", {
         "anos": anos, "ano": ano, "turmas": turmas, "turma": turma,
         "alunos": alunos, "registros": registros, "q": busca,
@@ -133,92 +143,185 @@ def _codigo_limpo(valor):
     return "".join(ch for ch in texto if ch.isdigit())
 
 
+def _normalizar_cabecalho(valor):
+    import unicodedata, re
+    texto = unicodedata.normalize("NFKD", str(valor or "")).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "", texto)
+
+
+def _localizar_cabecalho(ws):
+    obrigatorios = {
+        "escola": {"nmescola", "nomeescola"},
+        "disciplina": {"cddisciplina", "codigodisciplina"},
+        "etapa": {"cdetapa", "codigoetapa"},
+        "matricula": {"cdalunoinstitucional", "codigoalunoinstitucional"},
+        "nome": {"nmaluno", "nomealuno"},
+        "grupo": {"grupo", "classificacao", "classificacaogrupo"},
+    }
+    for numero, row in enumerate(ws.iter_rows(min_row=1, max_row=20, values_only=True), start=1):
+        mapa = {}
+        for indice, valor in enumerate(row or []):
+            chave = _normalizar_cabecalho(valor)
+            for campo, aliases in obrigatorios.items():
+                if chave in aliases:
+                    mapa[campo] = indice
+        if len(mapa) == len(obrigatorios):
+            return numero, mapa
+    return None, None
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def importar_diagnostico(request):
-    """Importa as classificações Grupo 1–4 das planilhas oficiais LP/MT."""
-    if request.method == "GET":
-        recentes = ResultadoDiagnostico.objects.values("ano_letivo", "disciplina", "arquivo_origem", "importado_em").distinct().order_by("-importado_em")[:12]
-        return render(request, "mapeamento_aprendizagem/importar_diagnostico.html", {"recentes": recentes})
-
-    arquivos = request.FILES.getlist("arquivos") or ([request.FILES.get("arquivo")] if request.FILES.get("arquivo") else [])
-    try:
-        ano = int(request.POST.get("ano_letivo") or timezone.localdate().year)
-    except (TypeError, ValueError):
-        messages.error(request, "Informe um ano letivo válido.")
-        return redirect("mapeamento_aprendizagem:importar_diagnostico")
-    if not arquivos or any(not arq.name.lower().endswith(".xlsx") for arq in arquivos):
-        messages.error(request, "Selecione uma ou mais planilhas Excel no formato .xlsx.")
-        return redirect("mapeamento_aprendizagem:importar_diagnostico")
-
-    mapa_alunos = {_codigo_limpo(m.matricula): m for m in Aluno.objects.select_related("turma") if _codigo_limpo(m.matricula)}
-    criados = atualizados = nao_encontrados = ignorados = 0
+    """Importação validada em duas fases, com limites para planilhas extensas."""
+    LIMITE_ARQUIVO = 30 * 1024 * 1024
+    LIMITE_LINHAS = 100_000
+    LIMITE_RESULTADOS = 20_000
     escola_alvo = "EE RODOLFO AUGUSTO TRECHAUD CURVO"
 
+    recentes = ResultadoDiagnostico.objects.values(
+        "ano_letivo", "disciplina", "arquivo_origem", "importado_em"
+    ).distinct().order_by("-importado_em")[:12]
+    if request.method == "GET":
+        return render(request, "mapeamento_aprendizagem/importar_diagnostico.html", {"recentes": recentes})
+
+    arquivos = request.FILES.getlist("arquivos") or (
+        [request.FILES.get("arquivo")] if request.FILES.get("arquivo") else []
+    )
     try:
-        with transaction.atomic():
-            for arquivo in arquivos:
-                try:
-                    wb = load_workbook(arquivo, read_only=True, data_only=True)
-                except Exception as exc:
-                    raise ValueError(f"Não foi possível abrir {arquivo.name}: {exc}") from exc
-                arquivo_nome = Path(arquivo.name).name[:255]
-                try:
-                    for ws in wb.worksheets:
-                        linhas = ws.iter_rows(values_only=True)
-                        cabecalho = next(linhas, None)
-                        if not cabecalho:
-                            continue
-                        indices = {str(v or "").strip().upper(): i for i, v in enumerate(cabecalho)}
-                        obrigatorios = ["NM_ESCOLA", "CD_DISCIPLINA", "CD_ETAPA", "CD_ALUNO_INSTITUCIONAL", "NM_ALUNO", "GRUPO"]
-                        if any(c not in indices for c in obrigatorios):
-                            continue
-                        for row in linhas:
-                            if not row or len(row) <= max(indices.values()):
-                                ignorados += 1
-                                continue
-                            valor = lambda campo: row[indices[campo]]
-                            nome_escola = str(valor("NM_ESCOLA") or "").strip().upper()
-                            if nome_escola != escola_alvo:
-                                continue
-                            disciplina = str(valor("CD_DISCIPLINA") or "").strip().upper()
-                            if disciplina not in {"LP", "MT"}:
-                                ignorados += 1
-                                continue
-                            grupo = str(valor("GRUPO") or "").strip()
-                            if grupo not in {"Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"}:
-                                ignorados += 1
-                                continue
-                            codigo = _codigo_limpo(valor("CD_ALUNO_INSTITUCIONAL"))
-                            aluno = mapa_alunos.get(codigo)
-                            if not aluno:
-                                nao_encontrados += 1
-                                continue
-                            defaults = {
-                                "turma": aluno.turma,
-                                "etapa": str(valor("CD_ETAPA") or "").strip(),
-                                "grupo": grupo,
-                                "codigo_aluno": _codigo_limpo(valor("CD_ALUNO")),
-                                "codigo_institucional": codigo,
-                                "escola": str(valor("NM_ESCOLA") or "")[:180],
-                                "modalidade": str(valor("MODALIDADE") or "")[:80],
-                                "arquivo_origem": arquivo_nome,
-                            }
-                            _, criado = ResultadoDiagnostico.objects.update_or_create(
-                                aluno=aluno, ano_letivo=ano, disciplina=disciplina, defaults=defaults
-                            )
-                            if criado:
-                                criados += 1
-                            else:
-                                atualizados += 1
-                finally:
-                    wb.close()
-    except Exception as exc:
-        messages.error(request, f"A importação foi cancelada para evitar gravação parcial: {exc}")
+        ano = int(request.POST.get("ano_letivo") or timezone.localdate().year)
+        if not 2000 <= ano <= 2100:
+            raise ValueError
+    except (TypeError, ValueError):
+        messages.error(request, "Informe um ano letivo válido entre 2000 e 2100.")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+    if not arquivos:
+        messages.error(request, "Selecione ao menos uma planilha Excel.")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+    for arquivo in arquivos:
+        if not Path(arquivo.name).name.lower().endswith((".xlsx", ".xlsm")):
+            messages.error(request, f"Formato não aceito: {arquivo.name}. Use .xlsx ou .xlsm.")
+            return redirect("mapeamento_aprendizagem:importar_diagnostico")
+        if arquivo.size > LIMITE_ARQUIVO:
+            messages.error(request, f"{arquivo.name}: excede o limite de 30 MB por arquivo.")
+            return redirect("mapeamento_aprendizagem:importar_diagnostico")
+
+    mapa_alunos = {
+        _codigo_limpo(a.matricula): a for a in Aluno.objects.select_related("turma")
+        if _codigo_limpo(a.matricula)
+    }
+    # Chave única evita acumular repetidos em planilhas longas.
+    pendentes = {}
+    erros = []
+    ignorados = nao_encontrados = 0
+
+    for arquivo in arquivos:
+        wb = None
+        try:
+            arquivo.seek(0)
+            wb = load_workbook(arquivo, read_only=True, data_only=True)
+            encontrou = False
+            for ws in wb.worksheets:
+                cabecalho, indices = _localizar_cabecalho(ws)
+                if not indices:
+                    continue
+                encontrou = True
+                ultima = min(ws.max_row or LIMITE_LINHAS, LIMITE_LINHAS)
+                for row in ws.iter_rows(min_row=cabecalho + 1, max_row=ultima, values_only=True):
+                    if not row or not any(v not in (None, "") for v in row):
+                        continue
+                    def valor(campo):
+                        i = indices[campo]
+                        return row[i] if i < len(row) else None
+                    if str(valor("escola") or "").strip().upper() != escola_alvo:
+                        continue
+                    disc_raw = _normalizar_cabecalho(valor("disciplina"))
+                    disciplina = "LP" if disc_raw in {"lp", "linguaportuguesa", "portugues"} else (
+                        "MT" if disc_raw in {"mt", "matematica"} else ""
+                    )
+                    grupo_num = "".join(ch for ch in str(valor("grupo") or "") if ch.isdigit())
+                    grupo = f"Grupo {grupo_num}" if grupo_num in {"1", "2", "3", "4"} else ""
+                    codigo = _codigo_limpo(valor("matricula"))
+                    if not disciplina or not grupo or not codigo:
+                        ignorados += 1
+                        continue
+                    aluno = mapa_alunos.get(codigo)
+                    if not aluno:
+                        nao_encontrados += 1
+                        continue
+                    pendentes[(aluno.pk, disciplina)] = {
+                        "aluno": aluno, "disciplina": disciplina,
+                        "etapa": str(valor("etapa") or "").strip()[:20],
+                        "grupo": grupo, "codigo_aluno": "",
+                        "codigo_institucional": codigo, "escola": escola_alvo,
+                        "arquivo_origem": Path(arquivo.name).name[:255], "modalidade": "",
+                    }
+                    if len(pendentes) > LIMITE_RESULTADOS:
+                        raise ValueError(f"lote excede {LIMITE_RESULTADOS:,} resultados válidos")
+            if not encontrou:
+                erros.append(f"{arquivo.name}: cabeçalho obrigatório não localizado nas primeiras 20 linhas")
+        except Exception as exc:
+            erros.append(f"{arquivo.name}: {exc}")
+        finally:
+            if wb is not None:
+                wb.close()
+
+    if erros:
+        messages.error(request, "Nenhum registro foi gravado. Corrija os arquivos: " + " | ".join(erros))
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+    if not pendentes:
+        messages.warning(request, f"Nenhum resultado válido. Matrículas não localizadas: {nao_encontrados}; linhas ignoradas: {ignorados}.")
         return redirect("mapeamento_aprendizagem:importar_diagnostico")
 
-    messages.success(request, f"Importação concluída ({len(arquivos)} arquivo(s)): {criados} novos, {atualizados} atualizados, {nao_encontrados} sem correspondência de matrícula e {ignorados} ignorados. A correspondência usa CD_ALUNO_INSTITUCIONAL com a matrícula do GerEdu.")
-    return redirect("mapeamento_aprendizagem:painel")
+    ids = [item["aluno"].pk for item in pendentes.values()]
+    existentes = set(ResultadoDiagnostico.objects.filter(
+        ano_letivo=ano, aluno_id__in=ids
+    ).values_list("aluno_id", "disciplina"))
+    criados = atualizados = 0
+    exibicao = []
+    try:
+        with transaction.atomic():
+            for item in pendentes.values():
+                aluno = item["aluno"]
+                disciplina = item["disciplina"]
+                defaults = {k: val for k, val in item.items() if k != "aluno"}
+                resultado, _ = ResultadoDiagnostico.objects.update_or_create(
+                    aluno=aluno, ano_letivo=ano, disciplina=disciplina,
+                    defaults={"turma": aluno.turma, **defaults},
+                )
+                if (aluno.pk, disciplina) in existentes:
+                    atualizados += 1
+                else:
+                    criados += 1
+                nivel = _nivel_diagnostico(resultado.grupo)
+                if nivel and aluno.turma_id:
+                    registro, _ = RegistroMapeamento.objects.get_or_create(
+                        aluno=aluno, ano_letivo=ano,
+                        defaults={
+                            "turma": aluno.turma, "criado_por": request.user,
+                            "paede": "SIM" if aluno.aluno_paed else "NÃO",
+                            "situacao": "Transferido" if aluno.transferido else "Matriculado",
+                        },
+                    )
+                    campo = "diagnostico_lp" if disciplina == "LP" else "diagnostico_mt"
+                    setattr(registro, campo, nivel)
+                    registro.turma = aluno.turma
+                    registro.atualizado_por = request.user
+                    registro.save(update_fields=["turma", campo, "atualizado_por", "atualizado_em"])
+                exibicao.append({
+                    "aluno": aluno, "disciplina": resultado.get_disciplina_display(),
+                    "grupo": resultado.grupo, "nivel": nivel, "turma": aluno.turma,
+                })
+    except Exception as exc:
+        messages.error(request, f"Importação cancelada integralmente; nenhum lote parcial foi confirmado: {exc}")
+        return redirect("mapeamento_aprendizagem:importar_diagnostico")
+
+    messages.success(request, f"Importação concluída: {criados} novos, {atualizados} atualizados, {nao_encontrados} matrículas não localizadas e {ignorados} linhas ignoradas.")
+    return render(request, "mapeamento_aprendizagem/importar_diagnostico.html", {
+        "recentes": recentes, "resultado_importacao": exibicao, "ano_importado": ano,
+        "criados": criados, "atualizados": atualizados,
+        "nao_encontrados": nao_encontrados, "ignorados": ignorados,
+    })
 
 
 @login_required

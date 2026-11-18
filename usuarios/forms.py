@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Usuario
+from .models import Usuario, PerfilAcesso
 import re
 
 
@@ -46,6 +46,11 @@ class UsuarioForm(forms.ModelForm):
         }),
         required=True
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        perfis = list(PerfilAcesso.objects.filter(ativo=True).values_list("codigo", "nome"))
+        self.fields["perfil"].choices = perfis or Usuario.PERFIS
 
     class Meta:
         model = Usuario
@@ -126,6 +131,8 @@ class EditarUsuarioForm(forms.ModelForm):
         })
     )
 
+    is_superuser = forms.BooleanField(label="Superusuário do sistema", required=False, widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
+
     is_active = forms.BooleanField(
         label="Usuário Ativo",
         required=False,
@@ -148,6 +155,7 @@ class EditarUsuarioForm(forms.ModelForm):
             'telefone',
             'endereco',
             'is_active',
+            'is_superuser',
         ]
 
         widgets = {
@@ -183,6 +191,8 @@ class EditarUsuarioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Atualiza o valor automaticamente ao abrir o form
+        perfis = list(PerfilAcesso.objects.filter(ativo=True).values_list("codigo", "nome"))
+        self.fields["perfil"].choices = perfis or Usuario.PERFIS
         if self.instance and self.instance.pk:
             self.fields['perfil_gerencial'].initial = self.instance.perfil_gerencial
 

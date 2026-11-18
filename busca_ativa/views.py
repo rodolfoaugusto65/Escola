@@ -100,50 +100,199 @@ def _active_action_subquery():
 @login_required
 @user_passes_test(gerencial)
 def painel(request):
+    """Fila de atendimento: só mostra sem ação vigente; concluídos reaparecem
+    apenas quando uma importação posterior volta a sinalizar o estudante."""
     today = timezone.localdate()
     situacoes = SituacaoInfrequencia.objects.select_related("aluno", "aluno__turma").filter(ano_letivo=today.year)
-    ativos = AcaoBuscaAtiva.objects.filter(prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"])
-    base = situacoes.annotate(tem_prazo_ativo=Exists(
-        AcaoBuscaAtiva.objects.filter(aluno_id=OuterRef("aluno_id"), prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"])
-    ))
-    # Alertas permanecem visíveis mesmo quando já existem ações/prazos ativos.
-    pendentes = base
+    ultima_importacao = HistoricoSituacaoInfrequencia.objects.filter(
+        aluno_id=OuterRef("aluno_id"), ano_letivo=today.year
+    ).order_by("-importado_em")
+    acao_concluida = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), status="Concluída"
+    ).order_by("-atualizado_em")
+    acao_vigente = AcaoBuscaAtiva.objects.filter(
+        aluno_id=OuterRef("aluno_id"), prazo__gte=today
+    ).exclude(status__in=["Concluída", "Cancelada"])
+    base = situacoes.annotate(
+        ultima_integracao=Subquery(ultima_importacao.values("importado_em")[:1]),
+        concluida_em=Subquery(acao_concluida.values("atualizado_em")[:1]),
+        tem_acao_vigente=Exists(acao_vigente),
+        tem_prazo_ativo=Exists(acao_vigente),
+    ).annotate(
+        concluido_apos_integracao=Q(concluida_em__isnull=False) &
+            Q(ultima_integracao__isnull=False) & Q(concluida_em__gte=F("ultima_integracao"))
+    ).annotate(
+        percentual_considerado_db=Greatest("percentual_geral_final", "percentual_geral", "percentual_relatorio_25")
+    )
     q = request.GET.get("q", "").strip()
     faixa = request.GET.get("faixa", "")
+    turno = request.GET.get("turno", "")
+    turma = request.GET.get("turma", "")
+    percentual_min = request.GET.get("percentual_min", "").strip()
+    percentual_max = request.GET.get("percentual_max", "").strip()
+    base = base.filter(tem_acao_vigente=False).exclude(concluido_apos_integracao=True)
     if q:
         base = base.filter(Q(aluno__nome__icontains=q) | Q(aluno__matricula__icontains=q))
+    if turno:
+        base = base.filter(aluno__turma__turno=turno)
+    if turma:
+        base = base.filter(aluno__turma_id=turma)
+    if percentual_min:
+        try: base = base.filter(percentual_considerado_db__gte=Decimal(percentual_min))
+        except InvalidOperation: pass
+    if percentual_max:
+        try: base = base.filter(percentual_considerado_db__lte=Decimal(percentual_max))
+        except InvalidOperation: pass
     if faixa == "critico":
         base = base.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25))
     elif faixa == "atencao":
         base = base.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(
             Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25))
-    base = base.order_by("-percentual_geral_final", "aluno__nome")
+    base = base.order_by("-percentual_considerado_db", "aluno__nome")
+    pendentes = base
     total_estudantes = base.count()
-    pagina_situacoes = Paginator(base, 50).get_page(request.GET.get("page"))
-    from conselho.models import ConselhoAluno
-    from django.db.models import OuterRef, Subquery, F
-
-    ultimo_registro_conselho = ConselhoAluno.objects.filter(
-        aluno_id=OuterRef("aluno_id")
-    ).order_by("-conselho__ano", "-conselho__bimestre", "-atualizado_em").values("id")[:1]
-    alertas_apa = (ConselhoAluno.objects.annotate(ultimo_id=Subquery(ultimo_registro_conselho))
-        .filter(id=F("ultimo_id"), apa="sim")
-        .select_related("aluno", "conselho", "conselho__turma").order_by("aluno__nome"))
-
+    pagina_situacoes = Paginator(base, 15).get_page(request.GET.get("page"))
+    from turmas.models import Turma
+    turmas = Turma.objects.all().order_by("nome")
+    turnos = getattr(Turma, "TURNOS", [])
+    # Painéis complementares: não misturam ações em curso com a fila de novas ações.
+    acoes_vencidas = AcaoBuscaAtiva.objects.filter(
+        prazo__lt=today
+    ).exclude(status__in=["Concluída", "Cancelada"]).select_related(
+        "aluno", "aluno__turma", "responsavel"
+    ).order_by("prazo", "aluno__nome")[:100]
+    acoes_ativas = AcaoBuscaAtiva.objects.filter(
+        Q(prazo__gte=today) | Q(prazo__isnull=True),
+    ).exclude(status__in=["Concluída", "Cancelada"]).select_related(
+        "aluno", "aluno__turma", "responsavel"
+    ).order_by("prazo", "aluno__nome")[:100]
+    alunos_prioridade = base.filter(
+        Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)
+    ).order_by("-percentual_geral_final", "aluno__nome")[:30]
     context = {
-        "alertas_apa": alertas_apa,
-        "total_alertas_apa": alertas_apa.count(),
-        "situacoes": pagina_situacoes,
-        "pagina_situacoes": pagina_situacoes,
+        "acoes_vencidas": acoes_vencidas,
+        "total_acoes_vencidas": AcaoBuscaAtiva.objects.filter(prazo__lt=today).exclude(status__in=["Concluída", "Cancelada"]).count(),
+        "acoes_ativas": acoes_ativas,
+        "alunos_prioridade": alunos_prioridade,
+        "situacoes": pagina_situacoes, "pagina_situacoes": pagina_situacoes,
         "total_estudantes": total_estudantes,
         "total_criticos": pendentes.filter(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
         "total_atencao": pendentes.filter(Q(percentual_geral_final__gte=10) | Q(percentual_geral__gte=10) | Q(percentual_relatorio_25__gte=10)).exclude(Q(percentual_geral_final__gte=25) | Q(percentual_geral__gte=25) | Q(percentual_relatorio_25__gte=25)).count(),
-        "acoes_pendentes": ativos.count(),
-        "q": q, "faixa": faixa,
+        "acoes_pendentes": AcaoBuscaAtiva.objects.filter(prazo__gte=today).exclude(status__in=["Concluída", "Cancelada"]).count(),
+        "q": q, "faixa": faixa, "turno": turno, "turma": turma,
+        "percentual_min": percentual_min, "percentual_max": percentual_max,
+        "turmas": turmas, "turnos": turnos,
         "importacoes": ImportacaoInfrequencia.objects.all()[:10],
         "ultimos_repetidos": HistoricoSituacaoInfrequencia.objects.filter(apareceu_novamente=True).select_related("aluno", "importacao").order_by("-importado_em")[:12],
     }
     return render(request, "busca_ativa/painel.html", context)
+
+
+@login_required
+@user_passes_test(gerencial)
+def dashboard_busca_ativa(request):
+    """Dashboard analítico complementar; não altera as filas e telas operacionais."""
+    from django.db.models import Count, Q, F
+    from django.db.models.functions import Greatest
+    from turmas.models import Turma
+
+    hoje = timezone.localdate()
+    ano = int(request.GET.get("ano") or hoje.year)
+    turno = request.GET.get("turno", "").strip()
+    turma_id = request.GET.get("turma", "").strip()
+
+    situacoes = SituacaoInfrequencia.objects.filter(ano_letivo=ano).select_related(
+        "aluno", "aluno__turma"
+    ).annotate(
+        percentual_painel=Greatest(
+            "percentual_geral_final", "percentual_geral", "percentual_relatorio_25"
+        )
+    )
+    if turno:
+        situacoes = situacoes.filter(aluno__turma__turno=turno)
+    if turma_id:
+        situacoes = situacoes.filter(aluno__turma_id=turma_id)
+
+    # Indicadores consolidados, mantendo os filtros de ano, turno e turma.
+    from django.db.models import Avg
+    totais = situacoes.aggregate(
+        estudantes=Count("id"),
+        criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+        atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+        regular=Count("id", filter=Q(percentual_painel__lt=10)),
+        media=Avg("percentual_painel"),
+    )
+    acoes = AcaoBuscaAtiva.objects.filter(aluno__situacoes_infrequencia__ano_letivo=ano)
+    if turno:
+        acoes = acoes.filter(aluno__turma__turno=turno)
+    if turma_id:
+        acoes = acoes.filter(aluno__turma_id=turma_id)
+    acoes = acoes.distinct()
+    total_acoes = acoes.count()
+    abertas = acoes.exclude(status__in=["Concluída", "Cancelada"])
+    acoes_abertas = abertas.count()
+    acoes_vencidas = abertas.filter(prazo__lt=hoje).count()
+    acoes_sem_prazo = abertas.filter(prazo__isnull=True).count()
+    acoes_concluidas = acoes.filter(status="Concluída").count()
+
+    fila_prioritaria = situacoes.filter(percentual_painel__gte=25).order_by(
+        "-percentual_painel", "aluno__nome"
+    )[:10]
+    maior_atencao = situacoes.filter(percentual_painel__gte=10).order_by(
+        "-percentual_painel", "aluno__nome"
+    )[:10]
+    importacoes = ImportacaoInfrequencia.objects.filter(ano_letivo=ano).order_by("-criado_em")[:6]
+    ultima_importacao = importacoes[0] if importacoes else None
+
+    # Comparativo histórico: não herda o filtro de ano para permitir visualizar todos os anos.
+    historico_anos = SituacaoInfrequencia.objects.all().select_related("aluno", "aluno__turma").annotate(
+        percentual_painel=Greatest(
+            "percentual_geral_final", "percentual_geral", "percentual_relatorio_25"
+        )
+    )
+    if turno:
+        historico_anos = historico_anos.filter(aluno__turma__turno=turno)
+    if turma_id:
+        historico_anos = historico_anos.filter(aluno__turma_id=turma_id)
+    comparativo_anos = list(
+        historico_anos.values("ano_letivo").annotate(
+            estudantes=Count("id"),
+            criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+            atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+            regular=Count("id", filter=Q(percentual_painel__lt=10)),
+        ).order_by("ano_letivo")
+    )
+
+    por_turma = list(
+        situacoes.values("ano_letivo", "aluno__turma__nome", "aluno__turma__turno")
+        .annotate(
+            estudantes=Count("id"),
+            criticos=Count("id", filter=Q(percentual_painel__gte=25)),
+            atencao=Count("id", filter=Q(percentual_painel__gte=10, percentual_painel__lt=25)),
+        )
+        .order_by("-criticos", "-atencao", "aluno__turma__nome")[:12]
+    )
+    turnos = getattr(Turma, "TURNOS", [])
+    anos_disponiveis = list(
+        SituacaoInfrequencia.objects.order_by("-ano_letivo")
+        .values_list("ano_letivo", flat=True).distinct()[:8]
+    )
+    if ano not in anos_disponiveis:
+        anos_disponiveis.insert(0, ano)
+
+    return render(request, "busca_ativa/dashboard.html", {
+        "ano": ano, "anos_disponiveis": anos_disponiveis,
+        "turno": turno, "turma_id": turma_id, "turnos": turnos,
+        "turmas": Turma.objects.all().order_by("nome"),
+        "totais": totais, "total_acoes": total_acoes,
+        "acoes_abertas": acoes_abertas, "acoes_vencidas": acoes_vencidas,
+        "acoes_sem_prazo": acoes_sem_prazo, "acoes_concluidas": acoes_concluidas,
+        "taxa_conclusao": round(acoes_concluidas * 100 / total_acoes, 1) if total_acoes else 0,
+        "fila_prioritaria": fila_prioritaria, "maior_atencao": maior_atencao,
+        "por_turma": por_turma, "comparativo_anos": comparativo_anos,
+        "importacoes": importacoes,
+        "ultima_importacao": ultima_importacao,
+    })
 
 
 @login_required

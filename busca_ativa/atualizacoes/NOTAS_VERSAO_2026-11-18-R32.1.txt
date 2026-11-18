@@ -1,0 +1,29 @@
+GEREDU — NOTA DE ATUALIZAÇÃO R32.1
+Data: 18/11/2026
+Base: R31 (backup de 18/11/2026)
+
+OBJETIVO
+Recuperar a apresentação e as regras operacionais da Busca Ativa conforme a referência R28, preservando as evoluções gerais da R31.
+
+ALTERAÇÕES
+- Restaurada a implementação da view painel() a partir da referência R28.
+- Restaurado o template busca_ativa/painel.html da referência R28.
+- Restaurada a implementação do dashboard analítico complementar, mantendo filtros, indicadores, comparativo histórico, filas prioritárias e importações.
+- Mantidos os endpoints auxiliares já existentes para relatórios 25%+, lançamentos atuais, fila de últimos lançamentos, alertas, comunicados e atualizações.
+- Verificada a correspondência entre as funções referenciadas em busca_ativa/urls.py e as funções existentes em busca_ativa/views.py.
+- Nenhum model, migration ou registro de banco de dados foi alterado nesta atualização.
+- Nenhuma funcionalidade geral da R31 foi substituída: dashboard inicial, Mapeamento da Aprendizagem, acompanhamento de avaliações e importações permanecem na base.
+
+VALIDAÇÃO REALIZADA NESTA PREPARAÇÃO
+- Compilação sintática de busca_ativa/views.py concluída.
+- Verificação estática das referências das URLs da Busca Ativa: nenhuma função ausente.
+- O comando python manage.py check não pôde ser executado neste ambiente porque Django não está instalado.
+
+VALIDAÇÃO PENDENTE NO AMBIENTE LOCAL
+1. Ative o ambiente virtual.
+2. Execute: python manage.py check
+3. Execute: python manage.py test busca_ativa
+4. Confira manualmente o painel operacional e o dashboard analítico.
+
+SEGURANÇA
+Faça backup do banco e da pasta media antes de instalar. Esta atualização não solicita exclusão ou recriação do banco.

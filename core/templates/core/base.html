@@ -315,6 +315,30 @@ transition:left .3s ease;
     box-shadow:0 10px 30px rgba(0,0,0,.08) !important;
     border-left:6px solid #38bdf8;
 }
+
+
+/* R34.3 — navegação lateral fluida e com foco na seção ativa */
+.sidebar-scroll{scroll-behavior:smooth;overscroll-behavior:contain}
+.sidebar-group{transition:background .25s ease,box-shadow .25s ease,margin .25s ease}
+.sidebar-group[open]{background:rgba(255,255,255,.055);box-shadow:inset 0 0 0 1px rgba(125,211,252,.09)}
+.sidebar-group summary{transition:color .22s ease,background .22s ease,padding .28s ease}
+.sidebar-group>a{transition:opacity .22s ease,transform .28s ease,background .22s ease,padding .28s ease}
+.sidebar-group>a.active{background:linear-gradient(100deg,rgba(14,165,233,.25),rgba(14,165,233,.08));color:#7dd3fc;box-shadow:inset 3px 0 #38bdf8}
+.sidebar.collapsed .sidebar-group>a.active{outline:1px solid rgba(56,189,248,.28);outline-offset:-2px}
+.sidebar.collapsed .sidebar-group[open] summary{background:rgba(56,189,248,.12);border-radius:10px}
+.sidebar:not(.collapsed) .sidebar-group[open]>a.active{margin-left:6px;margin-right:6px}
+.sidebar-scroll .sidebar-group summary:focus-visible,.sidebar-scroll a:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.sidebar,.sidebar-group,.sidebar-group>a,.sidebar-group summary{transition:none!important;animation:none!important}}
+
+
+
+/* R34.4 — foco real na opção ativa e transição consistente do menu */
+.sidebar-scroll{scroll-behavior:smooth;scroll-padding-block:42vh}
+.sidebar-group[open]{isolation:isolate}
+.sidebar-group>a.active{position:relative;z-index:1}
+.sidebar.collapsed .sidebar-group[open]>a.active{display:flex;opacity:1;transform:translateY(0)}
+.sidebar:not(.collapsed) .sidebar-group[open]>a.active{margin-inline:6px}
+.sidebar-group summary:focus-visible,.sidebar-group>a:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
 </style>
 <style>
 /* r13: sidebar labels remain readable in expanded/collapsed layouts */
@@ -367,6 +391,10 @@ transition:left .3s ease;
 
 {% if user.is_authenticated %}
 <details class="sidebar-group">
+ <summary><i data-lucide="clipboard-signature"></i><span>Conselho de Classe</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
+ <a hx-get="{% url 'conselho:lista' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'conselho:lista' %}"><i data-lucide="clipboard-list"></i><span>Conselhos e relatórios</span></a>
+</details>
+<details class="sidebar-group">
  <summary><i data-lucide="book-open-check"></i><span>Acompanhamento pedagógico</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a href="{% url 'mapeamento_aprendizagem:painel' %}"><i data-lucide="clipboard-pen-line"></i><span>Mapeamento da Aprendizagem</span></a>
 </details>
@@ -395,7 +423,7 @@ transition:left .3s ease;
 <details class="sidebar-group">
  <summary><i data-lucide="settings"></i><span>Administração</span><i data-lucide="chevron-down" class="group-chevron"></i></summary>
  <a hx-get="{% url 'lista_usuarios' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'lista_usuarios' %}"><i data-lucide="users-cog"></i><span>Usuários</span></a>
- <a hx-get="{% url 'conselho:lista' %}" hx-target="#mainContent" hx-swap="innerHTML" hx-push-url="true" href="{% url 'conselho:lista' %}"><i data-lucide="clipboard-signature"></i><span>Conselho de Classe</span></a>
+ {% if user.is_superuser %}<a href="{% url 'gerenciar_perfis' %}"><i data-lucide="shield-check"></i><span>Níveis de perfis</span></a>{% endif %}
  <a href="{% url 'busca_ativa:atualizacao_txt' %}" title="Atualizações do sistema"><i data-lucide="file-text"></i><span>Atualizações do sistema</span></a>
 </details>
 {% endif %}
@@ -578,6 +606,7 @@ function applySidebarState() {
 
     lucide.createIcons();
     refreshSidebarTitles();
+    if(!sidebar.classList.contains("collapsed")) focusActiveSidebarLink();
 }
 
 applySidebarState();
@@ -592,11 +621,28 @@ function refreshSidebarTitles(){
 }
 refreshSidebarTitles();
 
+/* Acordeão: ao abrir uma seção, mantém a navegação focada e evita grupos concorrentes. */
+if(sidebar){
+    sidebar.querySelectorAll("details.sidebar-group").forEach(group => {
+        group.addEventListener("toggle", () => {
+            if(!group.open) return;
+            sidebar.querySelectorAll("details.sidebar-group").forEach(other => {
+                if(other !== group) other.open = false;
+            });
+            requestAnimationFrame(() => {
+                const selected = group.querySelector("a.active");
+                if(selected) focusActiveSidebarLink();
+            });
+        });
+    });
+}
+
 /* Hover só funciona se NÃO estiver fixada */
 if (sidebar) {
     sidebar.addEventListener("mouseenter", () => {
         if (!locked && window.innerWidth > 768) {
             sidebar.classList.remove("collapsed");
+            requestAnimationFrame(focusActiveSidebarLink);
         }
     });
 
@@ -656,72 +702,88 @@ window.addEventListener("resize", () => {
  /* ================= ABA ATIVA + SPA ESTÁVEL ================= */
 
 function updateActivePageInfo(){
-
-    const currentPath = window.location.pathname.replace(/\/+$/, "");
-
+    const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
     const pageTitle = document.getElementById("pageTitle");
     const breadcrumbTitle = document.getElementById("breadcrumbTitle");
     const pageIcon = document.getElementById("pageIcon");
+    const links = [...document.querySelectorAll(".sidebar a[href]")];
 
-    let activeFound = false;
+    links.forEach(link => link.classList.remove("active"));
+    const candidates = links.map(link => ({
+        link,
+        path: (link.getAttribute("href") || "").replace(/\/+$/, "") || "/"
+    })).filter(item =>
+        item.path === currentPath ||
+        (item.path !== "/" && currentPath.startsWith(item.path + "/"))
+    ).sort((a,b) => b.path.length - a.path.length);
 
-    document.querySelectorAll(".sidebar a").forEach(link => {
-
-        const href = link.getAttribute("href");
-        if(!href) return;
-
-        const linkPath = href.replace(/\/+$/, "");
-
-        link.classList.remove("active");
-
-        // 🔥 Correção aplicada aqui
-        if (
-            (linkPath === "" && currentPath === "") ||
-            (linkPath !== "" && (
-                currentPath === linkPath ||
-                currentPath.startsWith(linkPath + "/")
-            ))
-        ){
-
-            link.classList.add("active");
-            const group = link.closest("details.sidebar-group");
-            if(group) group.open = true;
-            activeFound = true;
-
-            const text = link.textContent.trim();
-
-            if(pageTitle) pageTitle.textContent = text;
-            if(breadcrumbTitle) breadcrumbTitle.textContent = text;
-
-            if(pageIcon){
-                const icon = link.querySelector("i");
-                if(icon){
-                    pageIcon.setAttribute(
-                        "data-lucide",
-                        icon.getAttribute("data-lucide")
-                    );
-                }
-            }
-        }
+    const selected = candidates[0]?.link;
+    document.querySelectorAll(".sidebar details.sidebar-group").forEach(group => {
+        group.open = false;
     });
 
-    lucide.createIcons();
+    if(selected){
+        selected.classList.add("active");
+        const group = selected.closest("details.sidebar-group");
+        if(group) group.open = true;
 
-    if(!activeFound){
-        console.warn("Nenhuma aba correspondente encontrada:", currentPath);
+        const text = selected.querySelector("span")?.textContent?.trim() || selected.textContent.trim();
+        if(pageTitle) pageTitle.textContent = text;
+        if(breadcrumbTitle) breadcrumbTitle.textContent = text;
+        const icon = selected.querySelector("i");
+        if(pageIcon && icon?.getAttribute("data-lucide")){
+            pageIcon.setAttribute("data-lucide", icon.getAttribute("data-lucide"));
+        }
     }
+    if(window.lucide) lucide.createIcons();
+    focusActiveSidebarLink();
 }
+
+/* ================= ATIVAÇÃO INSTANTÂNEA E FOCO CENTRALIZADO ================= */
 
 /* ================= ATIVAÇÃO INSTANTÂNEA (SEM FLICKER) ================= */
 
-function setActiveSidebar(link){
+function focusActiveSidebarLink(){
+    if(!sidebar) return;
+    const active = sidebar.querySelector(".sidebar a.active");
+    if(!active) return;
+    const group = active.closest("details.sidebar-group");
+    if(group) group.open = true;
 
-    document.querySelectorAll(".sidebar a")
-        .forEach(l => l.classList.remove("active"));
-
-    link.classList.add("active");
+    requestAnimationFrame(() => {
+        const scroller = sidebar.querySelector(".sidebar-scroll");
+        if(!scroller || !active.isConnected) return;
+        const a = active.getBoundingClientRect();
+        const s = scroller.getBoundingClientRect();
+        const targetTop = scroller.scrollTop + (a.top - s.top) - (s.height - a.height) / 2;
+        scroller.scrollTo({top: Math.max(0, targetTop), behavior: "smooth"});
+    });
 }
 
+function setActiveSidebar(link){
+    document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
+    link.classList.add("active");
+    const selectedGroup = link.closest("details.sidebar-group");
+    if(selectedGroup){
+        document.querySelectorAll(".sidebar details.sidebar-group").forEach(group => {
+            group.open = group === selectedGroup;
+        });
+    }
+    focusActiveSidebarLink();
+}
+
+
+
+
+// Recalcula a seção ativa após navegação HTMX e histórico do navegador.
+document.body.addEventListener("htmx:afterSettle", () => {
+    updateActivePageInfo();
+    requestAnimationFrame(focusActiveSidebarLink);
+});
+window.addEventListener("popstate", () => {
+    updateActivePageInfo();
+    requestAnimationFrame(focusActiveSidebarLink);
+});
 
 /* Delegação de evento (funciona mesmo após HTMX) */
 document.addEventListener("click", function(e){

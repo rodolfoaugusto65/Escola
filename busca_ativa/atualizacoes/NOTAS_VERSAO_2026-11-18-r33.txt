@@ -1,0 +1,12 @@
+VERSAO: 2026.11.18.33
+TITULO: Administração de perfis e permissões do GerEdu
+
+TEXTO:
+- Criada estrutura configurável de perfis de acesso, com nome, código, descrição, status e áreas gerenciadas.
+- Adicionada tela Administração > Níveis de perfis para criar, editar e excluir perfis personalizados.
+- Os perfis padrão existentes são preservados e cadastrados na nova estrutura.
+- A edição de usuários passa a utilizar os perfis ativos cadastrados.
+- Criada consulta centralizada das permissões por área para frequência, ocorrências, Busca Ativa, avaliações e atualizações.
+- Usuários que já possuíam perfil gerencial são promovidos a superusuários na migração, conforme solicitação administrativa.
+- A conta identificada pelo CPF informado para o administrador inicial também é promovida, caso já exista.
+- Nenhuma tela, fila, relatório ou funcionalidade da Busca Ativa foi removida ou redesenhada nesta atualização.

@@ -8,12 +8,25 @@
  <header class="diag-hero"><div class="small fw-bold opacity-75">GEREDU · MAPEAMENTO DA APRENDIZAGEM</div><h2 class="fw-bold mt-2 mb-1">Importar fichas de avaliação diagnóstica</h2><p class="mb-0">Envie uma ou mais planilhas oficiais em Excel para registrar os grupos de Língua Portuguesa e Matemática no acompanhamento dos estudantes.</p></header>
  <section class="diag-card">
   <h5 class="fw-bold mb-2">Selecionar arquivo</h5>
-  <p class="diag-muted">Formato aceito: .xlsx. O sistema lê as abas da planilha, considera somente a EE RODOLFO AUGUSTO TRECHAUD CURVO e identifica a disciplina pelo campo CD_DISCIPLINA. O vínculo com o cadastro é feito por CD_ALUNO_INSTITUCIONAL = matrícula do GerEdu.</p>
+  <p class="diag-muted">Formatos aceitos: .xlsx e .xlsm, até 30 MB por arquivo e 100.000 linhas por planilha. O sistema procura o cabeçalho nas primeiras 20 linhas, valida todos os arquivos antes de gravar e cancela o lote inteiro se algum arquivo estiver inválido. O sistema lê as abas da planilha, considera somente a EE RODOLFO AUGUSTO TRECHAUD CURVO e identifica a disciplina pelo campo CD_DISCIPLINA. O vínculo com o cadastro é feito por CD_ALUNO_INSTITUCIONAL = matrícula do GerEdu.</p>
   <form method="post" enctype="multipart/form-data">{% csrf_token %}
-   <div class="diag-grid mb-3"><div><label class="form-label fw-bold">Ano letivo</label><input class="diag-control" type="number" name="ano_letivo" value="{{ request.GET.ano|default:2026 }}" min="2000" max="2100" required></div><div><label class="form-label fw-bold">Planilhas Excel (.xlsx) — você pode selecionar LP e MT juntas</label><input class="diag-control" type="file" name="arquivos" accept=".xlsx" multiple required></div></div>
+   <div class="diag-grid mb-3"><div><label class="form-label fw-bold">Ano letivo</label><input class="diag-control" type="number" name="ano_letivo" value="{{ request.GET.ano|default:2026 }}" min="2000" max="2100" required></div><div><label class="form-label fw-bold">Planilhas Excel (.xlsx) — você pode selecionar LP e MT juntas</label><input class="diag-control" type="file" name="arquivos" accept=".xlsx,.xlsm" multiple required></div></div>
    <div class="d-flex flex-wrap gap-2"><button class="diag-btn" type="submit"><i data-lucide="upload-cloud" style="width:17px"></i> Importar resultados</button><a class="btn btn-outline-secondary" href="{% url 'mapeamento_aprendizagem:painel' %}">Voltar ao mapeamento</a></div>
   </form>
  </section>
- <section class="diag-card"><h5 class="fw-bold">Como a importação funciona</h5><ul class="mb-0"><li>Reconhece os campos de escola, disciplina, etapa, matrícula institucional, nome e grupo.</li><li>Registra Grupo 1, Grupo 2, Grupo 3 ou Grupo 4 sem converter para níveis pedagógicos diferentes.</li><li>Se o mesmo estudante/ano/disciplina for importado novamente, o resultado é atualizado, sem duplicar o registro.</li><li>Estudantes cuja matrícula não for localizada são contabilizados e não são associados a outra pessoa por aproximação de nome.</li></ul></section>
+ {% if resultado_importacao %}
+ <section class="diag-card" id="resultado-importacao">
+  <h5 class="fw-bold mb-2">Diagnósticos importados e convertidos</h5>
+  <p class="diag-muted mb-3">Além do aviso de conclusão, confira abaixo a classificação original e o nível que foi gravado no diagnóstico inicial do Mapeamento da Aprendizagem.</p>
+  <div class="table-responsive"><table class="table table-sm table-hover align-middle">
+   <thead><tr><th>Estudante</th><th>Turma</th><th>Disciplina</th><th>Grupo original</th><th>Diagnóstico aplicado</th><th></th></tr></thead>
+   <tbody>{% for item in resultado_importacao %}
+    <tr><td class="fw-semibold">{{ item.aluno.nome }}</td><td>{{ item.turma|default:"Sem turma" }}</td><td>{{ item.disciplina }}</td><td><span class="badge text-bg-secondary">{{ item.grupo }}</span></td><td>{% if item.nivel %}<span class="badge text-bg-success">{{ item.nivel }}</span>{% else %}<span class="badge text-bg-warning">Não convertido</span>{% endif %}</td><td>{% if item.turma %}<a class="btn btn-sm btn-outline-primary" href="{% url 'mapeamento_aprendizagem:painel' %}?ano={{ ano_importado }}&turma={{ item.turma.pk }}">Abrir turma</a>{% endif %}</td></tr>
+   {% endfor %}</tbody>
+  </table></div>
+  <div class="diag-muted">Novos: {{ criados }} · Atualizados: {{ atualizados }} · Matrículas não localizadas: {{ nao_encontrados }} · Linhas ignoradas: {{ ignorados }}</div>
+ </section>
+ {% endif %}
+ <section class="diag-card"><h5 class="fw-bold">Como a importação funciona</h5><ul class="mb-0"><li>Reconhece os campos de escola, disciplina, etapa, matrícula institucional, nome e grupo.</li><li>No diagnóstico inicial, Grupo 1 é convertido em Nível 01, Grupo 2 em Nível 02, Grupo 3 em Nível 03 e Grupo 4 em Nível 04. Essa conversão não altera os níveis dos bimestres seguintes; a classificação original do grupo permanece registrada no resultado importado.</li><li>Se o mesmo estudante/ano/disciplina for importado novamente, o resultado é atualizado, sem duplicar o registro.</li><li>Estudantes cuja matrícula não for localizada são contabilizados e não são associados a outra pessoa por aproximação de nome.</li></ul></section>
 </div>
 {% endblock %}

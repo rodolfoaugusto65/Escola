@@ -1,0 +1,16 @@
+GEREDU R34.2 — IMPORTAÇÃO ROBUSTA E EXIBIÇÃO DO DIAGNÓSTICO
+Data: 18/11/2026
+
+- Importação aceita XLSX/XLSM até 30 MB por arquivo.
+- Leitura em modo somente leitura, com limite de 100.000 linhas por planilha.
+- Limite de 20.000 resultados únicos por lote; repetidos do mesmo aluno/disciplina são consolidados.
+- Todos os arquivos são validados antes da gravação; falha em qualquer arquivo cancela o lote.
+- A gravação permanece transacional.
+- Após importar, a tela apresenta tabela de resultados com estudante, turma, disciplina, grupo original e nível convertido.
+- Links permitem abrir diretamente o Mapeamento da turma importada.
+- A conversão Grupo 1–4 para Nível 01–04 continua exclusiva do diagnóstico inicial.
+- Os quatro bimestres e o Grupo original permanecem preservados.
+
+Limitação de infraestrutura:
+- O servidor Django/gateway também deve permitir upload maior que o arquivo enviado. Em caso de erro HTTP 413, ajustar DATA_UPLOAD_MAX_MEMORY_SIZE / FILE_UPLOAD_MAX_MEMORY_SIZE e o limite do proxy/hosting.
+- Não há migração nova nesta atualização.

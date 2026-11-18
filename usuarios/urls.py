@@ -14,6 +14,7 @@ urlpatterns = [
     path('editar-dados/', views.editar_dados_view, name='editar_dados'),
 
     # GERENCIAL
+    path('usuarios/perfis/', views.gerenciar_perfis_view, name='gerenciar_perfis'),
     path('usuarios/', views.lista_usuarios_view, name='lista_usuarios'),
     path('usuarios/novo/', views.cadastrar_usuario_view, name='cadastrar_usuario'),
     path('usuarios/<int:pk>/editar/', views.editar_usuario_view, name='editar_usuario'),

@@ -1,0 +1,17 @@
+GEREDU R34.1 — EQUIVALÊNCIA DO DIAGNÓSTICO INICIAL
+Data: 18/11/2026
+
+Regra aprovada:
+- Grupo 1 -> Nível 01
+- Grupo 2 -> Nível 02
+- Grupo 3 -> Nível 03
+- Grupo 4 -> Nível 04
+
+Escopo estrito:
+- A conversão é aplicada exclusivamente ao diagnóstico inicial importado de Língua Portuguesa e Matemática.
+- O grupo original continua preservado em ResultadoDiagnostico.grupo para rastreabilidade.
+- A equivalência alimenta somente RegistroMapeamento.diagnostico_lp ou diagnostico_mt.
+- Os campos lp_b1..lp_b4 e mt_b1..mt_b4 não são alterados.
+- Nível 05 permanece disponível para classificação pedagógica manual e não é inferido a partir dos grupos.
+- Reimportações atualizam o diagnóstico inicial correspondente sem duplicar resultados.
+- Nenhuma migração de banco é necessária para esta alteração.

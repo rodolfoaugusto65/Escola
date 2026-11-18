@@ -1,0 +1,30 @@
+GEREDU R33 — PERFIS E PERMISSÕES
+
+BASE
+Este patch foi aplicado sobre a versão enviada em "Escola test.zip", na raiz principal Escola/.
+Não substitua o projeto inteiro. Extraia os arquivos do ZIP mantendo a estrutura e substituindo somente os arquivos correspondentes.
+
+O QUE MUDA
+1. A migração cria a tabela de perfis configuráveis e cadastra os perfis atuais.
+2. A migração promove a superusuário todos os usuários que já possuem perfil_gerencial=True (além dos códigos DIRECAO, COORD e SECRETARIA).
+3. A migração também promove a conta CPF 02553366167, se já existir no banco.
+4. Administração > Níveis de perfis permite criar, editar, ativar/desativar e excluir perfis personalizados, com seleção de áreas gerenciadas.
+5. Na edição de usuários, superusuários podem marcar/desmarcar o privilégio de superusuário.
+6. As verificações de gestão em frequência, ocorrências, Busca Ativa e avaliações consultam a matriz do perfil. Os perfis gerenciais legados continuam com acesso compatível até serem reconfigurados.
+
+ATENÇÃO À SEGURANÇA
+A promoção solicitada concede acesso total ao Django Admin e privilégios amplos a todos os usuários atualmente marcados como gerenciais. Faça backup do banco antes de migrar.
+Depois da migração, entre com a conta administradora, abra Administração > Usuários e retire "Superusuário do sistema" das contas que não devem manter acesso total. Em seguida ajuste os níveis em Administração > Níveis de perfis.
+Apenas superusuários podem administrar os níveis de perfis.
+
+INSTALAÇÃO
+Na pasta que contém manage.py:
+    python manage.py check
+    python manage.py migrate
+    python manage.py check
+
+Não execute comandos de reset, flush ou remoção de banco.
+A nota de versão está em busca_ativa/atualizacoes/NOTAS_VERSAO_2026-11-18-r33.txt.
+
+VALIDAÇÃO
+A sintaxe dos arquivos Python foi verificada. Não foi possível executar o Django check/testes neste ambiente porque o Django não está instalado aqui. A migração e as telas precisam ser validadas no ambiente virtual do projeto antes do deploy.

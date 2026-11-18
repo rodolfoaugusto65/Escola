@@ -88,6 +88,12 @@
                     </div>
                     {% endif %}
 
+                    {% if form.is_superuser %}
+                    <div class="col-md-6 d-flex align-items-center mt-3">
+                        <div class="form-check form-switch">{{ form.is_superuser }}<label class="form-check-label ms-2 fw-semibold">Superusuário do sistema</label></div>
+                    </div>
+                    {% endif %}
+
                     {% if form.is_active %}
                     <div class="col-md-6 d-flex align-items-center mt-3">
                         <div class="form-check form-switch">

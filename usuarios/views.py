@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .forms import EditarMeusDadosForm
-from .models import Usuario
+from .models import Usuario, PerfilAcesso
 from .forms import UsuarioForm, EditarUsuarioForm
 from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse_lazy
@@ -163,6 +163,8 @@ def editar_usuario_view(request, pk):
 
     if request.method == 'POST':
         form = EditarUsuarioForm(request.POST, instance=usuario)
+        if not request.user.is_superuser:
+            form.fields.pop("is_superuser", None)
 
         if form.is_valid():
             form.save()
@@ -182,6 +184,8 @@ def editar_usuario_view(request, pk):
             messages.error(request, "Verifique os campos e tente novamente.")
     else:
         form = EditarUsuarioForm(instance=usuario)
+        if not request.user.is_superuser:
+            form.fields.pop("is_superuser", None)
 
     return render(request, 'usuarios/form.html', {
         'form': form,
@@ -308,3 +312,37 @@ class CustomPasswordChangeView(PasswordChangeView):
 
 class CustomPasswordChangeDoneView(PasswordChangeDoneView):
     template_name = 'usuarios/password_change_done.html'
+
+# Administração da matriz de perfis: restrita exclusivamente a superusuários.
+from django.contrib.auth.decorators import user_passes_test as _user_passes_test
+from django import forms as _forms
+from django.db import transaction as _transaction
+
+class PerfilAcessoForm(_forms.ModelForm):
+    permissoes = _forms.MultipleChoiceField(choices=PerfilAcesso.AREAS, required=False, widget=_forms.CheckboxSelectMultiple)
+    class Meta:
+        model = PerfilAcesso
+        fields = ("codigo", "nome", "descricao", "permissoes", "ativo")
+        widgets = {"codigo": _forms.TextInput(attrs={"class":"form-control"}), "nome": _forms.TextInput(attrs={"class":"form-control"}), "descricao": _forms.Textarea(attrs={"class":"form-control","rows":2}), "ativo": _forms.CheckboxInput(attrs={"class":"form-check-input"})}
+
+@login_required
+@_user_passes_test(lambda u: u.is_superuser)
+def gerenciar_perfis_view(request):
+    editar = get_object_or_404(PerfilAcesso, pk=request.GET.get("editar")) if request.GET.get("editar", "").isdigit() else None
+    if request.method == "POST":
+        acao = request.POST.get("acao")
+        if acao == "excluir":
+            perfil = get_object_or_404(PerfilAcesso, pk=request.POST.get("perfil_id"))
+            if Usuario.objects.filter(perfil=perfil.codigo).exists():
+                messages.error(request, "Este perfil está atribuído a usuários. Desative-o em vez de excluir.")
+            else:
+                perfil.delete(); messages.success(request, "Perfil excluído.")
+            return redirect("gerenciar_perfis")
+        instance = get_object_or_404(PerfilAcesso, pk=request.POST.get("perfil_id")) if request.POST.get("perfil_id") else None
+        form = PerfilAcessoForm(request.POST, instance=instance)
+        if form.is_valid():
+            perfil = form.save(commit=False); perfil.permissoes = form.cleaned_data["permissoes"]; perfil.save()
+            messages.success(request, "Perfil salvo com sucesso."); return redirect("gerenciar_perfis")
+    else:
+        form = PerfilAcessoForm(instance=editar)
+    return render(request, "usuarios/perfis.html", {"form":form,"perfis":PerfilAcesso.objects.all(),"editar":editar})

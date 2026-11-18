@@ -1,0 +1,14 @@
+VERSAO: 2026.11.18.34
+TITULO: Contraste do painel inicial, perfis administrativos e Conselho de Classe
+
+TEXTO:
+- Corrigido o contraste do cumprimento no painel inicial para leitura clara sobre o fundo azul.
+- Adicionada matriz configurável de perfis e tela de gerenciamento exclusiva para superusuários.
+- Criados perfis padrão e promovidos usuários de Direção, Coordenação e Secretaria a superusuários, conforme solicitado. A conta inicial informada também é promovida caso exista.
+- Adicionada consulta de permissão por área, com fallback temporário para os perfis antigos.
+- Conselho de Classe movido da seção Administração para uma seção própria na navegação.
+- Importação diagnóstica reforçada com reconhecimento de cabeçalho nas primeiras 20 linhas, validação prévia de todos os arquivos e gravação atômica do lote; aceita XLSX/XLSM.
+- Nenhum módulo de Busca Ativa, Mapeamento ou Avaliações foi removido.
+
+PENDÊNCIA DOCUMENTAL:
+Os documentos localizados distinguem Grupo 1–4 das planilhas diagnósticas e Nível 01–05 da planilha de monitoramento, mas não apresentam uma tabela oficial que relacione diretamente esses dois conjuntos. A conversão automática fica bloqueada até confirmação da correspondência oficial, para não atribuir nível pedagógico incorreto.

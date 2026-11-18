@@ -2,6 +2,25 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
+
+
+class PerfilAcesso(models.Model):
+    codigo = models.SlugField(max_length=30, unique=True, verbose_name="Código")
+    nome = models.CharField(max_length=80, unique=True, verbose_name="Nome do perfil")
+    descricao = models.TextField(blank=True, verbose_name="Descrição")
+    permissoes = models.JSONField(default=list, blank=True, verbose_name="Áreas gerenciadas")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    AREAS = [("usuarios", "Usuários e perfis"), ("alunos", "Alunos"), ("turmas", "Turmas"), ("frequencia", "Frequência"), ("ocorrencias", "Ocorrências"), ("busca_ativa", "Busca Ativa"), ("avaliacoes", "Avaliações"), ("conselho", "Conselho de Classe"), ("atualizacoes", "Atualizações do sistema")]
+    class Meta:
+        ordering = ("nome",)
+        verbose_name = "Perfil de acesso"
+        verbose_name_plural = "Perfis de acesso"
+    def __str__(self):
+        return self.nome
+
+
 # ======================================================
 # 🔐 MANAGER CUSTOMIZADO
 # ======================================================
@@ -109,7 +128,19 @@ class Usuario(AbstractUser):
 
     @property
     def pode_gerenciar_usuarios(self):
-        return self.is_authenticated and self.perfil_gerencial
+        return self.is_authenticated and (self.is_superuser or self.pode_gerenciar_area("usuarios"))
+
+    def pode_gerenciar_area(self, area):
+        if not self.is_authenticated:
+            return False
+        if self.is_superuser:
+            return True
+        perfil = PerfilAcesso.objects.filter(codigo=self.perfil, ativo=True).first()
+        if perfil:
+            return area in (perfil.permissoes or [])
+        if self.perfil in self.PERFIS_GERENCIAIS:
+            return area in {"usuarios", "alunos", "turmas", "frequencia", "ocorrencias", "busca_ativa", "avaliacoes", "conselho", "atualizacoes"}
+        return False
 
     # ======================================================
     # 🔄 SAVE AUTOMÁTICO INTELIGENTE

@@ -1,0 +1,16 @@
+GEREDU R34.3 — AJUSTE DE LAYOUT E NAVEGAÇÃO
+Data: 18/11/2026
+
+Mapeamento da Aprendizagem:
+- Campos de identificação, Língua Portuguesa e Matemática reorganizados em três colunas no desktop, eliminando a quarta coluna vazia.
+- Em telas intermediárias, a disposição passa para duas colunas; em telas pequenas, uma coluna.
+- Cartões alinhados e espaçamento interno ajustado.
+
+Menu lateral:
+- A seção selecionada permanece aberta e recebe foco ao expandir o menu.
+- A navegação rola suavemente até o item ativo quando necessário.
+- Abertura de uma seção fecha as demais, evitando grupos concorrentes e excesso de conteúdo.
+- Estados ativo, foco por teclado e movimento respeitam preferências de acessibilidade.
+- Recolhimento preserva o grupo da seleção atual, reorganizando os itens no modo compacto.
+
+Não altera models, migrations, dados, permissões ou regras de negócio.
