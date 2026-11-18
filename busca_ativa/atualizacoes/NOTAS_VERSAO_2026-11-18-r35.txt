@@ -1,0 +1,36 @@
+GEREDU R35 — IMPORTAÇÃO DIAGNÓSTICA EM LOTES
+Data: 18/11/2026
+
+Base:
+- Projeto recebido em Escola 18 nov.zip.
+- Mantidas as alterações locais presentes no arquivo recebido, incluindo a linha de melhorias R31/R32 e a administração de perfis R33.
+
+Correção principal:
+- Substituída a gravação individual ResultadoDiagnostico.objects.update_or_create() por operações bulk_create com atualização por conflito, em lotes de 500 registros.
+- Matrículas são normalizadas e resolvidas em leitura agrupada do cadastro, sem consulta individual por linha.
+- Mapeamentos ausentes são criados em lote; diagnósticos iniciais vazios são preenchidos com bulk_update.
+- A transação envolve a fase de gravação; erros cancelam o lote integralmente.
+- O relatório de importação limita a tabela renderizada a 500 linhas, sem limitar os registros gravados.
+
+Regras preservadas:
+- Grupo 1 -> Nível 01; Grupo 2 -> Nível 02; Grupo 3 -> Nível 03; Grupo 4 -> Nível 04.
+- Conversão exclusiva ao diagnóstico inicial LP/MT.
+- Campos bimestrais não são alterados.
+- Diagnósticos iniciais já preenchidos manualmente são preservados.
+- Resultados anteriores são atualizados sem duplicação, respeitando a restrição única aluno/ano/disciplina.
+
+Limites:
+- 30 MB por arquivo.
+- 100.000 linhas com dados por arquivo.
+- 20.000 resultados únicos por importação.
+- Lotes de 500 registros.
+
+Banco de dados:
+- Nenhuma alteração de modelo ou migração.
+- Nenhum comando de limpeza de banco.
+- Não é necessário executar migrate por esta atualização.
+
+Validação realizada nesta preparação:
+- Compilação sintática de mapeamento_aprendizagem/views.py.
+- Verificação estrutural dos arquivos e integridade dos pacotes ZIP.
+- O ambiente de preparação não possui Django instalado; portanto, manage.py check, testes integrados e execução real no PostgreSQL/Railway ainda precisam ser realizados.

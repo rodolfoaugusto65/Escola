@@ -1,0 +1,18 @@
+GEREDU R35 — COMO APLICAR E VALIDAR
+
+1. Faça backup do banco PostgreSQL antes de publicar.
+2. Faça download/extraia o pacote em uma pasta de teste ou aplique o patch na raiz que contém manage.py.
+3. Não apague a pasta media, .env, banco de dados ou arquivos do Cloudflare R2.
+4. Esta atualização não possui migrações novas; não execute makemigrations.
+5. No ambiente local, com o ambiente virtual ativado:
+   python manage.py check
+   python manage.py test mapeamento_aprendizagem
+   python manage.py runserver
+6. Teste primeiro uma planilha de Língua Portuguesa e uma de Matemática.
+7. Confira o relatório de importação e o campo Diagnóstico no Mapeamento.
+8. Só depois publique no Railway.
+
+IMPORTANTE
+- O projeto recebido contém alterações locais não commitadas em muitos arquivos. Este pacote preserva essas alterações; não é uma cópia limpa do último commit Git.
+- O ZIP completo exclui .git, ambientes virtuais e cópias internas antigas geredu_r11/geredu_work, mas mantém o projeto principal e a pasta media.
+- A preparação não executou Django/PostgreSQL/Railway. Faça as verificações acima antes da publicação.
